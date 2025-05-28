@@ -1,2 +1,4 @@
 # ignore raw data files
 data/
+# ignore vscode settings
+.vscode/
