@@ -1,9 +1,6 @@
-import sys
 import unittest
 import pandas as pd
-import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from cassette_exon_extraction import classify_exon_type
 
