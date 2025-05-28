@@ -1,10 +1,9 @@
-import unittest
 import pandas as pd
 
 from cassette_exon_extraction import classify_exons_per_gene
 
-class TestClassifyExonsPerGene(unittest.TestCase):
-    def test_classify_exons_per_gene(self):
+
+def test_classify_exons_per_gene():
         input_data = pd.DataFrame({
             "geneName": ["gene1", "gene1", "gene1", "gene1", "gene2", "gene2"],
             "name": ["1-transcript1", "1-transcript2", "1-transcript3", "1-transcript4","2-transcript1", "2-transcript2"],
@@ -71,6 +70,3 @@ class TestClassifyExonsPerGene(unittest.TestCase):
         output_data = classify_exons_per_gene(input_data)
         output_data = output_data[expected_output.columns]
         pd.testing.assert_frame_equal(output_data, expected_output)
-
-if __name__ == "__main__":
-    unittest.main()

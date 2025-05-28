@@ -1,10 +1,8 @@
-import unittest
 import pandas as pd
 
 from cassette_exon_extraction import modify_refFlat
 
-class TestModifyRefFlat(unittest.TestCase):
-    def test_modify_refFlat(self):
+def test_modify_refFlat():
         input_data = pd.DataFrame({
         "geneName": ["gene1", "gene1", "gene2"],
         "name": ["1-transcript1", "1-transcript2", "2-transcript1"],
@@ -43,5 +41,3 @@ class TestModifyRefFlat(unittest.TestCase):
         output_data = output_data[expected_output.columns]
         pd.testing.assert_frame_equal(output_data, expected_output)
 
-if __name__ == "__main__":
-    unittest.main()
