@@ -2,3 +2,6 @@
 data/
 # ignore vscode settings
 .vscode/
+
+# ignore pychache
+**/__pycache__/**
