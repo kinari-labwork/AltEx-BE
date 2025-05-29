@@ -19,7 +19,7 @@ refflat = pd.read_csv(
 
 
 
-def modify_refFlat(refFlat):
+def modify_refFlat(refFlat: pd.DataFrame) -> pd.DataFrame: 
     """
     Purpose:
         exonStart exonEndが別々のカラムに格納されているので、(start, end)のタプルのリストに変換する。
@@ -33,6 +33,7 @@ def modify_refFlat(refFlat):
         lambda x: [int(i) for i in x.split(",") if i.strip() !=''])
 
     # Calculate the lengths of each exon
+    # refflatのstartは0-baseでendは1-baseなので、毎回1を足す必要がない
     refFlat["exonlengths"] = refFlat.apply(
         lambda row: [end - start for start, end in zip(row["exonStarts"], row["exonEnds"])],
         axis=1)
@@ -44,7 +45,10 @@ def modify_refFlat(refFlat):
 
     return refFlat
 
-def classify_exon_type(target_exon, all_transcripts, fuzzy_tolerance=5):
+def classify_exon_type(
+        target_exon: tuple[int:int], 
+        all_transcripts: list[list[tuple[int,int]]], 
+        ) -> str :
     """
     Purpose:
         タプル (start, end)の形式で与えられたexonが、ある遺伝子の全てのトランスクリプトに含まれるexonの(start, end)のタプルのリストに対して、
@@ -61,8 +65,8 @@ def classify_exon_type(target_exon, all_transcripts, fuzzy_tolerance=5):
     exact_match = 0
     start_match_only = 0
     end_match_only = 0
-    fuzzy_match = 0
-    flanked_exon_count = 0
+    overlap_without_startend_match = 0
+    
 
     for tx in all_transcripts:
         if target_exon in tx:
@@ -73,8 +77,8 @@ def classify_exon_type(target_exon, all_transcripts, fuzzy_tolerance=5):
                     start_match_only += 1
                 elif ex[1] == end and ex[0] != start: 
                     end_match_only += 1
-                elif abs(ex[0] - start) <= fuzzy_tolerance and abs(ex[1] - end) <= fuzzy_tolerance: #fuzzy_toleranceパラメータで設定した容認する基準以下のずれが5',3'両方にあるexonを判定する
-                    fuzzy_match += 1
+                elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
+                    overlap_without_startend_match += 1
 
     total = len(all_transcripts)
 
@@ -83,17 +87,17 @@ def classify_exon_type(target_exon, all_transcripts, fuzzy_tolerance=5):
     elif exact_match > 1 and exact_match != total:
         return "cassette"
     elif start_match_only > 0 and end_match_only == 0:
-        return "a5ss"
-    elif end_match_only > 0 and start_match_only == 0:
         return "a3ss"
-    elif fuzzy_match > 0:
-        return "fuzzy"
+    elif end_match_only > 0 and start_match_only == 0:
+        return "a5ss"
+    elif overlap_without_startend_match > 0:
+        return "overlap"
     elif exact_match == 1 and exact_match != total:
         return "unique"
     else:
         return "other"
     
-def classify_exons_per_gene(refflat, fuzzy_tolerance=3):
+def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat = refflat.copy()
     result = []
 
@@ -108,7 +112,7 @@ def classify_exons_per_gene(refflat, fuzzy_tolerance=3):
     def classify_row_exons(row, gene_group):
         all_transcripts = gene_group["exons"].tolist()
         return [
-            classify_exon_type(exon, all_transcripts, fuzzy_tolerance)
+            classify_exon_type(exon, all_transcripts)
             for exon in row["exons"]
         ]
 

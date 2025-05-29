@@ -11,7 +11,7 @@ class TestClassifyExonType:
             [(0, 100), (150, 200), (250, 300)],       # 全部あり（完全型）
             [(0, 100), (250, 300)],                   # (150,200) がスキップ
             [(0, 100), (150, 200), (250, 300)],        # (150,200) ではなく5'のalteration
-            [(0, 100), (180, 220), (250, 300)]        # (180,220) のユニークなエキソンを持っている
+            [(0, 100), (110,120), (250, 300)]        # (110,120) のユニークなエキソンを持っている
         ]
 
      def test_constitutive(self):
@@ -25,19 +25,17 @@ class TestClassifyExonType:
         assert label == "cassette"
 
      def test_alt_5ss(self):
-        # (155, 200) が存在し、startがずれているため alt_5ss を拾いたい
-        # NOTE: (150,200) に対してズレたものがいるので、片側一致
+        # (155, 200) が存在し、startがずれているため a5ss を拾いたい
         label = classify_exon_type((155, 200), self.transcripts)
-        assert label == "a3ss"
+        assert label == "a5ss"     
 
      def test_unique(self):
-        # (180, 220) はどこにも含まれないが、ここでuniqueの条件にあわせるなら
-        # 自分だけ含まれている場合（例外的にmanualで渡しても可）
-        label = classify_exon_type((180, 220), self.transcripts)
+        # (180, 220) はどこにも含まれない
+        label = classify_exon_type((110, 120), self.transcripts)
         assert label == "unique"
 
-     def test_fuzzy(self):
-        # (151,199) は他のexonに±3以内で近い（たとえば fuzzy tolerance内）
-        label = classify_exon_type((151, 199), self.transcripts, fuzzy_tolerance=5)
-        assert  label == "fuzzy"
+     def test_overlap(self):
+        # (151, 199)は(150,200)とオーバーラップしている 
+        label = classify_exon_type((151, 199), self.transcripts)
+        assert  label == "overlap"
 
