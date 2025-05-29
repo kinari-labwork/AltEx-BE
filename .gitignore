@@ -5,3 +5,6 @@ data/
 
 # ignore pychache
 **/__pycache__/**
+
+# ignore pytest_cache
+.pytest_cache/
