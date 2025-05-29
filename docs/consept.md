@@ -26,14 +26,14 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 　判定の基準: ある(start:end) ペアに対して、  
 
   - startはすべてのtranscriptに存在し、endもすべてのtranscriptに存在する → "constitutive"  
-  - 他のtranscriptの（start: end）の組に対して、startだけ異なる場合がある  → "a3ss" (3'側のスプライスサイト変化)  
+  - 他のtranscriptの（start: end）の組に対して、endだけ異なる場合がある  → "a3ss" (3'側のスプライスサイト変化)  
   - 他のtranscriptの（start: end）の組に対して、startだけ異なる場合がある → "a5ss" (5'側のスプライスサイト変化)
   - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。しかし、start:endの組が2つ以上のtranscriptに存在する→ "cassette"  
   - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。そして、start:endの組が1つのtranscriptにしか存在しない→ "unique"  
-  - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。そして、start:endの組が他のexonと+-5bpズレている→ "fuzzy"  
+  - start:endが他のtranscriptと一致しないが、他のエキソンと1塩基以上のオーバーラップが生じているもの→ "overlap" 
 
   出力: [constitutive, cassette, unique....]
-
+  
   classify_exon_type()
 
 [☑]遺伝子ごとにrefflatをgroup化して、それぞれのエキソンに対してclassify_exon_type()を実行し、"exon_type"列に結果を格納する
