@@ -56,15 +56,14 @@ def classify_exon_type(
     Parameters:
         target_exon: タプル (start, end)
         all_transcripts: ある遺伝子の全てのトランスクリプトの (start, end)のタプルのリスト (次の関数で遺伝子ごとにグループ化してこの関数にinputする)
-        fuzzy_tolerance: int, これ以下の塩基数のstart/endのずれをfuzzyとして規定する (デフォルトは5)
     Returns:
         exon_type: str
     """
     start, end = target_exon
 
     exact_match = 0
-    start_match_only = 0
-    end_match_only = 0
+    start_match_only = False
+    end_match_only = False
     overlap_without_startend_match = 0
     
 
@@ -73,11 +72,11 @@ def classify_exon_type(
             exact_match += 1
         else:
             for ex in tx:
-                if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
-                    start_match_only += 1
-                elif ex[1] == end and ex[0] != start: 
-                    end_match_only += 1
-                elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
+               if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
+                    start_match_only = True
+               elif ex[1] == end and ex[0] != start: 
+                    end_match_only = True
+               elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
                     overlap_without_startend_match += 1
 
     total = len(all_transcripts)
@@ -86,9 +85,9 @@ def classify_exon_type(
         return "constitutive" #そもそもsplicing variantがない場合は全てconstitutiveとなる
     elif exact_match > 1 and exact_match != total:
         return "cassette"
-    elif start_match_only > 0 and end_match_only == 0:
+    elif start_match_only == True and end_match_only == False:
         return "a3ss"
-    elif end_match_only > 0 and start_match_only == 0:
+    elif end_match_only == True and start_match_only == False:
         return "a5ss"
     elif overlap_without_startend_match > 0:
         return "overlap"
