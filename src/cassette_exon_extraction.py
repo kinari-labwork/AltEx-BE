@@ -73,18 +73,18 @@ def classify_exon_type(
            continue
         for ex in tx:
             if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
-                start_match_only = True
+                start_match_only = True #start だけ他のエキソンと一致し、 end は一致しない
             elif ex[1] == end and ex[0] != start: 
-                end_match_only = True
+                end_match_only = True #endだけ他のエキソンと一致し、startは一致しない場合
             elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
-                overlap_without_startend_match = True
+                overlap_without_startend_match = True #start, endどちらも他のエキソンと一致しないが、他のエキソンと1塩基以上の重複が生じている
 
     total = len(all_transcripts)
 
     if exact_match == total: 
         return "constitutive" #そもそもsplicing variantがない場合は全てconstitutiveとなる
-    elif exact_match > 1 and exact_match != total and not start_match_only and not end_match_only and not overlap_without_startend_match:
-        return "cassette"
+    elif exact_match > 1 and exact_match != total and not start_match_only and not end_match_only and not overlap_without_startend_match: 
+        return "cassette" #2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
     elif start_match_only and not end_match_only:
         return "a5ss"
     elif end_match_only and not start_match_only:
@@ -92,10 +92,10 @@ def classify_exon_type(
     elif overlap_without_startend_match:
         return "overlap"
     elif exact_match == 1 and exact_match != total:
-        return "unique"
+        return "unique" #他のトランスクリプトには全く見られないエキソン
     else:
         return "other"
-    
+
 def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat = refflat.copy()
     result = []
@@ -124,3 +124,24 @@ def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
 
     return pd.concat(result, ignore_index=True)
 
+def flip_a3ss_a5ss_in_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+    """
+    purpose:
+        strandが-の遺伝子では、遺伝子の方向性が逆転するため、転写物のa3ssとa5ssが入れ替わるが、
+        classify_exons_per_gene()では方向性を考慮していない。したがってstrandが-のものだけ入れ替える
+    Parameter:
+        classified_refflat: exontype列とstrand列を持つpd.DataFrame
+    Return
+        pd.DataFrame
+    """
+
+    flip_dict = {"a3ss": "a5ss", "a5ss": "a3ss"}
+    classified_refflat = classified_refflat.copy()
+    mask = classified_refflat["strand"] == "-"
+    
+    # apply: リスト内の a3ss/a5ss を flip_dict で置換
+    classified_refflat.loc[mask, "exontype"] = classified_refflat.loc[mask, "exontype"].apply(
+        lambda types: [flip_dict.get(t, t) for t in types]
+    )
+
+    return classified_refflat
