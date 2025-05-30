@@ -86,9 +86,9 @@ def classify_exon_type(
     elif exact_match > 1 and exact_match != total and not start_match_only and not end_match_only and not overlap_without_startend_match:
         return "cassette"
     elif start_match_only and not end_match_only:
-        return "a3ss"
-    elif end_match_only and not start_match_only:
         return "a5ss"
+    elif end_match_only and not start_match_only:
+        return "a3ss"
     elif overlap_without_startend_match:
         return "overlap"
     elif exact_match == 1 and exact_match != total:
