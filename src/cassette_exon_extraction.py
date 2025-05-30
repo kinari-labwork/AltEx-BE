@@ -64,32 +64,32 @@ def classify_exon_type(
     exact_match = 0
     start_match_only = False
     end_match_only = False
-    overlap_without_startend_match = 0
+    overlap_without_startend_match = False
     
 
     for tx in all_transcripts:
         if target_exon in tx:
-            exact_match += 1
-        else:
-            for ex in tx:
-               if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
-                    start_match_only = True
-               elif ex[1] == end and ex[0] != start: 
-                    end_match_only = True
-               elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
-                    overlap_without_startend_match += 1
+           exact_match += 1
+           continue
+        for ex in tx:
+            if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
+                start_match_only = True
+            elif ex[1] == end and ex[0] != start: 
+                end_match_only = True
+            elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
+                overlap_without_startend_match = True
 
     total = len(all_transcripts)
 
     if exact_match == total: 
         return "constitutive" #そもそもsplicing variantがない場合は全てconstitutiveとなる
-    elif exact_match > 1 and exact_match != total:
+    elif exact_match > 1 and exact_match != total and not start_match_only and not end_match_only and not overlap_without_startend_match:
         return "cassette"
-    elif start_match_only == True and end_match_only == False:
+    elif start_match_only and not end_match_only:
         return "a3ss"
-    elif end_match_only == True and start_match_only == False:
+    elif end_match_only and not start_match_only:
         return "a5ss"
-    elif overlap_without_startend_match > 0:
+    elif overlap_without_startend_match:
         return "overlap"
     elif exact_match == 1 and exact_match != total:
         return "unique"
