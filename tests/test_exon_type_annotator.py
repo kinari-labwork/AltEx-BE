@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cassette_exon_extraction import modify_refFlat
+from src.exon_type_annotator import modify_refFlat
 
 def test_modify_refFlat():
         input_data = pd.DataFrame({
@@ -41,7 +41,7 @@ def test_modify_refFlat():
         output_data = output_data[expected_output.columns]
         pd.testing.assert_frame_equal(output_data, expected_output)
 
-from cassette_exon_extraction import classify_exon_type
+from exon_type_annotator import classify_exon_type
 
 class TestClassifyExonType:
      def setup_method(self):
@@ -85,7 +85,7 @@ class TestClassifyExonType:
         assert  label == "overlap"
 
 
-from cassette_exon_extraction import classify_exons_per_gene
+from exon_type_annotator import classify_exons_per_gene
 
 def test_classify_exons_per_gene():
         input_data = pd.DataFrame({
@@ -122,7 +122,7 @@ def test_classify_exons_per_gene():
         pd.testing.assert_frame_equal(output_data, expected_output)
 
 
-from cassette_exon_extraction import flip_a3ss_a5ss_in_minus_strand
+from exon_type_annotator import flip_a3ss_a5ss_in_minus_strand
 
 def test_flip_a3ss_a5ss_in_minus_strand():
          input_data = pd.DataFrame({
