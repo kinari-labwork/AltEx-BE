@@ -1,0 +1,10 @@
+# ignore raw data files
+data/
+# ignore vscode settings
+.vscode/
+
+# ignore pychache
+**/__pycache__/**
+
+# ignore pytest_cache
+.pytest_cache/
