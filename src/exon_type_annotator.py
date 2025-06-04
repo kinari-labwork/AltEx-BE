@@ -1,24 +1,5 @@
 import pandas as pd
 
-refflat = pd.read_csv(
-    "data/refFlat.txt",
-    sep="\t",
-    header=None,
-    names=[
-        "geneName",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds"])
-
-
-
 def modify_refFlat(refFlat: pd.DataFrame) -> pd.DataFrame: 
     """
     Purpose:
