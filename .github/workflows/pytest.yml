@@ -22,8 +22,7 @@ jobs:
           pip install pandas
 
       - name: Execute tests
-        env:
-          PYTHONPATH: src
         run: |
+          export PYTHONPATH=src
           pytest tests/ -p no:warnings -vv
 
