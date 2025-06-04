@@ -1,0 +1,29 @@
+name: Pytest for Ubuntu
+
+on: [push]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+    
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install pandas
+
+      - name: Execute tests
+        env:
+          PYTHONPATH: src
+        run: |
+          pytest tests/ -p no:warnings -vv
+
