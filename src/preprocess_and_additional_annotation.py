@@ -62,8 +62,6 @@ def max_min_exon_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
     minimum_exon_counts.columns = ["geneName", "min_exon_count"]
     data = data.merge(maximum_exon_counts, on="geneName", how="left")
     data = data.merge(minimum_exon_counts, on="geneName", how="left")
-    data["max_exon_count"] = data["max_exon_count"].astype("Int64")
-    data["min_exon_count"] = data["min_exon_count"].astype("Int64")
     return data
 
 def variant_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
@@ -79,5 +77,4 @@ def variant_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
     variant_counts = data.groupby("geneName")["name"].nunique().reset_index()
     variant_counts.columns = ["geneName", "variant_count"]
     data = data.merge(variant_counts, on="geneName", how="left")
-    data["variant_count"] = data["variant_count"].astype("Int64")
     return data
