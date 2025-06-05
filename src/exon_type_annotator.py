@@ -1,4 +1,6 @@
+from __future__ import annotations #python 3.8以下の型ヒントの頭文字は大文字でないといけない
 import pandas as pd
+
 
 def modify_refFlat(refFlat: pd.DataFrame) -> pd.DataFrame: 
     """
@@ -65,7 +67,7 @@ def classify_exon_type(
     if exact_match == total: 
         return "constitutive" #そもそもsplicing variantがない場合は全てconstitutiveとなる
     elif exact_match > 1 and exact_match != total and not start_match_only and not end_match_only and not overlap_without_startend_match: 
-        return "cassette" #2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
+        return "skipped" #2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
     elif start_match_only and not end_match_only:
         return "a5ss"
     elif end_match_only and not start_match_only:

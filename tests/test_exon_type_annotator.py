@@ -61,7 +61,7 @@ class TestClassifyExonType:
      def test_cassette_exact(self):
         # (150, 200) は transcript1にだけ存在、他では flanking されている
         label = classify_exon_type((150, 200), self.transcripts)
-        assert label == "cassette"
+        assert label == "skipped"
 
      def test_alt_3ss(self):
         # (155, 200) が存在し、startがずれているため a3ss を拾いたい
@@ -110,9 +110,9 @@ def test_classify_exons_per_gene():
                 [(100,200), (250, 350)],                             # gene2のtranscript2 (250,350のa5ssが生じている)
                 ],   
             "exontype": [
-                ["constitutive", "cassette", "constitutive"],
+                ["constitutive", "skipped", "constitutive"],
                 ["constitutive","constitutive"],
-                ["constitutive", "unique", "cassette", "constitutive"],
+                ["constitutive", "unique", "skipped", "constitutive"],
                 ["constitutive", "a5ss"],
                 ["constitutive", "a5ss"],
                 ],
@@ -128,7 +128,7 @@ def test_flip_a3ss_a5ss_in_minus_strand():
          input_data = pd.DataFrame({
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "cassette", "a5ss"],
+                ["constitutive", "skipped", "a5ss"],
                 ["constitutive", "overlap", "a3ss"],
                 ["constitutive", "unique", "a5ss"],
                 ["constitutive", "cassette", "a3ss"],
@@ -137,7 +137,7 @@ def test_flip_a3ss_a5ss_in_minus_strand():
          expected_output = pd.DataFrame({
               "strand": ["+", "+", "-", "-"],
               "exontype": [
-                ["constitutive", "cassette", "a5ss"],  # plus strandは変化なし
+                ["constitutive", "skipped", "a5ss"],  # plus strandは変化なし
                 ["constitutive", "overlap", "a3ss"],
                 ["constitutive", "unique", "a3ss"],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
                 ["constitutive", "cassette", "a5ss"],

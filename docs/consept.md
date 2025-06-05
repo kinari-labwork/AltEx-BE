@@ -1,7 +1,7 @@
 ## 最終目標
-- カセットエキソンを抽出し、target AidなどのBEでエキソンスキップが可能かどうか出力する
-- 遺伝子名を打つとトランスクリプトが出力される
-- そのトランスクリプトを消せるsgRNAを出力する
+- Skipped exon (SE) を抽出し、target AidなどのBEでエキソンスキップが可能かどうか出力する
+- 遺伝子名を入力するとトランスクリプトが出力される
+- 
 
 ## 考察
 スプライスバリアントがある遺伝子はそもそも何パーセント？
@@ -11,16 +11,16 @@ A3SSとA5SSが起こる場合は、コーディングシーケンス中にスプ
 
 
 ## 小タスクに分解する
-- [ ] refflatのデータ構造を把握する  
+- [x] refflatのデータ構造を把握する  
 geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonCount exonStarts exonEnds  
 
-- [ ] 重複列がないことを確認する  
+- [x] 重複列がないことを確認する  
 
-- [ ] エキソンのスタートエンドを　[[start1,end1],[start2,end2],....]　構造に変換する    
+- [x] エキソンのスタートエンドを　[[start1,end1],[start2,end2],....]　構造に変換する    
   
-  modify_refflat()  
+  ￥￥￥modify_refflat()  
 
-- [ ] エキソンの種類を判定する関数の作成    
+- [x] エキソンの種類を判定する関数の作成    
   入力: 調べたいexonのstart,endペア,ある遺伝子のすべてのトランスクリプトが持つエキソンのstart end のペア(target_exon, all_transcripts, fuzzy_tolerance=5)    
 
 　判定の基準: ある(start:end) ペアに対して、  
@@ -28,15 +28,15 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
   - startはすべてのtranscriptに存在し、endもすべてのtranscriptに存在する → "constitutive"  
   - 他のtranscriptの（start: end）の組に対して、startは一致しているが、endだけ異なる場合がある  → "a5ss" (次のエキソンから見た時の5'側のスプライスサイト変化)  
   - 他のtranscriptの（start: end）の組に対して、endは一致しているが、startは一致しない → "a3ss" (前のエキソンから見た時の3'側のスプライスサイト変化)
-  - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。しかし、start:endの組が2つ以上のtranscriptに存在する→ "cassette"  
+  - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。しかし、start:endの組が2つ以上のtranscriptに存在する→ "skipped exon"  
   - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。そして、start:endの組が1つのtranscriptにしか存在しない→ "unique"  
   - start:endが他のtranscriptと一致しないが、他のエキソンと1塩基以上のオーバーラップが生じているもの→ "overlap" 
 
-  出力: [constitutive, cassette, unique....]
+  出力: [constitutive, skipped_exon, unique....]
   
   classify_exon_type()
 
-- [ ] 遺伝子ごとにrefflatをgroup化して、それぞれのエキソンに対してclassify_exon_type()を実行し、"exon_type"列に結果を格納する
+- [x] 遺伝子ごとにrefflatをgroup化して、それぞれのエキソンに対してclassify_exon_type()を実行し、"exon_type"列に結果を格納する
 
 --- データ解析 ---  
 
