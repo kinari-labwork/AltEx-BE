@@ -3,7 +3,8 @@ from src.preprocess_and_additional_annotation import (
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
-    max_min_exon_count_annotator
+    max_min_exon_count_annotator,
+    variant_count_annotator
 )
 
 def test_drop_abnormal_mapped_transcripts():
@@ -37,10 +38,10 @@ def test_cording_information_annotator():
 def test_flame_information_annotator():
     # exonの長さに基づいて、in-flame(mod3=0)かout-flame(mod3=1.2)かを判定する
     input_data = pd.DataFrame({
-        "exonlength": [[120, 200], [150, 250, 300]]
+        "exonlengths": [[120, 200], [150, 250, 300]]
     })
     expected_output = pd.DataFrame({
-        "exonlength": [[120, 200], [150, 250, 300]],
+        "exonlengths": [[120, 200], [150, 250, 300]],
         "flame": [
             ["in-flame", "out-flame"],
             ["in-flame", "out-flame", "in-flame"]
@@ -62,5 +63,20 @@ def test_max_min_exon_count_annotator():
         "min_exon_count": [2, 2, 1, 1, 2]
     })
     output_data = max_min_exon_count_annotator(input_data)
+    pd.testing.assert_frame_equal(output_data, expected_output)
+
+def test_variant_count_annotator():
+    # 各遺伝子のバリアント数を追加する
+    input_data = pd.DataFrame({
+        "geneName": ["gene1", "gene1", "gene2", "gene2", "gene3"],
+        "name": ["1variant1", "1variant2", "2variant1", "2variant2", "3variant1"]
+    })
+    expected_output = pd.DataFrame({
+        "geneName": ["gene1", "gene1", "gene2", "gene2", "gene3"],
+        "name": ["1variant1", "1variant2", "2variant1", "2variant2", "3variant1"],
+        "variant_count": [2,2,2,2,1],
+    })
+    output_data = variant_count_annotator(input_data)
+
     pd.testing.assert_frame_equal(output_data, expected_output)
 
