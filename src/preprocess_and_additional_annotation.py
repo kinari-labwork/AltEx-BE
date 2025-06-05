@@ -44,7 +44,7 @@ def flame_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
         return ["in-flame" if l % 3 == 0 else "out-flame" for l in lengths]
 
     data = data.copy()
-    data["flame"] = data["exonlength"].apply(calc_flame)
+    data["flame"] = data["exonlengths"].apply(calc_flame)
     return data
 
 def max_min_exon_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
