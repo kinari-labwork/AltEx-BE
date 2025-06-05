@@ -20,6 +20,10 @@ refflat = pd.read_csv(
         "exonStarts",
         "exonEnds"])
 
+#transcript nameが重複している列を削除
+refflat = refflat.drop_duplicates(subset=["name"],keep=False)
+print(refflat.shape)
+
 # "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
 refflat_modify = modify_refFlat(refflat)
 refflat_modify.to_csv("data/refFlat_modify.csv", index=False)
