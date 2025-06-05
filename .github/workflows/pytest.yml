@@ -22,7 +22,6 @@ jobs:
         with:
           miniconda-version: "latest"
           python-version: ${{ matrix.python-version }}
-          activate-environment: test-env
           channels: bioconda, conda-forge, defaults
       
       - name: Setup conda environment on ubuntu-latest🐧
@@ -31,6 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          conda activate test-AltExAid
           python -m pip install --upgrade pip pytest numpy pandas 
 
       - name: Run pytest
