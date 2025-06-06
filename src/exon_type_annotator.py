@@ -72,6 +72,8 @@ def classify_exon_type(
         return "a5ss"
     elif end_match_only and not start_match_only:
         return "a3ss"
+    elif start_match_only and end_match_only:
+        return "split"
     elif overlap_without_startend_match:
         return "overlap"
     elif exact_match == 1 and exact_match != total:
