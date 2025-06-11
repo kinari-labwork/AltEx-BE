@@ -8,7 +8,6 @@ from preprocess_and_additional_annotation import (
     max_min_exon_count_annotator,
     variant_count_annotator
 )
-import ast
 
 # pklで読み込むと、evalを使わずにリストを読み込むことができる
 data = pd.read_pickle("data/exon_classification.pkl")
