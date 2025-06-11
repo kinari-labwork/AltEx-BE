@@ -11,7 +11,7 @@ def test_drop_abnormal_mapped_transcripts():
     # _GL や_MUの異常な染色体にマッピングされたトランスクリプトを削除
     input_data = pd.DataFrame({
     "geneName": ["gene1", "gene1", "gene2","gene2", "gene3","gene3", "gene4", "gene5"],
-    "chrom": ["chr1", "chr1", "chr2", "chr2","chr3","chr3", "chrX_GL", "chr1_MU"],
+    "chrom": ["chr1", "chr1", "chr2", "chr2","chr3","chr3", "chrX_random", "chr1_alt"],
     })
     output_data = drop_abnormal_mapped_transcripts(input_data)
     expected_output = pd.DataFrame({
