@@ -8,3 +8,6 @@ data/
 
 # ignore pytest_cache
 .pytest_cache/
+
+# ignore jupyter notebook
+.ipynb
