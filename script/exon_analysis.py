@@ -1,35 +1,15 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[24]:
-
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-import ast
-
-
-# In[25]:
-
 
 pd.set_option('display.width', 200) 
-
-
-# In[ ]:
-
 
 data = pd.read_csv('../data/exon_classification_with_additional_info.csv')
 print(data.head())
 print(data.shape)
-data["exonlengths"] = data["exonlengths"].apply(ast.literal_eval) #csvを読み込むと数値のリストが文字列のリストとして読み込まれるので、数値のリストに変換
-
 
 # - 全ての遺伝子について、バリアント数の分布を可視化
-
-# In[55]:
-
 
 plt.figure(figsize=(8, 5))
 variant_counts_per_gene = data.groupby("geneName")["variant_count"].first().values
@@ -45,10 +25,6 @@ plt.show()
 
 
 # - 遺伝子当たりの最大or最小エキソン数のヒストグラムを描画する
-
-# In[52]:
-
-
 maxcount = data.groupby("geneName")["max_exon_count"].first().values
 mincount = data.groupby("geneName")["min_exon_count"].first().values
 ange_exon_counts = maxcount - mincount
@@ -87,19 +63,11 @@ plt.show()
 
 
 # - エキソン数がtop5の遺伝子の中身を確認する
-
-# In[33]:
-
-
 top_5_exon_counts = data.nlargest(5, "max_exon_count")
 print(top_5_exon_counts)
 
 
 # - 最大エキソン数 vs バリアント数の散布図を作成するためのdfを作成
-
-# In[34]:
-
-
 plt.figure(figsize=(8, 6))
 sns.scatterplot(
     data=data,
@@ -119,9 +87,6 @@ plt.show()
 
 
 # - skipped exon, unique exon, a3ss, a5ss, overlapを持つ遺伝子の数を計算
-
-# In[45]:
-
 
 total_genes = data["geneName"].nunique()
 print(f"全遺伝子数: {total_genes}")
@@ -178,9 +143,6 @@ print(f"outflame exonを持つ遺伝子の割合: {len(genes_have_outflame_exon)
 
 # - 全遺伝子ではなく、skipped exonが生じうる可能性のある条件を満たすエキソンだけを分母としてみる
 
-# In[36]:
-
-
 # 最大エキソンが1つの遺伝子をカウント
 genes_with_one_exon = data[data["max_exon_count"] == 1]["geneName"].unique()
 print(f"最大エキソンが1つの遺伝子数: {len(genes_with_one_exon)}")
@@ -216,16 +178,5 @@ print(f"最大エキソンが一つまたはtranscript variantsが一つの遺�
 
 
 # - 分割されたエキソンの例
-
-# In[56]:
-
-
 print(data[data["geneName"] == "1600012H06Rik"].head(10))
 #unique ではなく　splitと表示されていることを確認
-
-
-# In[44]:
-
-
-print(data.head(5))
-
