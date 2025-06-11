@@ -1,7 +1,7 @@
 ## 最終目標
 - Skipped exon (SE) を抽出し、target AidなどのBEでエキソンスキップが可能かどうか出力する
 - 遺伝子名を入力するとトランスクリプトが出力される
-- 
+- 各skippedまたはuniqueエキソンのSA・SDを編集すsgRNAを設計し、表示する
 
 ## 考察
 スプライスバリアントがある遺伝子はそもそも何パーセント？
@@ -10,18 +10,19 @@
 A3SSとA5SSが起こる場合は、コーディングシーケンス中にスプライスアクセプター・ドナーが存在することになるので、そこを編集すると残したいバリアントも同時に消えてしまうことになる  
 
 
-## 小タスクに分解する
+## データ構造の把握、前処理
 - [x] refflatのデータ構造を把握する  
 geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonCount exonStarts exonEnds  
 
-- [x] 重複列がないことを確認する  
+- [x] 重複列がないことを確認する。トランスクリプト名に重複が存在するため、重複列を完全に削除する  
 
-- [x] エキソンのスタートエンドを　[[start1,end1],[start2,end2],....]　構造に変換する    
+- [x] エキソンのスタートエンドを　[[start1,end1],[start2,end2],....]　構造に変換し、エキソン長を計算する   
   
-  ￥￥￥modify_refflat()  
+  ```modify_refflat()```  
 
+## スプライシングイベントに応じたエキソンへのアノテーション付加
 - [x] エキソンの種類を判定する関数の作成    
-  入力: 調べたいexonのstart,endペア,ある遺伝子のすべてのトランスクリプトが持つエキソンのstart end のペア(target_exon, all_transcripts, fuzzy_tolerance=5)    
+  入力: 調べたいexonのstart,endペア,ある遺伝子のすべてのトランスクリプトが持つエキソンのstart end のペア(target_exon, all_transcripts）
 
 　判定の基準: ある(start:end) ペアに対して、  
 
@@ -30,22 +31,28 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
   - 他のtranscriptの（start: end）の組に対して、endは一致しているが、startは一致しない → "a3ss" (前のエキソンから見た時の3'側のスプライスサイト変化)
   - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。しかし、start:endの組が2つ以上のtranscriptに存在する→ "skipped exon"  
   - startはすべてのtranscriptに存在せず、endもすべてのtransctiptに存在しない。そして、start:endの組が1つのtranscriptにしか存在しない→ "unique"  
-  - start:endが他のtranscriptと一致しないが、他のエキソンと1塩基以上のオーバーラップが生じているもの→ "overlap" 
+  - start:endが他のtranscriptと一致しないが、他のエキソンと1塩基以上のオーバーラップが生じているもの→ "overlap"
+  - あるエキソンに対してa3ssとa5ssに相当するエキソンが両方存在するもの→ "split"
 
   出力: [constitutive, skipped_exon, unique....]
   
-  classify_exon_type()
+  ```classify_exon_type()```
 
-- [x] 遺伝子ごとにrefflatをgroup化して、それぞれのエキソンに対してclassify_exon_type()を実行し、"exon_type"列に結果を格納する
+- [x] 遺伝子ごとにrefflatをgroup化して、それぞれのエキソンに対してclassify_exon_type()を実行し、"exon_type"列に結果を格納する  
 
---- データ解析 ---  
+## フレームやコーディングなどのアノテーションを付加する
+- [x] 常染色体または性染色体だけにマッピングされている遺伝子を残し、そうでないものは削除する
+- [ ] エキソン長が3の倍数かどうかのアノテーションを"flame" 列に追加する（out-flameまたはin-flame)
+- [ ] その遺伝子がタンパク質をコードするかの情報を"cording"列に追加する（cordingまたはnoncording）
 
-- [ ] 各エキソンカテゴリごとの分布などを解析する
-- [ ] それらの抽出したエキソン長は3の倍数であることを確認する（3の倍数でないとエキソンスキップによってフレームシフトが起こり得るため、カセットエキソンになり得ない？）  
-- [ ] uniqueのうち、エキソン長が3の倍数のエキソンのみをカセットエキソンとして扱う
+## データ解析
+- [ ] 全遺伝子に対してエキソンの各アノテーションがどれくらい存在するかを調べる
+- [ ] Skipped exonが存在し得ないトランスクリプト（スプライシングバリアントが存在しない、またはエキソン数が1の遺伝子）を除いて各アノテーションを持つ遺伝子数を調べる
+- [ ] skipped or uniqueが中間エキソンまたは端エキソンのどちらに存在するか調べて
 
+## ゲノム配列の取得
 - [ ] 取得したカセットエキソンの位置情報をマウスゲノムFASTAにマッピングする  
 - [ ] エキソン開始点・終着点の+-25bp程度を取得する  
 
---- 未定 ----  
+
 - [ ] TargetAID (SpCas9, NGG)の編集ウィンドウに入るsgRNAをデザインする
