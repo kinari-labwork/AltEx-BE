@@ -23,12 +23,10 @@ def test_drop_abnormal_mapped_transcripts():
 def test_cording_information_annotator():
     #遺伝子がcordingかnon-codingかを判定する
     input_data = pd.DataFrame({
-    "cdsStart": [0, 100, 200, 500],
-    "cdsEnd": [0, 300, 400, 500],
+        "name": ["NR_001", "NM_001", "NM_002", "NR_002"],
     })
     expected_output = pd.DataFrame({
-        "cdsStart": [0, 100, 200, 500],
-        "cdsEnd": [0, 300, 400, 500],
+        "name": ["NR_001", "NM_001", "NM_002", "NR_002"],
         "coding": ["non-coding", "coding", "coding", "non-coding"]
     })
     expected_output["coding"] = expected_output["coding"].astype("category")

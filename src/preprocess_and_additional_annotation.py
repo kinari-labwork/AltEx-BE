@@ -10,7 +10,7 @@ def drop_abnormal_mapped_transcripts(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, 異常な染色体マッピングを持つトランスクリプトを削除したrefFlatのデータフレーム
     """
-    mask = data["chrom"].str.startswith("chrX_GL") | data["chrom"].str.startswith("chr1_GL") | data["chrom"].str.startswith("chr1_MU") | data["chrom"].str.startswith("chr1_Un")
+    mask = data["chrom"].str.endswith("_random") | data["chrom"].str.startswith("chrUn") | data["chrom"].str.endswith("_alt")
     data_filtered = data[~mask]  # ~mask で「条件に一致しない」行を選ぶ
     return data_filtered.reset_index(drop=True)
 
@@ -23,10 +23,14 @@ def cording_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, コーディング情報を追加したrefFlatのデータフレーム
     """
+    # コーディングと非コーディングのトランスクリプトを識別するための正規表現パターン
+    # NMはコーディング、NRは非コーディング
+    import re
+    cording_pattern = re.compile(r"^NM")
+    non_coding_pattern = re.compile(r"^NR")
     data["coding"] ="" 
-    # cdsStartとcdsEndが同じ場合はnon-coding、異なる場合はcodingとする
-    data.loc[data["cdsStart"] == data["cdsEnd"], "coding"] = "non-coding" 
-    data.loc[data["cdsStart"] != data["cdsEnd"], "coding"] = "coding"
+    data.loc[data["name"].str.match(cording_pattern), "coding"] = "coding"
+    data.loc[data["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
     data["coding"] = data["coding"].astype("category")
     return data
 
