@@ -51,22 +51,6 @@ def flame_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
     data["flame"] = data["exonlengths"].apply(calc_flame)
     return data
 
-def max_min_exon_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    Purpose:
-        refFlatのデータフレームに、最大および最小のエクソン数を追加する。
-    Parameters:
-        data: pd.DataFrame, refFlatのデータフレーム
-    Returns:
-        pd.DataFrame, 最大および最小のエクソン数を追加したrefFlatのデータフレーム
-    """
-    maximum_exon_counts = data.groupby("geneName")["exonCount"].max().reset_index()
-    maximum_exon_counts.columns = ["geneName", "max_exon_count"]
-    minimum_exon_counts = data.groupby("geneName")["exonCount"].min().reset_index()
-    minimum_exon_counts.columns = ["geneName", "min_exon_count"]
-    data = data.merge(maximum_exon_counts, on="geneName", how="left")
-    data = data.merge(minimum_exon_counts, on="geneName", how="left")
-    return data
 
 def variant_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
     """

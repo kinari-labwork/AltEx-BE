@@ -3,7 +3,6 @@ from src.preprocess_and_additional_annotation import (
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
-    max_min_exon_count_annotator,
     variant_count_annotator
 )
 
@@ -48,20 +47,6 @@ def test_flame_information_annotator():
     output_data = flame_information_annotator(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
-def test_max_min_exon_count_annotator():
-    # 各遺伝子の最大および最小のエクソン数を追加する
-    input_data = pd.DataFrame({
-        "geneName": ["gene1", "gene1", "gene2", "gene2", "gene3"],
-        "exonCount": [2, 3, 1, 4, 2]
-    })
-    expected_output = pd.DataFrame({
-        "geneName": ["gene1", "gene1", "gene2", "gene2", "gene3"],
-        "exonCount": [2, 3, 1, 4, 2],
-        "max_exon_count": [3, 3, 4, 4, 2],
-        "min_exon_count": [2, 2, 1, 1, 2]
-    })
-    output_data = max_min_exon_count_annotator(input_data)
-    pd.testing.assert_frame_equal(output_data, expected_output)
 
 def test_variant_count_annotator():
     # 各遺伝子のバリアント数を追加する

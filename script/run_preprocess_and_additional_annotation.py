@@ -19,8 +19,6 @@ data = drop_abnormal_mapped_transcripts(data)
 data = cording_information_annotator(data)
 # フレーム情報を追加
 data = flame_information_annotator(data)
-# 最大および最小のエクソン数を追加
-data = max_min_exon_count_annotator(data)
 #遺伝子ごとのバリアントの数を追加
 data = variant_count_annotator(data)
 # データフレームを保存
