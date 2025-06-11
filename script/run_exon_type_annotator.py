@@ -1,4 +1,5 @@
 import pandas as pd
+import pickle
 P=print
 
 from exon_type_annotator import modify_refFlat, classify_exons_per_gene, flip_a3ss_a5ss_in_minus_strand
@@ -35,4 +36,4 @@ exon_classification = classify_exons_per_gene(refflat_modify)
 exon_classification = flip_a3ss_a5ss_in_minus_strand(exon_classification)
 
 #データフレームを保存する
-exon_classification.to_csv("data/exon_classification.csv", index=False)
+exon_classification.to_pickle("data/exon_classification.pkl", index=False)
