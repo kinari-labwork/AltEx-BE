@@ -8,7 +8,7 @@ version = "0.1"
 description = "automatically design sgRNA for exon skipping with target-AID"
 authors = ["Kinari Matsumoto<matsumoto.kinari.qm@alumni.tsukuba.ac.jp>"]
 readme = "README.md"
-homepage = "https://github.com/kinari-labwork/KOnezumiEx"
+homepage = "https://github.com/kinari-labwork/AltEx-AID"
 license = "MIT"
 packages =[{ include = "AltEx-AID", from ="src"}]
 classifiers = [
