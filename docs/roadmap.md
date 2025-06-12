@@ -5,12 +5,23 @@
 * [bioRxiv](https://www.biorxiv.org/)
 * [Experimental Animals](https://www.jstage.jst.go.jp/browse/expanim)
 
+### 査読者
+
++ 編集者：真下先生
++ 査読者候補
+  + 天野先生＠BRC (https://hdm.brc.riken.jp/ja/)
+  + 奥村さん@千葉がんセンター (https://square.umin.ac.jp/platform/2016/interview/okumura.html)
+  + 大野先生@名大 (https://researchmap.jp/read0069240)
+  + （依馬先生：緊急事態）
+  + （大石先生：緊急事態）
+
+
 ## 進行目安
 
 ### 6月
 
 * [ ] カセットエクソン抽出アルゴリズムの実装
-* [ ] GitHub Actionによる自動テストの実装
+* [x] GitHub Actionによる自動テストの実装
 * [ ] Figプランの立案
   * Exp Animalは最低２枚。余裕を持って３枚あると良いかも。
 
