@@ -10,8 +10,10 @@ def drop_abnormal_mapped_transcripts(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, 異常な染色体マッピングを持つトランスクリプトを削除したrefFlatのデータフレーム
     """
-    mask = data["chrom"].str.endswith("_random") | data["chrom"].str.startswith("chrUn") | data["chrom"].str.endswith("_alt")
-    data_filtered = data[~mask]  # ~mask で「条件に一致しない」行を選ぶ
+    import re
+    # 正規表現パターンを使用して、染色体名が数字またはX, Yで終わるものを抜き出す（_random,_alt,_fixは除外）
+    pattern = re.compile(r"^chr(\d+|X|Y)$")
+    data_filtered = data[data["chrom"].str.match(pattern)]
     return data_filtered.reset_index(drop=True)
 
 def cording_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
