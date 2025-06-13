@@ -44,42 +44,46 @@ def test_modify_refFlat():
 from exon_type_annotator import classify_exon_type
 
 class TestClassifyExonType:
-     def setup_method(self):
+    def setup_method(self):
         # 準備：複数のtranscriptを用意（3トランスクリプト）
         self.transcripts = [
             [(0, 100), (150, 200), (250, 300)],       # 全部あり（完全型）
             [(0, 100), (250, 300)],                   # (150,200) がスキップ
             [(0, 100), (150, 200), (250, 300)],        # (150,200) ではなく5'のalteration
-            [(0, 100), (110,120), (250, 300)]        # (110,120) のユニークなエキソンを持っている
+            [(0, 100), (110,120), (250, 300)],
+            [(0, 100), (250,300), (500, 600), (600, 700)]
         ]
 
-     def test_constitutive(self):
+    def test_constitutive(self):
         # (0, 100) はすべてのtranscriptに含まれる
         label = classify_exon_type((0, 100), self.transcripts)
         assert label == "constitutive"
 
-     def test_cassette_exact(self):
+    def test_cassette_exact(self):
         # (150, 200) は transcript1にだけ存在、他では flanking されている
         label = classify_exon_type((150, 200), self.transcripts)
-        assert label == "cassette"
+        assert label == "skipped"
 
-     def test_alt_3ss(self):
+    def test_alt_3ss(self):
         # (155, 200) が存在し、startがずれているため a3ss を拾いたい
         label = classify_exon_type((155, 200), self.transcripts)
         assert label == "a3ss"     
-      
-     def test_alt_5ss(self):
+    
+    def test_alt_5ss(self):
         # (150,200) に対して(150,205)はendがずれているため a5ss を拾いたい
         label = classify_exon_type((150, 205), self.transcripts)
         assert label == "a5ss"
-   
+    def test_split(self):
+        #(500,700)は(500,600)と(600,700)に分割されている
+        label = classify_exon_type((500, 700), self.transcripts)
+        assert label == "split"
 
-     def test_unique(self):
+    def test_unique(self):
         # (180, 220) はどこにも含まれない
         label = classify_exon_type((110, 120), self.transcripts)
         assert label == "unique"
 
-     def test_overlap(self):
+    def test_overlap(self):
         # (151, 199)は(150,200)とオーバーラップしている 
         label = classify_exon_type((151, 199), self.transcripts)
         assert  label == "overlap"
@@ -110,9 +114,9 @@ def test_classify_exons_per_gene():
                 [(100,200), (250, 350)],                             # gene2のtranscript2 (250,350のa5ssが生じている)
                 ],   
             "exontype": [
-                ["constitutive", "cassette", "constitutive"],
+                ["constitutive", "skipped", "constitutive"],
                 ["constitutive","constitutive"],
-                ["constitutive", "unique", "cassette", "constitutive"],
+                ["constitutive", "unique", "skipped", "constitutive"],
                 ["constitutive", "a5ss"],
                 ["constitutive", "a5ss"],
                 ],
@@ -128,7 +132,7 @@ def test_flip_a3ss_a5ss_in_minus_strand():
          input_data = pd.DataFrame({
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "cassette", "a5ss"],
+                ["constitutive", "skipped", "a5ss"],
                 ["constitutive", "overlap", "a3ss"],
                 ["constitutive", "unique", "a5ss"],
                 ["constitutive", "cassette", "a3ss"],
@@ -137,7 +141,7 @@ def test_flip_a3ss_a5ss_in_minus_strand():
          expected_output = pd.DataFrame({
               "strand": ["+", "+", "-", "-"],
               "exontype": [
-                ["constitutive", "cassette", "a5ss"],  # plus strandは変化なし
+                ["constitutive", "skipped", "a5ss"],  # plus strandは変化なし
                 ["constitutive", "overlap", "a3ss"],
                 ["constitutive", "unique", "a3ss"],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
                 ["constitutive", "cassette", "a5ss"],
