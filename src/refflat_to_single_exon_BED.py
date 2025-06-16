@@ -1,6 +1,8 @@
 from __future__ import annotations
 import pandas as pd
 
+# BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
+
 
 def refflat_to_single_exon_df(data: pd.DataFrame)-> pd.DataFrame:
     """
