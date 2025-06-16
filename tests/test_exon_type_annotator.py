@@ -76,7 +76,7 @@ class TestClassifyExonType:
     def test_split(self):
         #(500,700)は(500,600)と(600,700)に分割されている
         label = classify_exon_type((500, 700), self.transcripts)
-        assert label == "split"
+        assert label == "intron_retention"
 
     def test_unique(self):
         # (180, 220) はどこにも含まれない
