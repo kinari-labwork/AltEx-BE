@@ -1,7 +1,7 @@
 import pandas as pd
-from refflat_to_single_exon_BED import refflat_to_single_exon_df, format_to_single_exon_bed
+from extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon, format_to_single_exon_bed
 
-def test_refflat_to_single_exon():
+def test_extract_skipped_or_unique_exon():
     # テスト用のデータフレームを作成
     input_data = pd.DataFrame({
         "geneName": ["gene1", "gene1", "gene2", "gene2"],
@@ -13,7 +13,7 @@ def test_refflat_to_single_exon():
         "exontype": [["skipped","constitutive"], ["skipped","constitutive"], ["skipped","constitutive"], ["unique","constitutive"]]
     })
 
-    output_data = refflat_to_single_exon_df(input_data)
+    output_data = extract_skipped_or_unique_exon(input_data)
     expected_output = pd.DataFrame({
         "geneName": ["gene1","gene2", "gene2"],
         "name": ["1transcript1", "2transcript1", "2transcript2"],

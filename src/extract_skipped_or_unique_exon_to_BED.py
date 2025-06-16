@@ -4,7 +4,7 @@ import pandas as pd
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 
-def refflat_to_single_exon_df(data: pd.DataFrame)-> pd.DataFrame:
+def extract_skipped_or_unique_exon(data: pd.DataFrame)-> pd.DataFrame:
     """
     Purpose:
         スプライシングイベントに応じてアノテーションしたrefFlatのデータフレームから
