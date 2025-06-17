@@ -21,7 +21,8 @@ def test_extract_skipped_or_unique_exon():
         "strand": ["+", "-", "-"],
         "exonStarts": [100, 500, 700],
         "exonEnds": [150, 550, 750],
-        "exontype": ["skipped","skipped","unique"]
+        "exontype": ["skipped","skipped","unique"],
+        "index": [0, 1, 2]
     })
 
     pd.testing.assert_frame_equal(output_data, expected_output)
@@ -33,7 +34,8 @@ def test_format_to_single_exon_bed():
         "strand": ["+", "-", "-"],
         "exonStarts": [100, 500, 700],
         "exonEnds": [150, 550, 750],
-        "exontype": ["skipped","skipped","unique"]
+        "exontype": ["skipped","skipped","unique"],
+        "index" : [0, 1, 2]
     })
     output_data = format_to_single_exon_bed(input_data)
     expected_output = pd.DataFrame({
@@ -41,6 +43,7 @@ def test_format_to_single_exon_bed():
         "chromStart": [100, 500, 700],
         "chromEnd": [150, 550, 750],
         "name": ["gene1", "gene2", "gene2"],
-        "strand": ["+", "-", "-"]
+        "strand": ["+", "-", "-"],
+        "score": [0, 1, 2]
     })
     pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))

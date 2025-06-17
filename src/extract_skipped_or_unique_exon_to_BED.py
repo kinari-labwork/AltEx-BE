@@ -24,6 +24,9 @@ def extract_skipped_or_unique_exon(data: pd.DataFrame)-> pd.DataFrame:
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     # 重複を削除し一方だけ残す
     data = data.drop_duplicates(subset=["exonStarts", "exonEnds"])
+    # index列を追加
+    data = data.reset_index(drop=True)
+    data["index"] = data.index
     return data.reset_index(drop=True)
 
 def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
@@ -35,6 +38,8 @@ def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, BED形式に変換されたデータフレーム (BEDはタブ区切り形式なので実行時にタブ区切りに変更して保存する必要がある)
     """
-    bed_data = data[["chrom", "exonStarts", "exonEnds","geneName","strand"]].copy()
-    bed_data.columns = ["chrom", "chromStart", "chromEnd", "name", "strand"]
+    bed_data = data[["chrom", "exonStarts", "exonEnds","geneName","strand","index"]].copy()
+    
+
+    bed_data.columns = ["chrom", "chromStart", "chromEnd", "name", "strand","score"]
     return bed_data.reset_index(drop=True)
