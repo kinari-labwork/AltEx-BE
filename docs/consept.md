@@ -44,6 +44,7 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 - [x] 常染色体または性染色体だけにマッピングされている遺伝子を残し、そうでないものは削除する
 - [x] エキソン長が3の倍数かどうかのアノテーションを"flame" 列に追加する（out-flameまたはin-flame)
 - [x] その遺伝子がタンパク質をコードするかの情報を"cording"列に追加する（cordingまたはnoncording）
+- [x] エキソンの位置を"exon_position"列に追加する(first, internal, last) →　ある時はfirst, ある時はinternal のような場合は存在するのか？
 
 ## データ解析
 - [x] 全遺伝子に対してエキソンの各アノテーションがどれくらい存在するかを調べる
@@ -53,7 +54,7 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 ## 塩基配列取得のための前処理
 - [x] Skipped or Uniqueにアノテーションされたエキソンを少なくとも一つ持つトランスクリプトだけをフィルターする
 - [x] 1エキソンー1行になるようにrefflatを展開する
-- [ ] Skipped or Uniqueのエキソンだけを抽出する（各エキソンに一意であるindexを追加する）（重複を削除する）
+- [x] Skipped or Uniqueのエキソンだけを抽出する（各エキソンに一意であるindexを追加する）（重複を削除する）
 - [ ] それらのExonStart, ExonEndから+-25bp(トータルで51bp)の範囲を抜き出し、保存する (indexをBEDファイルのscoreに格納し、保持する) 
 - [ ] dfをBED形式に変換し、保存する
 
