@@ -1,8 +1,7 @@
 import pandas as pd
-from extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon, format_to_single_exon_bed
+from extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
 
 def test_extract_skipped_or_unique_exon():
-    # テスト用のデータフレームを作成
     input_data = pd.DataFrame({
         "geneName": ["gene1", "gene1", "gene2", "gene2","gene3"],
         "name": ["1transcript1", "1transcript2", "2transcript1", "2transcript2","3transcript1"],
@@ -30,14 +29,57 @@ def test_extract_skipped_or_unique_exon():
     print(expected_output)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
+def test_extract_splice_acceptor_regions():
+    input_data = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "chrom": ["chr1", "chr2"],
+        "strand": ["+", "-"],
+        "exonStarts": [100, 500],
+        "exonEnds": [150, 550],
+        "index": [0, 1]
+    })
+    window = 25
+    output_data = extract_splice_acceptor_regions(input_data, window)
+    expected_output = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "chrom": ["chr1", "chr2"],
+        "strand": ["+", "-"],
+        "chromStart": [75, 525],
+        "chromEnd": [125, 575],
+        "index": [0, 1]
+    })
+    pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))
+
+def test_extract_splice_donor_regions():
+    input_data = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "chrom": ["chr1", "chr2"],
+        "strand": ["+", "-"],
+        "exonStarts": [100, 500],
+        "exonEnds": [150, 550],
+        "index": [0, 1]
+    })
+    window = 25
+    output_data = extract_splice_donor_regions(input_data, window)
+    expected_output = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "chrom": ["chr1", "chr2"],
+        "strand": ["+", "-"],
+        "chromStart": [125, 475],
+        "chromEnd": [175, 525],
+        "index": [0, 1]
+    })
+    pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))
+
 def test_format_to_single_exon_bed():
     input_data = pd.DataFrame({
         "geneName": ["gene1","gene2", "gene2"],
         "chrom": ["chr1", "chr2", "chr2"],
         "strand": ["+", "-", "-"],
-        "exonStarts": [100, 500, 700],
-        "exonEnds": [150, 550, 750],
+        "chromStart": [100, 500, 700],
+        "chromEnd": [150, 550, 750],
         "exontype": ["skipped","skipped","unique"],
+        "exon_position": ["first", "last", "first"],
         "index" : [0, 1, 2]
     })
     output_data = format_to_single_exon_bed(input_data)
