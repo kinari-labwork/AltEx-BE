@@ -16,9 +16,9 @@ def extract_skipped_or_unique_exon(data: pd.DataFrame)-> pd.DataFrame:
     """
     # explodeで増加する行数を抑えるために、先に少なくともskipped exonまたはunique exonを1つ以上持つトランスクリプトを抽出
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
-    data = data[["geneName","name", "chrom", "strand", "exonStarts", "exonEnds", "exontype"]].copy() 
+    data = data[["geneName","name", "chrom", "strand", "exonStarts", "exonEnds", "exontype","exon_position"]].copy() 
     # 編集のために、リストになっている列を展開する
-    data = data.explode(["exonStarts",'exonEnds', "exontype"])
+    data = data.explode(["exonStarts",'exonEnds', "exontype", "exon_position"])
     data[["exonStarts","exonEnds"]] = data[["exonStarts","exonEnds"]].astype(int) # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
@@ -28,6 +28,16 @@ def extract_skipped_or_unique_exon(data: pd.DataFrame)-> pd.DataFrame:
     data = data.reset_index(drop=True)
     data["index"] = data.index
     return data.reset_index(drop=True)
+
+def extract_splice_site_regions(data:pd.DataFrame, window:int)-> pd.DataFrame:
+    """
+    Purpose : 
+        抜き出したskipped or unique exonStart/Endから windowで指定した幅の座位を示すDataFrameを作成する
+        strandが+の時はStartがSplice Acceptor, Endが Splice Donorになるが、-の時はその逆になる
+    """
+    sa_data = data
+
+
 
 def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     """

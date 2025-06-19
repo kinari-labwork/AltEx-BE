@@ -4,27 +4,30 @@ from extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon
 def test_extract_skipped_or_unique_exon():
     # テスト用のデータフレームを作成
     input_data = pd.DataFrame({
-        "geneName": ["gene1", "gene1", "gene2", "gene2"],
-        "name": ["1transcript1", "1transcript2", "2transcript1", "2transcript2"],
-        "chrom": ["chr1", "chr1", "chr2", "chr2"],
-        "strand": ["+", "+", "-", "-"],
-        "exonStarts": [[100, 200], [100, 400], [500, 600], [700, 800]],
-        "exonEnds": [[150, 250], [150, 450], [550, 650], [750, 850]],
-        "exontype": [["skipped","constitutive"], ["skipped","constitutive"], ["skipped","constitutive"], ["unique","constitutive"]]
+        "geneName": ["gene1", "gene1", "gene2", "gene2","gene3"],
+        "name": ["1transcript1", "1transcript2", "2transcript1", "2transcript2","3transcript1"],
+        "chrom": ["chr1", "chr1", "chr2", "chr2","chr3"],
+        "strand": ["+", "+", "-", "-","+"],
+        "exonStarts": [[100, 200, 300], [100, 400], [500, 600], [700,850],[900]],
+        "exonEnds": [[150, 250, 350], [150, 450], [550, 650], [750, 850],[1000]],
+        "exontype": [["skipped","constitutive","skipped"], ["skipped","constitutive"], ["skipped","constitutive"], ["unique","constitutive"],["constitutive"]],
+        "exon_position":[["first","internal","last"],["first","last"],["first","last"],["first","last"],["single"]]
     })
 
     output_data = extract_skipped_or_unique_exon(input_data)
     expected_output = pd.DataFrame({
-        "geneName": ["gene1","gene2", "gene2"],
-        "name": ["1transcript1", "2transcript1", "2transcript2"],
-        "chrom": ["chr1", "chr2", "chr2"],
-        "strand": ["+", "-", "-"],
-        "exonStarts": [100, 500, 700],
-        "exonEnds": [150, 550, 750],
-        "exontype": ["skipped","skipped","unique"],
-        "index": [0, 1, 2]
+        "geneName": ["gene1","gene1","gene2", "gene2"],
+        "name": ["1transcript1", "1transcript1","2transcript1", "2transcript2"],
+        "chrom": ["chr1", "chr1", "chr2", "chr2"],
+        "strand": ["+","+", "-", "-"],
+        "exonStarts": [100, 300, 500, 700],
+        "exonEnds": [150, 350, 550, 750],
+        "exontype": ["skipped","skipped", "skipped","unique"],
+        "exon_position": ["first","last","first", "first"],
+        "index": [0, 1, 2, 3]
     })
-
+    print(output_data)
+    print(expected_output)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 def test_format_to_single_exon_bed():
