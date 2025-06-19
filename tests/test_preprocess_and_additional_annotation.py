@@ -3,7 +3,8 @@ from src.preprocess_and_additional_annotation import (
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
-    variant_count_annotator
+    variant_count_annotator,
+    add_exon_position_flags
 )
 
 def test_drop_abnormal_mapped_transcripts():
@@ -60,6 +61,17 @@ def test_variant_count_annotator():
         "variant_count": [2,2,2,2,1],
     })
     output_data = variant_count_annotator(input_data)
-
     pd.testing.assert_frame_equal(output_data, expected_output)
 
+def test_add_exon_position_flags():
+    input_data = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "exonStarts": [[100,200,300],[200]]
+    })
+    expected_output = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "exonStarts": [[100,200,300],[200]],
+        "exon_position": [["first","internal","last"],['single']]
+    })
+    output_data = add_exon_position_flags(input_data)
+    pd.testing.assert_frame_equal(output_data,expected_output)

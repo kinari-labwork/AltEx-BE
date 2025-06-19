@@ -68,3 +68,24 @@ def variant_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
     variant_counts.columns = ["geneName", "variant_count"]
     data = data.merge(variant_counts, on="geneName", how="left")
     return data
+
+def add_exon_position_flags(data: pd.DataFrame)-> pd.DataFrame:
+    """
+    Purpose:
+        exon_position列を作成し、各行の転写産物に対してエキソンの位置を付与する
+        各エキソンに'first','internal','last'のカテゴリを付加する
+        エキソンが一つの場合は'single'を付加する
+        のちにSA/SDを編集するsgRNAを作成するとき、1番目のエキソンのSA、最後のエキソンのSDを編集する意味がないから、事前にflagをつけておく
+    Parameters:
+        data: pd.DataFrame, refflatのデータフレーム
+    """
+    # 位置に応じて値を付与する関数の作成
+    def get_category_list(x):
+        n = len(x)
+        if n ==1:
+            return ['single']
+        else:
+            return ['first'] + ['internal'] * (n - 2) + ['last']
+    data=data.copy()
+    data["exon_position"] = data["exonStarts"].apply(get_category_list)
+    return data
