@@ -25,4 +25,4 @@ python = "^3.10"
 pandas = "^2.2.3"
 
 [tool.poetry.scripts]
-AltEx-Aid = "AltEx-Aid.main:execute"
+altex-aid = "AltEx-Aid.main:execute"
