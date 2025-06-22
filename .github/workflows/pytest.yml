@@ -9,7 +9,7 @@ jobs:
       max-parallel: 4
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
 
     defaults:
