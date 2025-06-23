@@ -88,7 +88,7 @@ def test_format_to_single_exon_bed():
         "chromStart": [100, 500, 700],
         "chromEnd": [150, 550, 750],
         "name": ["gene1", "gene2", "gene2"],
-        "strand": ["+", "-", "-"],
-        "score": [0, 1, 2]
+        "score": [0, 1, 2],
+        "strand": ["+", "-", "-"]
     })
     pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))

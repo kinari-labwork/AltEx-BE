@@ -61,8 +61,9 @@ def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, BED形式に変換されたデータフレーム (BEDはタブ区切り形式なので実行時にタブ区切りに変更して保存する必要がある)
     """
-    bed_data = data[["chrom", "chromStart", "chromEnd","geneName","strand","index"]].copy()
-    
-
-    bed_data.columns = ["chrom", "chromStart", "chromEnd", "name", "strand","score"]
+    bed_data = data[["chrom", "chromStart", "chromEnd","geneName","index","strand"]].copy()
+    bed_data["name"] = bed_data["geneName"]  # geneNameをnameとして使用
+    bed_data["score"] = bed_data["index"]  # indexをscoreとして使用
+    # BED形式を満たすように列を並べ替える
+    bed_data = bed_data[["chrom", "chromStart", "chromEnd", "name", "score", "strand"]]
     return bed_data.reset_index(drop=True)
