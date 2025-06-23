@@ -16,5 +16,5 @@ splice_donor_single_exon_bed = format_to_single_exon_bed(splice_donor_single_exo
 
 # BED形式で保存するためにタブ区切りで保存
 single_exon_df.to_pickle("data/skipped_or_unique_exon_df.pkl")
-splice_acceptor_single_exon_bed.to_csv("data/splice_acceptor_single_exon.bed",sep="\t", index= False, header=True)
-splice_donor_single_exon_bed.to_csv("data/splice_donor_single_exon.bed",sep="\t", index= False, header=True)
+splice_acceptor_single_exon_bed.to_pickle("data/splice_acceptor_single_exon.bed",sep="\t", index= False, header=False)
+splice_donor_single_exon_bed.to_pickle("data/splice_donor_single_exon.bed",sep="\t", index= False, header=False)
