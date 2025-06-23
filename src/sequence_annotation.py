@@ -13,7 +13,8 @@ def annotate_sequence_to_bed(bed: pybedtools.BedTool, fasta_path:str,) -> pd.Dat
     """
     bed = bed.copy()
     bed_for_sequence = pybedtools.BedTool(bed)
-    # FASTAファイルから配列を取得
+    # FASTAファイルから配列を取得　s = true　で配列のstrandを考慮し、-の時は相補鎖を出力する
+    # もちろん、相補鎖も5'-3'の方向に出力される (今後間違えないように注意する)
     fasta_sequences = bed_for_sequence.sequence(fi=fasta_path, s=True, name=True)
     # 得られた配列ををlistにする(最終的に並べ替えていないBEDに付加するので、keyは必要ない)
     sequences = []
@@ -40,19 +41,16 @@ def annotate_sequence_to_bed(bed: pybedtools.BedTool, fasta_path:str,) -> pd.Dat
 
 def join_sequence_to_single_exon_df(
     single_exon_df: pd.DataFrame,
-    bed_for_df
-) -> pd.DataFrame:
+    bed_for_df: pd.DataFrame,
+    acceptor_or_donor: str = 'acceptor' or 'donor', 
+    ) -> pd.DataFrame:
     """
     Purpose:
-        単一エクソンのデータフレームに塩基配列を追加する
+        single_exon_dfにBED形式のデータから、score列取得した塩基配列を追加する
     Parameters:
-        single_exon_df: pd.DataFrame, 単一エクソンのデータフレーム
-        fasta_path: str, FASTAファイルのパス
+        single_exon_df: pd.DataFrame, アノテーションを与えるデータフレーム
+        bed_for_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム(形式はBED)
+        acceptor_or_donor: str, 'acceptor' or 'donor', どちらの配列を追加するか指定する 
     Returns:
-        single_exon_df_with_sequence: pd.DataFrame, 塩基配列が追加された単一エクソンのデータフレーム
+        single_exon_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム
     """
-    # BED形式に変換
-    bed = pybedtools.BedTool.from_dataframe(single_exon_df)
-    # 塩基配列を取得して追加
-    annotated_bed = annotate_sequence_to_bed(bed, fasta_path)
-    return annotated_bed
