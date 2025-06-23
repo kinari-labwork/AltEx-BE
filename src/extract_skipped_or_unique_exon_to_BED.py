@@ -24,9 +24,9 @@ def extract_skipped_or_unique_exon(data: pd.DataFrame)-> pd.DataFrame:
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     # 重複を削除し一方だけ残す
     data = data.drop_duplicates(subset=["exonStarts", "exonEnds"])
-    # index列を追加
+    # index=(score)列を追加 (BEDとして扱いやすくするため、名称をscoreにしておく)
     data = data.reset_index(drop=True)
-    data["index"] = data.index
+    data["score"] = data.index
     return data.reset_index(drop=True)
 
 def extract_splice_acceptor_regions(data:pd.DataFrame, window:int)-> pd.DataFrame:
@@ -38,7 +38,7 @@ def extract_splice_acceptor_regions(data:pd.DataFrame, window:int)-> pd.DataFram
     sa_data = data.copy()
     sa_data["chromStart"] = sa_data.apply(lambda row: row["exonStarts"] - window if row["strand"] == "+" else row["exonEnds"] - window, axis=1)
     sa_data["chromEnd"] = sa_data.apply(lambda row: row["exonStarts"] + window if row["strand"] == "+" else row["exonEnds"] + window, axis=1)
-    return sa_data[["geneName","chrom", "strand","chromStart","chromEnd","index"]].reset_index(drop=True)
+    return sa_data[["geneName","chrom", "strand","chromStart","chromEnd","score"]].reset_index(drop=True)
 
 def extract_splice_donor_regions(data: pd.DataFrame, window: int) -> pd.DataFrame:
     """
@@ -49,7 +49,7 @@ def extract_splice_donor_regions(data: pd.DataFrame, window: int) -> pd.DataFram
     sd_data = data.copy()
     sd_data["chromStart"] = sd_data.apply(lambda row: row["exonEnds"] - window if row["strand"] == "+" else row["exonStarts"] - window, axis=1)
     sd_data["chromEnd"] = sd_data.apply(lambda row: row["exonEnds"] + window if row["strand"] == "+" else row["exonStarts"] + window, axis=1)
-    return sd_data[["geneName","chrom", "strand","chromStart","chromEnd","index"]].reset_index(drop=True)
+    return sd_data[["geneName","chrom", "strand","chromStart","chromEnd","score"]].reset_index(drop=True)
 
 
 def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
@@ -61,9 +61,8 @@ def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, BED形式に変換されたデータフレーム (BEDはタブ区切り形式なので実行時にタブ区切りに変更して保存する必要がある)
     """
-    bed_data = data[["chrom", "chromStart", "chromEnd","geneName","index","strand"]].copy()
+    bed_data = data[["chrom", "chromStart", "chromEnd","geneName","score","strand"]].copy()
     bed_data["name"] = bed_data["geneName"]  # geneNameをnameとして使用
-    bed_data["score"] = bed_data["index"]  # indexをscoreとして使用
     # BED形式を満たすように列を並べ替える
     bed_data = bed_data[["chrom", "chromStart", "chromEnd", "name", "score", "strand"]]
     return bed_data.reset_index(drop=True)

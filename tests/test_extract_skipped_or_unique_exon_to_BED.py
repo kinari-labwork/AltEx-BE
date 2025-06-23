@@ -23,7 +23,7 @@ def test_extract_skipped_or_unique_exon():
         "exonEnds": [150, 350, 550, 750],
         "exontype": ["skipped","skipped", "skipped","unique"],
         "exon_position": ["first","last","first", "first"],
-        "index": [0, 1, 2, 3]
+        "score": [0, 1, 2, 3]
     })
     print(output_data)
     print(expected_output)
@@ -36,7 +36,7 @@ def test_extract_splice_acceptor_regions():
         "strand": ["+", "-"],
         "exonStarts": [100, 500],
         "exonEnds": [150, 550],
-        "index": [0, 1]
+        "score": [0, 1]
     })
     window = 25
     output_data = extract_splice_acceptor_regions(input_data, window)
@@ -46,7 +46,7 @@ def test_extract_splice_acceptor_regions():
         "strand": ["+", "-"],
         "chromStart": [75, 525],
         "chromEnd": [125, 575],
-        "index": [0, 1]
+        "score": [0, 1]
     })
     pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))
 
@@ -57,7 +57,7 @@ def test_extract_splice_donor_regions():
         "strand": ["+", "-"],
         "exonStarts": [100, 500],
         "exonEnds": [150, 550],
-        "index": [0, 1]
+        "score": [0, 1]
     })
     window = 25
     output_data = extract_splice_donor_regions(input_data, window)
@@ -67,7 +67,7 @@ def test_extract_splice_donor_regions():
         "strand": ["+", "-"],
         "chromStart": [125, 475],
         "chromEnd": [175, 525],
-        "index": [0, 1]
+        "score": [0, 1]
     })
     pd.testing.assert_frame_equal(output_data.reset_index(drop=True), expected_output.reset_index(drop=True))
 
@@ -80,7 +80,7 @@ def test_format_to_single_exon_bed():
         "chromEnd": [150, 550, 750],
         "exontype": ["skipped","skipped","unique"],
         "exon_position": ["first", "last", "first"],
-        "index" : [0, 1, 2]
+        "score" : [0, 1, 2]
     })
     output_data = format_to_single_exon_bed(input_data)
     expected_output = pd.DataFrame({
