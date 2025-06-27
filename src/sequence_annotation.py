@@ -21,18 +21,18 @@ def annotate_sequence_to_bed(bed: pybedtools.BedTool, fasta_path:str,) -> pd.Dat
     # ヘッダー行で始まっているときはそれまでに溜めたseqをlistに追加し、seqを初期化
     # それ以外の行は塩基配列としてseqに追加
     with open(fasta_sequences.seqfn) as f:
-        seq = ''
+        seq = []
         for line in f:
             if line.startswith('>'): #
                 if seq: 
-                    sequences.append(seq)
-                    seq = ''
+                    sequences.append(''.join(seq))
+                    seq = []
             else: 
-                seq += line.strip() # 改行を除去してseqに追加
+                seq.append(line.strip())# 改行を除去してseqに追加
         # 以上の処理は次のheaderに到達したときにlistにseqを追加する
         # 最後の配列は次のheaderが存在しないため、for ループを抜けた後にリストに追加する必要がある
         if seq:
-            sequences.append(seq)
+            sequences.append(''.join(seq))
     # .sequence()メソッドを使用すると、元の構造が保持されないため、bedの別のコピーをdfにする
     bed_for_df = bed.to_dataframe(names=['chrom', 'chromStart', 'chromEnd', 'name', 'score', 'strand'])
     # 取得した配列をデータフレームに追加
