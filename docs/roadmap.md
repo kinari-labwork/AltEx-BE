@@ -69,7 +69,7 @@
 
 
 > [!IMPORTANT]
-> XX月XX日： 水野先生に論文のレビューをもらう
+> 11月10日： 水野先生に論文のレビューをもらう
 
 > [!IMPORTANT]
 > 11月30日： bioRxiv投稿→ Experimental Animals投稿
