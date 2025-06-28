@@ -11,6 +11,3 @@ data/
 
 # ignore jupyter notebook
 *.ipynb
-
-# ignore data for testing
-.tests/data/
