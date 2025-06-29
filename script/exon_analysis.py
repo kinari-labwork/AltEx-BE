@@ -91,50 +91,50 @@ total_genes = data["geneName"].nunique()
 print(f"全遺伝子数: {total_genes}")
 
 # （skipped exon）を持つ遺伝子の数をカウント
-genes_have_skipped_exon = data[data["exontype"].apply(lambda x: "skipped" in x)]["geneName"].unique()
+genes_have_skipped_exon = data[data["exontype"].str.contains("skipped")]["geneName"].unique()
 print(f"skipped exonを持つ遺伝子数: {len(genes_have_skipped_exon)}")
 print(f"skipped exonを持たない遺伝子数: {total_genes - len(genes_have_skipped_exon)}")
 print(f"skipped exonを持つ遺伝子の割合: {len(genes_have_skipped_exon) / total_genes:.2%}")
 
 #  （unique exon）を持つ遺伝子の数をカウント
-genes_have_unique_exon = data[data["exontype"].apply(lambda x: "unique" in x)]["geneName"].unique()
+genes_have_unique_exon = data[data["exontype"].str.contains("unique")]["geneName"].unique()
 print(f"unique exonを持つ遺伝子数: {len(genes_have_unique_exon)}")
 print(f"unique exonを持たない遺伝子数: {total_genes - len(genes_have_unique_exon)}")
 print(f"unique exonを持つ遺伝子の割合: {len(genes_have_unique_exon) / total_genes:.2%}")
 
 # 少なくとも（skipped exon）と（unique exon）のいずれかを持つ遺伝子の数をカウント
 genes_have_skipped_or_unique_exon = data[
-    data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]["geneName"].unique()
+    data["exontype"].str.contains("skipped|unique")]["geneName"].unique()
 print(f"skipped exonまたはunique exonを持つ遺伝子数: {len(genes_have_skipped_or_unique_exon)}")
 print(f"skipped exonとunique exonの両方を持たない遺伝子数: {total_genes - len(genes_have_skipped_or_unique_exon)}")
 print(f"skipped exonまたはunique exonを持つ遺伝子の割合: {len(genes_have_skipped_or_unique_exon) / total_genes:.2%}")
 
 # (a3ss alternative 3' splice site)を持つ遺伝子の数をカウント
-genes_have_a3ss = data[data["exontype"].apply(lambda x: "a3ss" in x)]["geneName"].unique()
+genes_have_a3ss = data[data["exontype"].str.contains("a3ss")]["geneName"].unique()
 print(f"a3ss alternative 3' splice siteを持つ遺伝子数: {len(genes_have_a3ss)}")
 print(f"a3ss alternative 3' splice siteを持たない遺伝子数: {total_genes - len(genes_have_a3ss)}")
 print(f"a3ss alternative 3' splice siteを持つ遺伝子の割合: {len(genes_have_a3ss) / total_genes:.2%}")
 
 # (a5ss alternative 5' splice site)を持つ遺伝子の数をカウント
-genes_have_a5ss = data[data["exontype"].apply(lambda x: "a5ss" in x)]["geneName"].unique()
+genes_have_a5ss = data[data["exontype"].str.contains("a5ss")]["geneName"].unique()
 print(f"a5ss alternative 5' splice siteを持つ遺伝子数: {len(genes_have_a5ss)}")
 print(f"a5ss alternative 5' splice siteを持たない遺伝子数: {total_genes - len(genes_have_a5ss)}")
 print(f"a5ss alternative 5' splice siteを持つ遺伝子の割合: {len(genes_have_a5ss) / total_genes:.2%}")
 
 # overlapping exonを持つ遺伝子の数をカウント
-genes_have_overlapping_exon = data[data["exontype"].apply(lambda x: "overlap" in x)]["geneName"].unique()
+genes_have_overlapping_exon = data[data["exontype"].apply(lambda x: "overlapping" in x)]["geneName"].unique()
 print(f"overlapping exonを持つ遺伝子数: {len(genes_have_overlapping_exon)}")
 print(f"overlapping exonを持たない遺伝子数: {total_genes - len(genes_have_overlapping_exon)}")
 print(f"overlapping exonを持つ遺伝子の割合: {len(genes_have_overlapping_exon) / total_genes:.2%}")
 
 # split exonを持つ遺伝子の数をカウント
-genes_have_intron_retention = data[data["exontype"].apply(lambda x: "intron_retention" in x)]["geneName"].unique()
+genes_have_intron_retention = data[data["exontype"].str.contains("intron_retention")]["geneName"].unique()
 print(f"intron_retentionを持つ遺伝子数: {len(genes_have_intron_retention)}")
 print(f"intron_retentionを持たない遺伝子数: {total_genes - len(genes_have_intron_retention)}")
 print(f"intron_retentionを持つ遺伝子の割合: {len(genes_have_intron_retention) / total_genes:.2%}")
 
 # outflame exonを持つ遺伝子の数をカウント
-genes_have_outflame_exon = data[data["flame"].apply(lambda x: "out-flame" in x)]["geneName"].unique()
+genes_have_outflame_exon = data[data["flame"].str.contains("out-flame")]["geneName"].unique()
 print(f"outflame exonを持つ遺伝子数: {len(genes_have_outflame_exon)}")
 print(f"outflame exonを持たない遺伝子数: {total_genes - len(genes_have_outflame_exon)}")
 print(f"outflame exonを持つ遺伝子の割合: {len(genes_have_outflame_exon) / total_genes:.2%}")
@@ -157,7 +157,8 @@ print(f"最大エキソンが一つまたはtranscript variantsが一つの遺�
 
 # skipped exon or unique exonをもつ遺伝子をカウント
 genes_have_skipped_or_unique_exon = data[
-    data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]["geneName"].unique()
+    data["exontype"].str.contains("skipped|unique")]["geneName"].unique()
+print(f"skipped exonまたはunique exonを持つ遺伝子数: {len(genes_have_skipped_or_unique_exon)}")
 
 # total genes数をカウント
 total_genes = data["geneName"].nunique()
@@ -170,7 +171,7 @@ print(f"skipped exonを持つ遺伝子の割合 (skipped exonまたはunique exo
 # 最大exonが一つまたはtranscript variantsが一つの遺伝子でskipped exonまたはunique exonを持つ遺伝子
 genes_with_one_exon_or_one_variant_and_skipped_or_unique = data[
     (data["geneName"].isin(genes_with_one_exon_or_one_variant)) &
-    (data["exontype"].apply(lambda x: "skipped" in x or "unique" in x))
+    (data["exontype"].str.contains("skipped|unique"))
 ]
 print(f"最大エキソンが一つまたはtranscript variantsが一つの遺伝子でskipped exonまたはunique exonを持つ遺伝子数: "
     f"{len(genes_with_one_exon_or_one_variant_and_skipped_or_unique)}")
