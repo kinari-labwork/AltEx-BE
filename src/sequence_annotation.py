@@ -9,7 +9,7 @@ def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path:str) -> pd.DataFrame:
     Purpose:
         BED形式のデータに指定される遺伝子座位を参照して、塩基配列をFASTAから取得し、bedに塩基配列を追加する
     Parameters:
-        bed: pd.DataFrame, BED形式のデータ(内部でpybetdtoolsを使用するため、pybedtools.BedToolに変換可能な形式である必要がある,
+        bed: pd.DataFrame, BED形式のデータ(内部でpybedtoolsを使用するため、pybedtools.BedToolに変換可能な形式である必要がある,
             例: ['chrom', 'chromStart', 'chromEnd', 'name', 'score', 'strand']の列を持つ)
         fasta_path: str, FASTAファイルのパス
     Returns:
