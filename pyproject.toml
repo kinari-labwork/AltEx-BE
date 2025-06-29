@@ -25,4 +25,4 @@ python = "^3.12"
 pandas = "^2.2.3"
 
 [tool.poetry.scripts]
-altex_aid = "altex_aid.main:main"
+altex-aid = "altex_aid.main:main"
