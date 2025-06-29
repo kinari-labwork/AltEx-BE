@@ -17,11 +17,4 @@ def main():
 
     print("実行中...（特に何もしません）")
 
-def execute():
-    """
-    コマンドラインから実行されるエントリーポイント。
-    """
-    main()
-
 if __name__ == '__main__':
-    execute()
