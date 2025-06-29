@@ -45,31 +45,24 @@ def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path:str) -> pd.DataFrame:
 
 def join_sequence_to_single_exon_df(
     single_exon_df: pd.DataFrame,
-    acceptor_or_donor_bed_with_sequences: pd.DataFrame,
-    acceptor_or_donor: Literal['acceptor', 'donor']
+    acceptor_bed_with_sequences: pd.DataFrame,
+    donor_bed_with_sequences: pd.DataFrame,
     ) -> pd.DataFrame:
     """
     Purpose:
         single_exon_dfにbed_for_dfで取得した塩基配列をleft joinして、acceptor_sequenceまたはdonor_sequence列を追加する
     Parameters:
         single_exon_df: pd.DataFrame, アノテーションを与えるデータフレーム
-        bed_for_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム(形式はBED)
-        acceptor_or_donor: str, 'acceptor' or 'donor', どちらの配列を追加するか指定する
+        acceptor_bed_with_sequences: pd.DataFrame, acceptorのBED形式のデータフレームに配列アノテーションが追加されたもの
+        donor_bed_with_sequences: pd.DataFrame, donorのBED形式のデータフ
     Returns:
         single_exon_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム
     """
-    # acceptor_or_donorに応じて、single_exon_dfに加える列名を決定
-    if acceptor_or_donor == 'acceptor':
-        column_name = 'acceptor_sequence'
-    elif acceptor_or_donor == 'donor':
-        column_name = 'donor_sequence'
-    else:
-        raise ValueError("acceptor_or_donor must be 'acceptor' or 'donor'")
-    # single_exon_dfのscore列をキーとして、bed_for_dfのsequence列を[column_name]列に追加
-    single_exon_df = single_exon_df.merge(
-        acceptor_or_donor_bed_with_sequences[['score','sequence']],
-        on = 'score',
-        how ='left',
-        ).rename(columns={'sequence': column_name})
+    for label, bed in [("acceptor", acceptor_bed_with_sequences), ("donor", donor_bed_with_sequences)]:
+        single_exon_df = single_exon_df.merge(
+            bed[['score', 'sequence']],
+            on='score',
+            how='left'
+        ).rename(columns={'sequence': f'{label}_sequence'})
     return single_exon_df
 

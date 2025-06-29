@@ -60,7 +60,11 @@ def test_join_sequence_to_single_exon_df():
         "score": [0, 1],
         "sequence": ["ATGC", "GTCTAAT"]
     })
-    
+    doner_bed_with_sequences = pd.DataFrame({
+        "score": [0, 1],
+        "sequence": ["TACG", "TAGATTA"]
+    })
+
     expected_output = single_exon_df.copy()
     expected_output = pd.DataFrame({
         "chrom": ["chr1", "chr2"],
@@ -69,62 +73,12 @@ def test_join_sequence_to_single_exon_df():
         "name": ["gene1", "gene2"],
         "score": [0, 1],
         "strand": ["+", "-"],
-        "acceptor_sequence": ["ATGC", "GTCTAAT"] })
+        "acceptor_sequence": ["ATGC", "GTCTAAT"],
+        "donor_sequence": ["TACG", "TAGATTA"] })
     
     output_data = join_sequence_to_single_exon_df(
         single_exon_df,
         acceptor_bed_with_sequences,
-        acceptor_or_donor='acceptor'
-    )
-    
-    pd.testing.assert_frame_equal(output_data, expected_output)
-
-    # --- donorの場合のテスト ---
-    donor_bed_with_sequences = pd.DataFrame({
-        "score": [0, 1],
-        "sequence": ["ATGC", "GTCTAAT"]
-    })
-    expected_output = single_exon_df.copy()
-    expected_output = pd.DataFrame({
-        "chrom": ["chr1", "chr2"],
-        "chromStart": [0, 5],
-        "chromEnd": [4, 12],
-        "name": ["gene1", "gene2"],
-        "score": [0, 1],
-        "strand": ["+", "-"],
-        "donor_sequence": ["ATGC", "GTCTAAT"] })
-    output_data = join_sequence_to_single_exon_df(
-        single_exon_df,
-        donor_bed_with_sequences,
-        acceptor_or_donor='donor'
+        doner_bed_with_sequences,
     )
     pd.testing.assert_frame_equal(output_data, expected_output)
-
-def test_join_sequence_to_single_exon_df_invalid():
-    """
-    acceptor_or_donorが無効な値の場合、ValueErrorが発生することを確認する。
-    """
-    single_exon_df = pd.DataFrame({
-        "chrom": ["chr1", "chr2"],
-        "chromStart": [0, 5],
-        "chromEnd": [4, 12],
-        "name": ["gene1", "gene2"],
-        "score": [0, 1],
-        "strand": ["+", "-"]
-    })
-    
-    acceptor_bed_with_sequences = pd.DataFrame({
-        "score": [0, 1],
-        "sequence": ["ATGC", "GTCTAAT"]
-    })
-    
-    try:
-        join_sequence_to_single_exon_df(
-            single_exon_df,
-            acceptor_bed_with_sequences,
-            acceptor_or_donor='invalid'
-        )
-    except ValueError as e:
-        assert str(e) == "acceptor_or_donor must be 'acceptor' or 'donor'"
-    else:
-        assert False, "ValueError was not raised"

@@ -20,15 +20,10 @@ splice_donor_bed_with_sequences = annotate_sequence_to_bed(
 )
 
 # 取得した塩基配列をtarget_exon_dfに結合
-target_exons_with_acceptor_sequence = join_sequence_to_single_exon_df(
-    single_exon_df=target_exons_df,
-    acceptor_or_donor_bed_with_sequences=splice_acceptor_bed_with_sequences,
-    acceptor_or_donor='acceptor'
-)
 target_exons_with_acceptor_and_donor_sequence = join_sequence_to_single_exon_df(
-    single_exon_df=target_exons_with_acceptor_sequence,
-    acceptor_or_donor_bed_with_sequences=splice_donor_bed_with_sequences,
-    acceptor_or_donor='donor'
+    single_exon_df=target_exons_df,
+    acceptor_bed_with_sequences=splice_acceptor_bed_with_sequences,
+    donor_bed_with_sequences=splice_donor_bed_with_sequences
 )
 # 結果を保存
 target_exons_with_acceptor_and_donor_sequence.to_pickle("data/target_exons_with_acceptor_and_donor_sequence.pkl")
