@@ -86,6 +86,5 @@ def add_exon_position_flags(data: pd.DataFrame)-> pd.DataFrame:
             return ['single']
         else:
             return ['first'] + ['internal'] * (n - 2) + ['last']
-    data=data.copy()
     data["exon_position"] = data["exonStarts"].apply(get_category_list)
     return data
