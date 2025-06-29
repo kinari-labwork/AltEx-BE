@@ -82,7 +82,6 @@ def classify_exon_type(
         return "other"
 
 def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
-    refflat = refflat.copy()
     result = []
 
     """
@@ -121,7 +120,6 @@ def flip_a3ss_a5ss_in_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataF
     """
 
     flip_dict = {"a3ss": "a5ss", "a5ss": "a3ss"}
-    classified_refflat = classified_refflat.copy()
     mask = classified_refflat["strand"] == "-"
     
     # apply: リスト内の a3ss/a5ss を flip_dict で置換
