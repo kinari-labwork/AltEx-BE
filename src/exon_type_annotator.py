@@ -52,8 +52,8 @@ def classify_exon_type(
 
     for tx in all_transcripts:
         if target_exon in tx:
-           exact_match += 1
-           continue
+            exact_match += 1
+            continue
         for ex in tx:
             if ex[0] == start and ex[1] != end: #ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
                 start_match_only = True #start だけ他のエキソンと一致し、 end は一致しない
