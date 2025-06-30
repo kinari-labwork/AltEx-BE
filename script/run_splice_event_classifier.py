@@ -2,38 +2,15 @@ import pandas as pd
 import pickle
 P=print
 
-from altex_aid.splice_event_classifier import modify_refFlat, classify_exons_per_gene, flip_a3ss_a5ss_in_minus_strand
+from altex_aid.splice_event_classifier import classify_exons_per_gene, flip_a3ss_a5ss_in_minus_strand
 
-refflat = pd.read_csv(
-    "data/refFlat.txt",
-    sep="\t",
-    header=None,
-    names=[
-        "geneName",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds"])
-
-#transcript nameが重複している列を削除
-refflat = refflat.drop_duplicates(subset=["name"],keep=False)
-
-# "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
-refflat_modify = modify_refFlat(refflat)
-refflat_modify.to_csv("data/refFlat_modify.csv", index=False)
-P(refflat_modify.head())
+refflat = pd.read_pickle("data/processed_refflat.pkl")
 
 # 各遺伝子ごとにエクソンの分類を行い、"exontype"列に追加する
-exon_classification = classify_exons_per_gene(refflat_modify)
+classified_exon_refflat = classify_exons_per_gene(refflat)
 
 # refflatは+ strandベースでexonのstart endが決まっているので、strand = - の遺伝子のa5ssとa3ssを入れ替える
-exon_classification = flip_a3ss_a5ss_in_minus_strand(exon_classification)
+classified_exon_refflat = flip_a3ss_a5ss_in_minus_strand(classified_exon_refflat)
 
 #データフレームを保存する
-exon_classification.to_pickle("data/exon_classification.pkl")
+classified_exon_refflat.to_pickle("data/classified_exon_refflat.pkl")

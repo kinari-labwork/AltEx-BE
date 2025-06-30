@@ -1,33 +1,6 @@
 from __future__ import annotations #python 3.8以下の型ヒントの頭文字は大文字でないといけない
 import pandas as pd
 
-
-def modify_refFlat(refFlat: pd.DataFrame) -> pd.DataFrame: 
-    """
-    Purpose:
-        exonStart exonEndが別々のカラムに格納されているので、(start, end)のタプルのリストに変換する。
-    Parameters:
-        refFlat: pd.DataFrame, refFlatのデータフレーム
-    """
-    # Convert the exonStarts and exonEnds columns to lists of integers
-    refFlat["exonStarts"] = refFlat["exonStarts"].apply(
-        lambda x: [int(i) for i in x.split(",") if i.strip() !='']) 
-    refFlat["exonEnds"] = refFlat["exonEnds"].apply(
-        lambda x: [int(i) for i in x.split(",") if i.strip() !=''])
-
-    # Calculate the lengths of each exon
-    # refflatのstartは0-baseでendは1-baseなので、毎回1を足す必要がない
-    refFlat["exonlengths"] = refFlat.apply(
-        lambda row: [end - start for start, end in zip(row["exonStarts"], row["exonEnds"])],
-        axis=1)
-
-    refFlat["exons"] = refFlat.apply(
-        lambda row: list(zip(row["exonStarts"], row["exonEnds"])),
-        axis=1
-    )
-
-    return refFlat
-
 def classify_exon_type(
         target_exon: tuple[int:int], 
         all_transcripts: list[list[tuple[int,int]]], 

@@ -1,7 +1,7 @@
 import pandas as pd
-import pickle
 #export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
 from altex_aid.refflat_preprocessor import (
+    modify_refFlat,
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
@@ -9,16 +9,39 @@ from altex_aid.refflat_preprocessor import (
     add_exon_position_flags
 )
 
-# pklで読み込むと、evalを使わずにリストを読み込むことができる
-data = pd.read_pickle("data/exon_classification.pkl")
+data = pd.read_csv(
+    "data/refFlat.txt",
+    sep="\t",
+    header=None,
+    names=[
+        "geneName",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds"])
+
+
+#transcript nameが重複している列を削除
+data = data.drop_duplicates(subset=["name"],keep=False)
+
+# "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
+data= modify_refFlat(data)
 
 # 異常な染色体にマッピングされたトランスクリプトを削除
 data = drop_abnormal_mapped_transcripts(data)
 
 # コーディング情報を追加
 data = cording_information_annotator(data)
+
 # フレーム情報を追加
 data = flame_information_annotator(data)
+
 #遺伝子ごとのバリアントの数を追加
 data = variant_count_annotator(data)
 
@@ -26,4 +49,4 @@ data = variant_count_annotator(data)
 data = add_exon_position_flags(data)
 
 # データフレームを保存
-data.to_pickle("data/exon_classification_with_additional_info.pkl")
+data.to_pickle("data/processed_refflat.pkl")
