@@ -60,7 +60,7 @@ def test_join_sequence_to_single_exon_df():
         "score": [0, 1],
         "sequence": ["ATGC", "GTCTAAT"]
     })
-    doner_bed_with_sequences = pd.DataFrame({
+    donor_bed_with_sequences = pd.DataFrame({
         "score": [0, 1],
         "sequence": ["TACG", "TAGATTA"]
     })
@@ -79,6 +79,6 @@ def test_join_sequence_to_single_exon_df():
     output_data = join_sequence_to_single_exon_df(
         single_exon_df,
         acceptor_bed_with_sequences,
-        doner_bed_with_sequences,
+        donor_bed_with_sequences,
     )
     pd.testing.assert_frame_equal(output_data, expected_output)
