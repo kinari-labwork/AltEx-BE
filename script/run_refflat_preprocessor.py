@@ -1,7 +1,8 @@
 import pandas as pd
 #export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
 from altex_aid.refflat_preprocessor import (
-    modify_refFlat,
+    parse_exon_coordinates,
+    calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
@@ -33,7 +34,10 @@ data = pd.read_csv(
 data = data.drop_duplicates(subset=["name"],keep=False)
 
 # "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
-data= modify_refFlat(data)
+data = parse_exon_coordinates(data)
+
+# 各エキソンの長さを計算して追加
+data = calculate_exon_lengths(data)
 
 # 異常な染色体にマッピングされたトランスクリプトを削除
 data = drop_abnormal_mapped_transcripts(data)

@@ -1,6 +1,7 @@
 import pandas as pd
 from altex_aid.refflat_preprocessor import (
-    modify_refFlat,
+    parse_exon_coordinates,
+    calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
@@ -8,7 +9,7 @@ from altex_aid.refflat_preprocessor import (
     add_exon_position_flags
 )
 
-def test_modify_refFlat():
+def test_parse_exon_coordinates():
         input_data = pd.DataFrame({
         "geneName": ["gene1", "gene1", "gene2"],
         "name": ["1-transcript1", "1-transcript2", "2-transcript1"],
@@ -36,16 +37,27 @@ def test_modify_refFlat():
             [(0, 90), (100, 200), (200, 300)],
             [(0, 150), (150, 250), (250, 350)],
             [(0, 50), (50, 150)]
-            ],
-        "exonlengths": [
-            [90, 100, 100],
-            [150, 100, 100],
-            [50, 100]
-        ]   
+            ]
     })
-        output_data = modify_refFlat(input_data)
+        output_data = parse_exon_coordinates(input_data)
         output_data = output_data[expected_output.columns]
         pd.testing.assert_frame_equal(output_data, expected_output)
+
+def test_calculate_exon_lengths():
+    # exonの長さを計算する
+    input_data = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "exonStarts": [[0, 100, 150], [50, 200]],
+        "exonEnds": [[100, 200, 300], [100, 300]],
+    })
+    expected_output = pd.DataFrame({
+        "geneName": ["gene1", "gene2"],
+        "exonStarts": [[0, 100, 150], [50, 200]],
+        "exonEnds": [[100, 200, 300], [100, 300]],
+        "exonlengths": [[100, 100, 150], [50, 100]]
+    })
+    output_data = calculate_exon_lengths(input_data)
+    pd.testing.assert_frame_equal(output_data, expected_output)
 
 def test_drop_abnormal_mapped_transcripts():
     # _GL や_MUの異常な染色体にマッピングされたトランスクリプトを削除
