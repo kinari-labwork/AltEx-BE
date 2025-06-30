@@ -11,7 +11,7 @@ from altex_aid.refflat_preprocessor import (
 
 annotation_genome = "mm39"  # ここは必要に応じて変更してください
 
-data = pd.read_csv(
+refflat = pd.read_csv(
     f"data/{annotation_genome}/refFlat.txt",
     sep="\t",
     header=None,
@@ -30,28 +30,28 @@ data = pd.read_csv(
 
 
 #transcript nameが重複している列を削除
-data = data.drop_duplicates(subset=["name"],keep=False)
+refflat = refflat.drop_duplicates(subset=["name"],keep=False)
 
 # "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
-data = parse_exon_coordinates(data)
+refflat = parse_exon_coordinates(refflat)
 
 # 各エキソンの長さを計算して追加
-data = calculate_exon_lengths(data)
+refflat = calculate_exon_lengths(refflat)
 
 # 異常な染色体にマッピングされたトランスクリプトを削除
-data = drop_abnormal_mapped_transcripts(data)
+refflat = drop_abnormal_mapped_transcripts(refflat)
 
 # コーディング情報を追加
-data = annotate_cording_information(data)
+refflat = annotate_cording_information(refflat)
 
 # フレーム情報を追加
-data = annotate_flame_information(data)
+refflat = annotate_flame_information(refflat)
 
 #遺伝子ごとのバリアントの数を追加
-data = annotate_flame_information(data)
+refflat = annotate_flame_information(refflat)
 
 # エキソンの位置を示す列を追加
-data = add_exon_position_flags(data)
+refflat = add_exon_position_flags(refflat)
 
 # データフレームを保存
-data.to_pickle("data/processed_refflat.pkl")
+refflat.to_pickle("data/processed_refflat.pkl")
