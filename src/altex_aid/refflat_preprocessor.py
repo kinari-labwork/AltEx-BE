@@ -50,7 +50,7 @@ def drop_abnormal_mapped_transcripts(data: pd.DataFrame) -> pd.DataFrame:
     data_filtered = data[data["chrom"].str.match(pattern)]
     return data_filtered.reset_index(drop=True)
 
-def cording_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_cording_information(data: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、コーディング情報を追加する。
@@ -70,7 +70,7 @@ def cording_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
     data["coding"] = data["coding"].astype("category")
     return data
 
-def flame_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_flame_information(data: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、フレーム情報を追加する。
@@ -88,7 +88,7 @@ def flame_information_annotator(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def variant_count_annotator(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_variant_count(data: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、バリアント数を追加する。

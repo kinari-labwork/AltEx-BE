@@ -4,9 +4,8 @@ from altex_aid.refflat_preprocessor import (
     parse_exon_coordinates,
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
-    cording_information_annotator,
-    flame_information_annotator,
-    variant_count_annotator,
+    annotate_cording_information,
+    annotate_flame_information,
     add_exon_position_flags
 )
 
@@ -43,13 +42,13 @@ data = calculate_exon_lengths(data)
 data = drop_abnormal_mapped_transcripts(data)
 
 # コーディング情報を追加
-data = cording_information_annotator(data)
+data = annotate_cording_information(data)
 
 # フレーム情報を追加
-data = flame_information_annotator(data)
+data = annotate_flame_information(data)
 
 #遺伝子ごとのバリアントの数を追加
-data = variant_count_annotator(data)
+data = annotate_flame_information(data)
 
 # エキソンの位置を示す列を追加
 data = add_exon_position_flags(data)
