@@ -1,6 +1,6 @@
 import pandas as pd
 
-from altex_aid.splice_event_classifier import classify_splicing_events_per_gene, flip_a3ss_a5ss_on_minus_strand
+from altex_aid.splicing_event_classifier import classify_splicing_events_per_gene, flip_a3ss_a5ss_on_minus_strand
 
 refflat = pd.read_pickle("data/processed_refflat.pkl")
 
