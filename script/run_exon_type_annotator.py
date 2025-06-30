@@ -2,7 +2,7 @@ import pandas as pd
 import pickle
 P=print
 
-from altex_aid.exon_type_annotator import modify_refFlat, classify_exons_per_gene, flip_a3ss_a5ss_in_minus_strand
+from altex_aid.splice_event_classifier import modify_refFlat, classify_exons_per_gene, flip_a3ss_a5ss_in_minus_strand
 
 refflat = pd.read_csv(
     "data/refFlat.txt",
