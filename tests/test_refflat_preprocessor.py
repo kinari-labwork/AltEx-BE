@@ -3,9 +3,9 @@ from altex_aid.refflat_preprocessor import (
     parse_exon_coordinates,
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
-    cording_information_annotator,
-    flame_information_annotator,
-    variant_count_annotator,
+    annotate_flame_information,
+    annotate_cording_information,
+    annotate_variant_count,
     add_exon_position_flags
 )
 
@@ -82,7 +82,7 @@ def test_cording_information_annotator():
         "coding": ["non-coding", "coding", "coding", "non-coding"]
     })
     expected_output["coding"] = expected_output["coding"].astype("category")
-    output_data = cording_information_annotator(input_data)
+    output_data = annotate_cording_information(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 def test_flame_information_annotator():
@@ -97,7 +97,7 @@ def test_flame_information_annotator():
             ["in-flame", "out-flame", "in-flame"]
         ]
     })
-    output_data = flame_information_annotator(input_data)
+    output_data = annotate_flame_information(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 
@@ -112,7 +112,7 @@ def test_variant_count_annotator():
         "name": ["1variant1", "1variant2", "2variant1", "2variant2", "3variant1"],
         "variant_count": [2,2,2,2,1],
     })
-    output_data = variant_count_annotator(input_data)
+    output_data = annotate_variant_count(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 def test_add_exon_position_flags():

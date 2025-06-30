@@ -1,6 +1,6 @@
 import pandas as pd
 
-from altex_aid.splice_event_classifier import classify_exon_type
+from altex_aid.splice_event_classifier import classify_splicing_event, classify_splicing_events_per_gene, flip_a3ss_a5ss_on_minus_strand
 
 class TestClassifyExonType:
     def setup_method(self):
@@ -15,40 +15,37 @@ class TestClassifyExonType:
 
     def test_constitutive(self):
         # (0, 100) はすべてのtranscriptに含まれる
-        label = classify_exon_type((0, 100), self.transcripts)
+        label = classify_splicing_event((0, 100), self.transcripts)
         assert label == "constitutive"
 
     def test_cassette_exact(self):
         # (150, 200) は transcript1にだけ存在、他では flanking されている
-        label = classify_exon_type((150, 200), self.transcripts)
+        label = classify_splicing_event((150, 200), self.transcripts)
         assert label == "skipped"
 
     def test_alt_3ss(self):
         # (155, 200) が存在し、startがずれているため a3ss を拾いたい
-        label = classify_exon_type((155, 200), self.transcripts)
+        label = classify_splicing_event((155, 200), self.transcripts)
         assert label == "a3ss"     
     
     def test_alt_5ss(self):
         # (150,200) に対して(150,205)はendがずれているため a5ss を拾いたい
-        label = classify_exon_type((150, 205), self.transcripts)
+        label = classify_splicing_event((150, 205), self.transcripts)
         assert label == "a5ss"
     def test_split(self):
         #(500,700)は(500,600)と(600,700)に分割されている
-        label = classify_exon_type((500, 700), self.transcripts)
+        label = classify_splicing_event((500, 700), self.transcripts)
         assert label == "intron_retention"
 
     def test_unique(self):
         # (180, 220) はどこにも含まれない
-        label = classify_exon_type((110, 120), self.transcripts)
+        label = classify_splicing_event((110, 120), self.transcripts)
         assert label == "unique"
 
     def test_overlap(self):
         # (151, 199)は(150,200)とオーバーラップしている 
-        label = classify_exon_type((151, 199), self.transcripts)
+        label = classify_splicing_event((151, 199), self.transcripts)
         assert  label == "overlap"
-
-
-from altex_aid.splice_event_classifier import classify_exons_per_gene
 
 def test_classify_exons_per_gene():
         input_data = pd.DataFrame({
@@ -80,15 +77,12 @@ def test_classify_exons_per_gene():
                 ["constitutive", "a5ss"],
                 ],
             })
-        output_data = classify_exons_per_gene(input_data)
+        output_data = classify_splicing_events_per_gene(input_data)
         output_data = output_data[expected_output.columns]
         pd.testing.assert_frame_equal(output_data, expected_output)
 
-
-from altex_aid.splice_event_classifier import flip_a3ss_a5ss_in_minus_strand
-
 def test_flip_a3ss_a5ss_in_minus_strand():
-         input_data = pd.DataFrame({
+        input_data = pd.DataFrame({
             "strand": ["+", "+", "-", "-"],
             "exontype": [
                 ["constitutive", "skipped", "a5ss"],
@@ -97,14 +91,14 @@ def test_flip_a3ss_a5ss_in_minus_strand():
                 ["constitutive", "cassette", "a3ss"],
                 ],
             }) 
-         expected_output = pd.DataFrame({
-              "strand": ["+", "+", "-", "-"],
-              "exontype": [
+        expected_output = pd.DataFrame({
+            "strand": ["+", "+", "-", "-"],
+            "exontype": [
                 ["constitutive", "skipped", "a5ss"],  # plus strandは変化なし
                 ["constitutive", "overlap", "a3ss"],
                 ["constitutive", "unique", "a3ss"],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
                 ["constitutive", "cassette", "a5ss"],
                 ],
             })
-         output_data = flip_a3ss_a5ss_in_minus_strand(input_data)
-         pd.testing.assert_frame_equal(output_data,expected_output)
+        output_data = flip_a3ss_a5ss_on_minus_strand(input_data)
+        pd.testing.assert_frame_equal(output_data,expected_output)
