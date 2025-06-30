@@ -55,10 +55,10 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 - [x] Skipped or Uniqueにアノテーションされたエキソンを少なくとも一つ持つトランスクリプトだけをフィルターする
 - [x] 1エキソンー1行になるようにrefflatを展開する
 - [x] Skipped or Uniqueのエキソンだけを抽出する（各エキソンに一意であるindexを追加する）（重複を削除する）
-- [ ] それらのExonStart, ExonEndから+-25bp(トータルで51bp)の範囲を抜き出し、保存する (indexをBEDファイルのscoreに格納し、保持する) 
-- [ ] dfをBED形式に変換し、保存する
+- [x] それらのExonStart, ExonEndから+-25bp(トータルで51bp)の範囲を抜き出し、保存する (indexをBEDファイルのscoreに格納し、保持する) 
+- [x] dfをBED形式に変換し、保存する
 
 ## ゲノム配列の取得
-- [ ] 取得したカセットエキソンの位置情報をマウスゲノムにマッピングし、塩基配列を取得する(pybedtoolを利用)
-- [ ] 塩基配列を付加したDFを作成する
+- [x] 取得したカセットエキソンの位置情報をマウスゲノムにマッピングし、塩基配列を取得する(pybedtoolを利用)
+- [x] 塩基配列を付加したDFを作成する
 - [ ] TargetAID (SpCas9, NGG)の編集ウィンドウに入るsgRNAをデザインする

@@ -13,4 +13,4 @@ data/
 *.ipynb
 
 # ignore temporary directories
-.temp/
+temp/
