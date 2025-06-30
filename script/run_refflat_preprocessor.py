@@ -9,8 +9,10 @@ from altex_aid.refflat_preprocessor import (
     add_exon_position_flags
 )
 
+annotation_genome = "mm39"  # ここは必要に応じて変更してください
+
 data = pd.read_csv(
-    "data/refFlat.txt",
+    f"data/{annotation_genome}/refFlat.txt",
     sep="\t",
     header=None,
     names=[
