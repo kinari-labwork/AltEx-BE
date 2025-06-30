@@ -7,7 +7,8 @@ from src.sequence_annotation import (
 target_exons_df = pd.read_pickle("data/skipped_or_unique_exon_df.pkl")
 splice_acceptor_bed = pd.read_csv("data/splice_acceptor_single_exon.bed", sep="\t", header=None)
 splice_donor_bed = pd.read_csv("data/splice_donor_single_exon.bed", sep="\t", header=None)
-fasta_path = "data/mm39.fa"
+annotation_genome = "mm39"
+fasta_path = f"data/{annotation_genome}/{annotation_genome}.fa"
 
 # 塩基配列を取得して、BED形式のデータに追加
 splice_acceptor_bed_with_sequences = annotate_sequence_to_bed(
