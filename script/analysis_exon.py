@@ -5,7 +5,9 @@ from matplotlib import pyplot as plt
 
 pd.set_option('display.width', 200) 
 
-data = pd.read_pickle('../data/exon_classification_with_additional_info.pkl')
+annotation_genome = "mm39"
+
+data = pd.read_pickle('./data/classified_exon_refflat.pkl')
 print(data.head())
 print(data.shape)
 

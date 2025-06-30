@@ -3,7 +3,7 @@ from plotnine import *
 
 pd.set_option('display.width', 200)
 
-data = pd.read_pickle("../data/target_exons_with_acceptor_and_donor_sequence.pkl")
+data = pd.read_pickle("./data/target_exons_with_acceptor_and_donor_sequence.pkl")
 
 print(data.head())
 
