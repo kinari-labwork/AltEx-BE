@@ -1,7 +1,7 @@
 import pandas as pd
 import pickle
 #export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
-from src.preprocess_and_additional_annotation import (
+from altex_aid.preprocess_and_additional_annotation import (
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,

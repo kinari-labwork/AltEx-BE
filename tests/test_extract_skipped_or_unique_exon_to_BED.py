@@ -1,5 +1,5 @@
 import pandas as pd
-from extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
+from altex_aid.extract_skipped_or_unique_exon_to_BED import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
 
 def test_extract_skipped_or_unique_exon():
     input_data = pd.DataFrame({
