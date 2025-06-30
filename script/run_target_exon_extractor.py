@@ -1,7 +1,7 @@
 import pandas as pd
 from altex_aid.target_exon_extractor import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
 
-data = pd.read_pickle("data/exon_classification_with_additional_info.pkl")
+data = pd.read_pickle("data/classified_exon_refflat.pkl")
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 single_exon_df = extract_skipped_or_unique_exon(data)
