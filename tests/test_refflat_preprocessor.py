@@ -1,5 +1,5 @@
 import pandas as pd
-from altex_aid.preprocess_and_additional_annotation import (
+from altex_aid.refflat_preprocessor import (
     drop_abnormal_mapped_transcripts,
     cording_information_annotator,
     flame_information_annotator,
