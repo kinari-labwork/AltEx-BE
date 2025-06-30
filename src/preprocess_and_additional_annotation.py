@@ -87,4 +87,17 @@ def add_exon_position_flags(data: pd.DataFrame)-> pd.DataFrame:
         else:
             return ['first'] + ['internal'] * (n - 2) + ['last']
     data["exon_position"] = data["exonStarts"].apply(get_category_list)
+
+    def flip_first_last_to_minus_strand(row):
+        """
+        Purpose:
+        マイナス鎖の転写産物に対して、firstとlastを入れ替える
+        なぜなら、マイナス鎖の転写産物では、最初のエキソンが最後のエキソンになり、最後のエキソンが最初のエキソンになるから
+        Parameters:
+            row: pd.Series, 各行のデータ
+        """
+        if row["strand"] == "-":
+            row["exon_position"] = row["exon_position"][::-1]
+        return row
+    data = data.apply(flip_first_last_to_minus_strand, axis=1)
     return data

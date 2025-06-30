@@ -65,13 +65,15 @@ def test_variant_count_annotator():
 
 def test_add_exon_position_flags():
     input_data = pd.DataFrame({
-        "geneName": ["gene1", "gene2"],
-        "exonStarts": [[100,200,300],[200]]
+        "geneName": ["gene1","gene2","gene3"],
+        "exonStarts": [[100,200,300],[400,500],[200]],
+        "strand": ["+", "-", "+"]
     })
     expected_output = pd.DataFrame({
-        "geneName": ["gene1", "gene2"],
-        "exonStarts": [[100,200,300],[200]],
-        "exon_position": [["first","internal","last"],['single']]
+        "geneName": ["gene1", "gene2", "gene3"],
+        "exonStarts": [[100,200,300],[400,500],[200]],
+        "strand": ["+", "-", "+"],
+        "exon_position": [["first","internal","last"],["last","first"],['single']]
     })
     output_data = add_exon_position_flags(input_data)
     pd.testing.assert_frame_equal(output_data,expected_output)
