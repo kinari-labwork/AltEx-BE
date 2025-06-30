@@ -1,7 +1,7 @@
 from __future__ import annotations #python 3.8以下の型ヒントの頭文字は大文字でないといけない
 import pandas as pd
 
-def classify_exon_type(
+def classify_splicing_event(
         target_exon: tuple[int:int], 
         all_transcripts: list[list[tuple[int,int]]], 
         ) -> str :
@@ -54,7 +54,7 @@ def classify_exon_type(
     else:
         return "other"
 
-def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
+def classify_splicing_events_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
     result = []
 
     """
@@ -68,7 +68,7 @@ def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
     def classify_row_exons(row, gene_group):
         all_transcripts = gene_group["exons"].tolist()
         return [
-            classify_exon_type(exon, all_transcripts)
+            classify_splicing_event(exon, all_transcripts)
             for exon in row["exons"]
         ]
 
@@ -81,11 +81,11 @@ def classify_exons_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
 
     return pd.concat(result, ignore_index=True)
 
-def flip_a3ss_a5ss_in_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+def flip_a3ss_a5ss_on_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataFrame:
     """
     purpose:
         strandが-の遺伝子では、遺伝子の方向性が逆転するため、転写物のa3ssとa5ssが入れ替わるが、
-        classify_exons_per_gene()では方向性を考慮していない。したがってstrandが-のものだけ入れ替える
+        classify_exons_per_gene()では方向性を考慮していない。したがってstrandが-のa3ssとa5ssを入れ替える
     Parameter:
         classified_refflat: exontype列とstrand列を持つpd.DataFrame
     Return
