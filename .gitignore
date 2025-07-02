@@ -11,3 +11,6 @@ data/
 
 # ignore jupyter notebook
 *.ipynb
+
+# ignore temporary directories
+temp/
