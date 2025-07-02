@@ -97,7 +97,6 @@ def annotate_flame_information(data: pd.DataFrame) -> pd.DataFrame:
     def calc_flame(lengths):
         return ["in-flame" if l % 3 == 0 else "out-flame" for l in lengths]
 
-    data = data.copy()
     data["flame"] = data["exonlengths"].apply(calc_flame)
     return data
 
