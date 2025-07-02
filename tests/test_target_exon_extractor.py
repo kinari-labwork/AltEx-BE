@@ -1,7 +1,7 @@
 import pandas as pd
 from altex_aid.target_exon_extractor import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
 
-def test_extract_skipped_or_unique_exon():
+def test_extract_target_exon():
     input_data = pd.DataFrame({
         "geneName": ["gene1", "gene1", "gene2", "gene2","gene3"],
         "name": ["1transcript1", "1transcript2", "2transcript1", "2transcript2","3transcript1"],

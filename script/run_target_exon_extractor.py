@@ -1,10 +1,10 @@
 import pandas as pd
-from altex_aid.target_exon_extractor import extract_skipped_or_unique_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
+from altex_aid.target_exon_extractor import extract_target_exon, format_to_single_exon_bed, extract_splice_acceptor_regions, extract_splice_donor_regions
 
 classified_exon_refflat = pd.read_pickle("data/classified_exon_refflat.pkl")
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
-single_exon_df = extract_skipped_or_unique_exon(classified_exon_refflat)
+single_exon_df = extract_target_exon(classified_exon_refflat)
 # SAから+-25bpの範囲を指定したdfの作成
 splice_acceptor_single_exon_df = extract_splice_acceptor_regions(single_exon_df,25)
 # SDから+-25bpの範囲を指定したdfの作成
