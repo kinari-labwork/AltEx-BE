@@ -14,7 +14,7 @@ def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path: str) -> pd.DataFrame
     Returns:
         bed_for_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム(形式はBED)
     """
-    bed_for_df = bed.copy()
+    bed_for_df = bed
     bed_for_sequence = pybedtools.BedTool.from_dataframe(bed)
     # FASTAファイルから配列を取得　s = true　で配列のstrandを考慮し、-の時は相補鎖を出力する
     # もちろん、相補鎖も5'-3'の方向に出力される (今後間違えないように注意する)
