@@ -1,10 +1,9 @@
 import pandas as pd
-from typing import Literal
 import pybedtools
 
 
 # 今はまだFasta pathがハードコーディングになっているので、再利用性を考えて後でargpersで指定できるようにする
-def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path:str) -> pd.DataFrame:
+def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path: str) -> pd.DataFrame:
     """
     Purpose:
         BED形式のデータに指定される遺伝子座位を参照して、塩基配列をFASTAから取得し、bedに塩基配列を追加する
@@ -27,27 +26,28 @@ def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path:str) -> pd.DataFrame:
     with open(fasta_sequences.seqfn) as f:
         seq = []
         for line in f:
-            if line.startswith('>'):
-                if seq: 
-                    sequences.append(''.join(seq))
+            if line.startswith(">"):
+                if seq:
+                    sequences.append("".join(seq))
                     seq = []
-            else: 
-                seq.append(line.strip())# 改行を除去してseqに追加
+            else:
+                seq.append(line.strip())  # 改行を除去してseqに追加
         # 以上の処理は次のheaderに到達したときにlistにseqを追加する
         # 最後の配列は次のheaderが存在しないため、for ループを抜けた後にリストに追加する必要がある
         if seq:
-            sequences.append(''.join(seq))
+            sequences.append("".join(seq))
     # .sequence()メソッドを使用すると、元の構造が保持されないため、bedの別のコピーをdfにする
     bed_for_df.columns = ["chrom", "chromStart", "chromEnd", "name", "score", "strand"]
     # 取得した配列をデータフレームに追加
-    bed_for_df['sequence'] = sequences
+    bed_for_df["sequence"] = sequences
     return bed_for_df
+
 
 def join_sequence_to_single_exon_df(
     single_exon_df: pd.DataFrame,
     acceptor_bed_with_sequences: pd.DataFrame,
     donor_bed_with_sequences: pd.DataFrame,
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Purpose:
         single_exon_dfにbed_for_dfで取得した塩基配列をleft joinして、acceptor_sequenceまたはdonor_sequence列を追加する
@@ -58,11 +58,11 @@ def join_sequence_to_single_exon_df(
     Returns:
         single_exon_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム
     """
-    for label, bed in [("acceptor", acceptor_bed_with_sequences), ("donor", donor_bed_with_sequences)]:
+    for label, bed in [
+        ("acceptor", acceptor_bed_with_sequences),
+        ("donor", donor_bed_with_sequences),
+    ]:
         single_exon_df = single_exon_df.merge(
-            bed[['score', 'sequence']],
-            on='score',
-            how='left'
-        ).rename(columns={'sequence': f'{label}_sequence'})
+            bed[["score", "sequence"]], on="score", how="left"
+        ).rename(columns={"sequence": f"{label}_sequence"})
     return single_exon_df
-

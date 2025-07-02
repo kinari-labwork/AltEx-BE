@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import pandas as pd
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 
-def extract_target_exon(data: pd.DataFrame)-> pd.DataFrame:
+def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         スプライシングイベントに応じてアノテーションしたrefFlatのデータフレームから
@@ -16,10 +17,23 @@ def extract_target_exon(data: pd.DataFrame)-> pd.DataFrame:
     """
     # explodeで増加する行数を抑えるために、先に少なくともskipped exonまたはunique exonを1つ以上持つトランスクリプトを抽出
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
-    data = data[["geneName","name", "chrom", "strand", "exonStarts", "exonEnds", "exontype","exon_position"]].copy() 
+    data = data[
+        [
+            "geneName",
+            "name",
+            "chrom",
+            "strand",
+            "exonStarts",
+            "exonEnds",
+            "exontype",
+            "exon_position",
+        ]
+    ].copy()
     # 編集のために、リストになっている列を展開する
-    data = data.explode(["exonStarts",'exonEnds', "exontype", "exon_position"])
-    data[["exonStarts","exonEnds"]] = data[["exonStarts","exonEnds"]].astype(int) # int型に変換
+    data = data.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
+    data[["exonStarts", "exonEnds"]] = data[["exonStarts", "exonEnds"]].astype(
+        int
+    )  # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     # 重複を削除し一方だけ残す
@@ -29,27 +43,53 @@ def extract_target_exon(data: pd.DataFrame)-> pd.DataFrame:
     data["score"] = data.index
     return data.reset_index(drop=True)
 
-def extract_splice_acceptor_regions(data:pd.DataFrame, window:int)-> pd.DataFrame:
+
+def extract_splice_acceptor_regions(data: pd.DataFrame, window: int) -> pd.DataFrame:
     """
-    Purpose : 
+    Purpose :
         抜き出したskipped or unique exonのexonStart/Endから、SA部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonStartがSplice Acceptor, -の時はその逆でexonEndがSAになる
     """
     sa_data = data.copy()
-    sa_data["chromStart"] = sa_data.apply(lambda row: row["exonStarts"] - window if row["strand"] == "+" else row["exonEnds"] - window, axis=1)
-    sa_data["chromEnd"] = sa_data.apply(lambda row: row["exonStarts"] + window if row["strand"] == "+" else row["exonEnds"] + window, axis=1)
-    return sa_data[["geneName","chrom", "strand","chromStart","chromEnd","score"]].reset_index(drop=True)
+    sa_data["chromStart"] = sa_data.apply(
+        lambda row: row["exonStarts"] - window
+        if row["strand"] == "+"
+        else row["exonEnds"] - window,
+        axis=1,
+    )
+    sa_data["chromEnd"] = sa_data.apply(
+        lambda row: row["exonStarts"] + window
+        if row["strand"] == "+"
+        else row["exonEnds"] + window,
+        axis=1,
+    )
+    return sa_data[
+        ["geneName", "chrom", "strand", "chromStart", "chromEnd", "score"]
+    ].reset_index(drop=True)
+
 
 def extract_splice_donor_regions(data: pd.DataFrame, window: int) -> pd.DataFrame:
     """
-    Purpose : 
+    Purpose :
         抜き出したskipped or unique exonのexonStart/Endから、SD部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonEndがSplice Donor, -の時はその逆でexonStartがSDになる
     """
     sd_data = data.copy()
-    sd_data["chromStart"] = sd_data.apply(lambda row: row["exonEnds"] - window if row["strand"] == "+" else row["exonStarts"] - window, axis=1)
-    sd_data["chromEnd"] = sd_data.apply(lambda row: row["exonEnds"] + window if row["strand"] == "+" else row["exonStarts"] + window, axis=1)
-    return sd_data[["geneName","chrom", "strand","chromStart","chromEnd","score"]].reset_index(drop=True)
+    sd_data["chromStart"] = sd_data.apply(
+        lambda row: row["exonEnds"] - window
+        if row["strand"] == "+"
+        else row["exonStarts"] - window,
+        axis=1,
+    )
+    sd_data["chromEnd"] = sd_data.apply(
+        lambda row: row["exonEnds"] + window
+        if row["strand"] == "+"
+        else row["exonStarts"] + window,
+        axis=1,
+    )
+    return sd_data[
+        ["geneName", "chrom", "strand", "chromStart", "chromEnd", "score"]
+    ].reset_index(drop=True)
 
 
 def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
@@ -61,7 +101,9 @@ def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, BED形式に変換されたデータフレーム (BEDはタブ区切り形式なので実行時にタブ区切りに変更して保存する必要がある)
     """
-    bed_data = data[["chrom", "chromStart", "chromEnd","geneName","score","strand"]].copy()
+    bed_data = data[
+        ["chrom", "chromStart", "chromEnd", "geneName", "score", "strand"]
+    ].copy()
     bed_data["name"] = bed_data["geneName"]  # geneNameをnameとして使用
     # BED形式を満たすように列を並べ替える
     bed_data = bed_data[["chrom", "chromStart", "chromEnd", "name", "score", "strand"]]

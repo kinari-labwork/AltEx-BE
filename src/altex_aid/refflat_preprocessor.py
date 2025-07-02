@@ -95,7 +95,7 @@ def annotate_flame_information(data: pd.DataFrame) -> pd.DataFrame:
 
     # exonlengths列（リスト）に対してmod3を計算し、0ならin-flame, それ以外はout-flame
     def calc_flame(lengths):
-        return ["in-flame" if l % 3 == 0 else "out-flame" for l in lengths]
+        return ["in-flame" if length % 3 == 0 else "out-flame" for length in lengths]
 
     data["flame"] = data["exonlengths"].apply(calc_flame)
     return data

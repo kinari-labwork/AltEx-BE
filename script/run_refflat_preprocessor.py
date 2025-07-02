@@ -1,12 +1,13 @@
 import pandas as pd
-#export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
+
+# export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
 from altex_aid.refflat_preprocessor import (
-    parse_exon_coordinates,
-    calculate_exon_lengths,
-    drop_abnormal_mapped_transcripts,
+    add_exon_position_flags,
     annotate_cording_information,
     annotate_flame_information,
-    add_exon_position_flags
+    calculate_exon_lengths,
+    drop_abnormal_mapped_transcripts,
+    parse_exon_coordinates,
 )
 
 annotation_genome = "mm39"  # ここは必要に応じて変更してください
@@ -26,11 +27,13 @@ refflat = pd.read_csv(
         "cdsEnd",
         "exonCount",
         "exonStarts",
-        "exonEnds"])
+        "exonEnds",
+    ],
+)
 
 
-#transcript nameが重複している列を削除
-refflat = refflat.drop_duplicates(subset=["name"],keep=False)
+# transcript nameが重複している列を削除
+refflat = refflat.drop_duplicates(subset=["name"], keep=False)
 
 # "exonStarts" と　"exonEnds"を扱いやすいように (start, end) のリストに変換する
 refflat = parse_exon_coordinates(refflat)
@@ -47,7 +50,7 @@ refflat = annotate_cording_information(refflat)
 # フレーム情報を追加
 refflat = annotate_flame_information(refflat)
 
-#遺伝子ごとのバリアントの数を追加
+# 遺伝子ごとのバリアントの数を追加
 refflat = annotate_flame_information(refflat)
 
 # エキソンの位置を示す列を追加
