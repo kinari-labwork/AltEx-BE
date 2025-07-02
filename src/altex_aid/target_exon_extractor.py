@@ -28,7 +28,7 @@ def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
             "exontype",
             "exon_position",
         ]
-    ].copy()
+    ]
     # 編集のために、リストになっている列を展開する
     data = data.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
     data[["exonStarts", "exonEnds"]] = data[["exonStarts", "exonEnds"]].astype(
@@ -50,7 +50,7 @@ def extract_splice_acceptor_regions(data: pd.DataFrame, window: int) -> pd.DataF
         抜き出したskipped or unique exonのexonStart/Endから、SA部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonStartがSplice Acceptor, -の時はその逆でexonEndがSAになる
     """
-    sa_data = data.copy()
+    sa_data = data
     sa_data["chromStart"] = sa_data.apply(
         lambda row: row["exonStarts"] - window
         if row["strand"] == "+"
@@ -74,7 +74,7 @@ def extract_splice_donor_regions(data: pd.DataFrame, window: int) -> pd.DataFram
         抜き出したskipped or unique exonのexonStart/Endから、SD部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonEndがSplice Donor, -の時はその逆でexonStartがSDになる
     """
-    sd_data = data.copy()
+    sd_data = data
     sd_data["chromStart"] = sd_data.apply(
         lambda row: row["exonEnds"] - window
         if row["strand"] == "+"
@@ -101,9 +101,7 @@ def format_to_single_exon_bed(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, BED形式に変換されたデータフレーム (BEDはタブ区切り形式なので実行時にタブ区切りに変更して保存する必要がある)
     """
-    bed_data = data[
-        ["chrom", "chromStart", "chromEnd", "geneName", "score", "strand"]
-    ].copy()
+    bed_data = data[["chrom", "chromStart", "chromEnd", "geneName", "score", "strand"]]
     bed_data["name"] = bed_data["geneName"]  # geneNameをnameとして使用
     # BED形式を満たすように列を並べ替える
     bed_data = bed_data[["chrom", "chromStart", "chromEnd", "name", "score", "strand"]]
