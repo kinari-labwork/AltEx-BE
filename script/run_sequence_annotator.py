@@ -5,12 +5,12 @@ from altex_aid.sequence_annotator import (
     join_sequence_to_single_exon_df,
 )
 
-target_exons_df = pd.read_pickle("data/skipped_or_unique_exon_df2.pkl")
+target_exons_df = pd.read_pickle("data/skipped_or_unique_exon_df.pkl")
 splice_acceptor_bed = pd.read_csv(
-    "data/splice_acceptor_single_exon2.bed", sep="\t", header=None
+    "data/splice_acceptor_single_exon.bed", sep="\t", header=None
 )
 splice_donor_bed = pd.read_csv(
-    "data/splice_donor_single_exon2.bed", sep="\t", header=None
+    "data/splice_donor_single_exon.bed", sep="\t", header=None
 )
 annotation_genome = "mm39"
 fasta_path = f"data/{annotation_genome}/{annotation_genome}.fa"
