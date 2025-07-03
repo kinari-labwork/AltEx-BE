@@ -18,7 +18,6 @@ def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame
     """
     # explodeで増加する行数を抑えるために、先に少なくともskipped exonまたはunique exonを1つ以上持つトランスクリプトを抽出
-    data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     data = data[
         [
             "chrom",
