@@ -24,16 +24,16 @@ def test_annotate_sequence_to_bed():
     input_data = pd.read_csv("tests/data/test_bed_input.tsv", sep="\t", header=None)
     """
     テスト用のBED形式のデータ:
-    chr1	0	4	gene1	0	+
-    chr2	5	12	gene2	1	-
+    chr1	0	4	UUID1	0	+
+    chr2	5	12	UUID2	0	-
     """
     expected_output = pd.DataFrame(
         {
             "chrom": ["chr1", "chr2"],
             "chromStart": [0, 5],
             "chromEnd": [4, 12],
-            "name": ["gene1", "gene2"],
-            "score": [0, 1],
+            "name": ["UUID1", "UUID2"],
+            "score": [0, 0],
             "strand": ["+", "-"],
             "sequence": ["AGCT", "TAATCTG"],
             # chr1の0-4は"AGCT"、chr2の5-12は"CAGATTA"で、2列目はstrandが"-"なので相補鎖の"TAATCTG"が出力される
@@ -55,18 +55,18 @@ def test_join_sequence_to_single_exon_df():
             "chrom": ["chr1", "chr2"],
             "chromStart": [0, 5],
             "chromEnd": [4, 12],
-            "name": ["gene1", "gene2"],
-            "score": [0, 1],
+            "name": ["UUID1", "UUID2"],
+            "score": [0, 0],
             "strand": ["+", "-"],
         }
     )
 
     # --- acceptorの場合のテスト ---
     acceptor_bed_with_sequences = pd.DataFrame(
-        {"score": [0, 1], "sequence": ["ATGC", "GTCTAAT"]}
+        {"name": ["UUID1", "UUID2"], "sequence": ["ATGC", "GTCTAAT"]}
     )
     donor_bed_with_sequences = pd.DataFrame(
-        {"score": [0, 1], "sequence": ["TACG", "TAGATTA"]}
+        {"name": ["UUID1","UUID2"], "sequence": ["TACG", "TAGATTA"]}
     )
 
     expected_output = single_exon_df.copy()
@@ -75,8 +75,8 @@ def test_join_sequence_to_single_exon_df():
             "chrom": ["chr1", "chr2"],
             "chromStart": [0, 5],
             "chromEnd": [4, 12],
-            "name": ["gene1", "gene2"],
-            "score": [0, 1],
+            "name": ["UUID1", "UUID2"],
+            "score": [0, 0],
             "strand": ["+", "-"],
             "acceptor_sequence": ["ATGC", "GTCTAAT"],
             "donor_sequence": ["TACG", "TAGATTA"],

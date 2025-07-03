@@ -63,6 +63,6 @@ def join_sequence_to_single_exon_df(
         ("donor", donor_bed_with_sequences),
     ]:
         single_exon_df = single_exon_df.merge(
-            bed[["score", "sequence"]], on="score", how="left"
+            bed[["name", "sequence"]], on="name", how="left"
         ).rename(columns={"sequence": f"{label}_sequence"})
     return single_exon_df
