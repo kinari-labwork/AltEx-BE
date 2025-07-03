@@ -16,10 +16,10 @@ splice_acceptor_single_exon_df = extract_splice_acceptor_regions(single_exon_df,
 splice_donor_single_exon_df = extract_splice_donor_regions(single_exon_df, 25)
 
 # BED形式で保存するためにタブ区切りで保存
-single_exon_df.to_pickle("data/skipped_or_unique_exon_df2.pkl")
+single_exon_df.to_pickle("data/skipped_or_unique_exon_df.pkl")
 splice_acceptor_single_exon_df.to_csv(
-    "data/splice_acceptor_single_exon2.bed", sep="\t", index=False, header=False
+    "data/splice_acceptor_single_exon.bed", sep="\t", index=False, header=False
 )
 splice_donor_single_exon_df.to_csv(
-    "data/splice_donor_single_exon2.bed", sep="\t", index=False, header=False
+    "data/splice_donor_single_exon.bed", sep="\t", index=False, header=False
 )

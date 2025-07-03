@@ -31,5 +31,5 @@ target_exons_with_acceptor_and_donor_sequence = join_sequence_to_single_exon_df(
 )
 # 結果を保存
 target_exons_with_acceptor_and_donor_sequence.to_pickle(
-    "data/target_exons_with_acceptor_and_donor_sequence2.pkl"
+    "data/target_exons_with_acceptor_and_donor_sequence.pkl"
 )
