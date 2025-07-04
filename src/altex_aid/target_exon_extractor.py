@@ -36,7 +36,7 @@ def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
     data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     # 重複を削除し一方だけ残す
-    data = data.drop_duplicates(subset=["exonStarts", "exonEnds"])
+    data = data.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     data['name'] = [uuid.uuid4().hex for _ in range(len(data))]  # 一意のIDを生成
     data['score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
