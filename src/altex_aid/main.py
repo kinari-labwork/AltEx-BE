@@ -90,28 +90,20 @@ def main():
         refflat = refflat_preprocessor.add_exon_position_flags(refflat)
 
         print("Classifying splicing events...")
-        refflat = splicing_event_classifier.classify_splicing_events_per_gene(refflat)
-        refflat = splicing_event_classifier.flip_a3ss_a5ss_on_minus_strand(refflat)
-        refflat.to_pickle(f"{output_directory}/processed_refFlat.pickle")
-        del refflat
+        classified_refflat = splicing_event_classifier.classify_splicing_events_per_gene(refflat)
+        classified_refflat = splicing_event_classifier.flip_a3ss_a5ss_on_minus_strand(classified_refflat)
+        classified_refflat.to_pickle(f"{output_directory}/processed_refFlat.pickle")
+        del classified_refflat
 
         print("Extracting target exons...")
         target_exon_df = target_exon_extractor.extract_target_exon(refflat)
-        target_exon_df = target_exon_extractor.format_to_single_exon_bed(target_exon_df)
         splice_acceptor_single_exon_df = (
             target_exon_extractor.extract_splice_acceptor_regions(target_exon_df, 25)
         )
         splice_donor_single_exon_df = (
             target_exon_extractor.extract_splice_donor_regions(target_exon_df, 25)
         )
-        splice_acceptor_single_exon_df = (
-            target_exon_extractor.format_to_single_exon_bed(
-                splice_acceptor_single_exon_df
-            )
-        )
-        splice_donor_single_exon_df = target_exon_extractor.format_to_single_exon_bed(
-            splice_donor_single_exon_df
-        )
+
         print("Annotating sequences to dataframe from genome FASTA...")
         fasta_path = f"{input_directory}/combined.fa"
         splice_acceptor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
@@ -120,7 +112,7 @@ def main():
         splice_donor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
             splice_donor_single_exon_df, fasta_path
         )
-        target_exon_df = sequence_annotator.join_sequence_to_single_exon_df(
+        target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.join_sequence_to_single_exon_df(
             single_exon_df=target_exon_df,
             acceptor_bed_with_sequences=splice_acceptor_single_exon_df,
             donor_bed_with_sequences=splice_donor_single_exon_df,

@@ -45,7 +45,7 @@ def calculate_exon_lengths(refFlat: pd.DataFrame) -> pd.DataFrame:
     return refFlat
 
 
-def drop_abnormal_mapped_transcripts(data: pd.DataFrame) -> pd.DataFrame:
+def drop_abnormal_mapped_transcripts(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームから、異常な染色体にマッピングされたトランスクリプトを削除する。
@@ -57,11 +57,11 @@ def drop_abnormal_mapped_transcripts(data: pd.DataFrame) -> pd.DataFrame:
 
     # 正規表現パターンを使用して、染色体名が数字またはX, Yで終わるものを抜き出す（_random,_alt,_fixは除外）
     pattern = re.compile(r"^chr(\d+|X|Y)$")
-    data_filtered = data[data["chrom"].str.match(pattern)]
+    data_filtered = refflat[refflat["chrom"].str.match(pattern)]
     return data_filtered.reset_index(drop=True)
 
 
-def annotate_cording_information(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_cording_information(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、コーディング情報を追加する。
@@ -76,14 +76,14 @@ def annotate_cording_information(data: pd.DataFrame) -> pd.DataFrame:
 
     cording_pattern = re.compile(r"^NM")
     non_coding_pattern = re.compile(r"^NR")
-    data["coding"] = ""
-    data.loc[data["name"].str.match(cording_pattern), "coding"] = "coding"
-    data.loc[data["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
-    data["coding"] = data["coding"].astype("category")
-    return data
+    refflat["coding"] = ""
+    refflat.loc[refflat["name"].str.match(cording_pattern), "coding"] = "coding"
+    refflat.loc[refflat["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
+    refflat["coding"] = refflat["coding"].astype("category")
+    return refflat
 
 
-def annotate_flame_information(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_flame_information(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、フレーム情報を追加する。
@@ -97,11 +97,11 @@ def annotate_flame_information(data: pd.DataFrame) -> pd.DataFrame:
     def calc_flame(lengths):
         return ["in-flame" if length % 3 == 0 else "out-flame" for length in lengths]
 
-    data["flame"] = data["exonlengths"].apply(calc_flame)
-    return data
+    refflat["flame"] = refflat["exonlengths"].apply(calc_flame)
+    return refflat
 
 
-def annotate_variant_count(data: pd.DataFrame) -> pd.DataFrame:
+def annotate_variant_count(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、バリアント数を追加する。
@@ -111,13 +111,13 @@ def annotate_variant_count(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame, バリアント数を追加したrefFlatのデータフレーム
     """
-    variant_counts = data.groupby("geneName")["name"].nunique().reset_index()
+    variant_counts = refflat.groupby("geneName")["name"].nunique().reset_index()
     variant_counts.columns = ["geneName", "variant_count"]
-    data = data.merge(variant_counts, on="geneName", how="left")
-    return data
+    refflat = refflat.merge(variant_counts, on="geneName", how="left")
+    return refflat
 
 
-def add_exon_position_flags(data: pd.DataFrame) -> pd.DataFrame:
+def add_exon_position_flags(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         exon_position列を作成し、各行の転写産物に対してエキソンの位置を付与する
@@ -136,7 +136,7 @@ def add_exon_position_flags(data: pd.DataFrame) -> pd.DataFrame:
         else:
             return ["first"] + ["internal"] * (n - 2) + ["last"]
 
-    data["exon_position"] = data["exonStarts"].apply(get_category_list)
+    refflat["exon_position"] = refflat["exonStarts"].apply(get_category_list)
 
     def flip_first_last_to_minus_strand(row):
         """
@@ -150,5 +150,5 @@ def add_exon_position_flags(data: pd.DataFrame) -> pd.DataFrame:
             row["exon_position"] = row["exon_position"][::-1]
         return row
 
-    data = data.apply(flip_first_last_to_minus_strand, axis=1)
-    return data
+    refflat = refflat.apply(flip_first_last_to_minus_strand, axis=1)
+    return refflat

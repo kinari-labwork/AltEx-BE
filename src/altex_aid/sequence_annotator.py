@@ -2,7 +2,7 @@ import pandas as pd
 import pybedtools
 
 
-# 今はまだFasta pathがハードコーディングになっているので、再利用性を考えて後でargpersで指定できるようにする
+
 def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path: str) -> pd.DataFrame:
     """
     Purpose:

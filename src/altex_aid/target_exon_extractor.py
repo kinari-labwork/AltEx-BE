@@ -7,7 +7,7 @@ import uuid
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 
-def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
+def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         スプライシングイベントに応じてアノテーションしたrefFlatのデータフレームから
@@ -18,7 +18,7 @@ def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame
     """
     # explodeで増加する行数を抑えるために、先に少なくともskipped exonまたはunique exonを1つ以上持つトランスクリプトを抽出
-    data = data[
+    classified_refflat = classified_refflat[
         [
             "chrom",
             "strand",
@@ -29,60 +29,60 @@ def extract_target_exon(data: pd.DataFrame) -> pd.DataFrame:
         ]
     ]
     # 編集のために、リストになっている列を展開する
-    data = data.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
-    data[["exonStarts", "exonEnds"]] = data[["exonStarts", "exonEnds"]].astype(
+    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
+    classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
         int
     )  # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
-    data = data[data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
+    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
     # 重複を削除し一方だけ残す
-    data = data.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
-    data['name'] = [uuid.uuid4().hex for _ in range(len(data))]  # 一意のIDを生成
-    data['score'] = 0  # BED形式のスコア列を追加
+    classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
+    classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
+    classified_refflat['score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
-    data = data[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
-    return data.reset_index(drop=True)
+    classified_refflat = classified_refflat[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
+    return classified_refflat.reset_index(drop=True)
 
 
-def extract_splice_acceptor_regions(data: pd.DataFrame, window: int) -> pd.DataFrame:
+def extract_splice_acceptor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
     """
     Purpose :
         抜き出したskipped or unique exonのexonStart/Endから、SA部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonStartがSplice Acceptor, -の時はその逆でexonEndがSAになる
     """
-    sa_data = data
-    sa_data["chromStart"] = sa_data.apply(
+    splice_acceptor_single_exon_df = target_exon_df.copy()
+    splice_acceptor_single_exon_df["chromStart"] = splice_acceptor_single_exon_df.apply(
         lambda row: row["exonStarts"] - window
         if row["strand"] == "+"
         else row["exonEnds"] - window,
         axis=1,
     )
-    sa_data["chromEnd"] = sa_data.apply(
+    splice_acceptor_single_exon_df["chromEnd"] = splice_acceptor_single_exon_df.apply(
         lambda row: row["exonStarts"] + window
         if row["strand"] == "+"
         else row["exonEnds"] + window,
         axis=1,
     )
-    return sa_data[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
+    return splice_acceptor_single_exon_df[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
 
 
-def extract_splice_donor_regions(data: pd.DataFrame, window: int) -> pd.DataFrame:
+def extract_splice_donor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
     """
     Purpose :
         抜き出したskipped or unique exonのexonStart/Endから、SD部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonEndがSplice Donor, -の時はその逆でexonStartがSDになる
     """
-    sd_data = data
-    sd_data["chromStart"] = sd_data.apply(
+    splice_donor_single_exon_df = target_exon_df.copy()
+    splice_donor_single_exon_df["chromStart"] = splice_donor_single_exon_df.apply(
         lambda row: row["exonEnds"] - window
         if row["strand"] == "+"
         else row["exonStarts"] - window,
         axis=1,
     )
-    sd_data["chromEnd"] = sd_data.apply(
+    splice_donor_single_exon_df["chromEnd"] = splice_donor_single_exon_df.apply(
         lambda row: row["exonEnds"] + window
         if row["strand"] == "+"
         else row["exonStarts"] + window,
         axis=1,
     )
-    return sd_data[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
+    return splice_donor_single_exon_df[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
