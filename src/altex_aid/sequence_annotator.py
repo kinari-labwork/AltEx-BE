@@ -2,7 +2,7 @@ import pandas as pd
 import pybedtools
 
 
-# 今はまだFasta pathがハードコーディングになっているので、再利用性を考えて後でargpersで指定できるようにする
+
 def annotate_sequence_to_bed(bed: pd.DataFrame, fasta_path: str) -> pd.DataFrame:
     """
     Purpose:
@@ -63,6 +63,6 @@ def join_sequence_to_single_exon_df(
         ("donor", donor_bed_with_sequences),
     ]:
         single_exon_df = single_exon_df.merge(
-            bed[["score", "sequence"]], on="score", how="left"
+            bed[["name", "sequence"]], on="name", how="left"
         ).rename(columns={"sequence": f"{label}_sequence"})
     return single_exon_df
