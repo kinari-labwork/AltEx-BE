@@ -28,16 +28,25 @@ class TestClassifyExonType:
         label = classify_splicing_event((150, 200), self.transcripts)
         assert label == "skipped"
 
-    def test_alt_3ss(self):
-        # (155, 200) が存在し、startがずれているため a3ss を拾いたい
+    def test_alt_3ss_short(self):
+        # (150, 200) が存在し、(155,200)はstartがずれている。 しかし、end を共有する(150,200)のほうが長いため a3ss-short を拾いたい
         label = classify_splicing_event((155, 200), self.transcripts)
-        assert label == "a3ss"
+        assert label == "a3ss-short"
+    
+    def test_alt_3ss_long(self):
+        # (150, 200) が存在し、(140,200)はstartがずれている。 これは end が一致する他のエキソンのstartよりも小さいため a3ss-long を拾いたい
+        label = classify_splicing_event((140, 200), self.transcripts)
+        assert label == "a3ss-long"
 
-    def test_alt_5ss(self):
-        # (150,200) に対して(150,205)はendがずれているため a5ss を拾いたい
-        label = classify_splicing_event((150, 205), self.transcripts)
-        assert label == "a5ss"
+    def test_alt_5ss_short(self):
+        # (150,200) に対して(150,190)はendがずれている。しかし、startを 共有する(150,200)のほうが長いため a5ss-short を拾いたい
+        label = classify_splicing_event((150, 190), self.transcripts)
+        assert label == "a5ss-short"
 
+    def test_alt_5ss_long(self):
+        # (150,200) に対して(150,210)はendがずれている。これは start が一致する他のエキソンのendよりも大きいため、a5ss-long を拾いたい
+        label = classify_splicing_event((150, 210), self.transcripts)
+        assert label == "a5ss-long"
     def test_split(self):
         # (500,700)は(500,600)と(600,700)に分割されている
         label = classify_splicing_event((500, 700), self.transcripts)
@@ -102,14 +111,20 @@ def test_classify_exons_per_gene():
                     (150, 200),
                     (250, 300),
                 ],
-                [(0, 100), (250, 300)],  # (150,200) がスキップ
+                [
+                    (0, 100), 
+                    (250, 300)
+                ],  # (150,200) がスキップ
                 [
                     (0, 100),
                     (110, 120),
                     (150, 200),
                     (250, 300),
                 ],  # (110,120) のユニークなエキソンを持っている (ここまでが gene1)
-                [(100, 200), (250, 300)],  # gene2のtranscript1
+                [
+                    (100, 200),
+                    (250, 300)
+                    ],  # gene2のtranscript1
                 [
                     (100, 200),
                     (250, 350),
@@ -119,8 +134,8 @@ def test_classify_exons_per_gene():
                 ["constitutive", "skipped", "constitutive"],
                 ["constitutive", "constitutive"],
                 ["constitutive", "unique", "skipped", "constitutive"],
-                ["constitutive", "a5ss"],
-                ["constitutive", "a5ss"],
+                ["constitutive", "a5ss-short"],
+                ["constitutive", "a5ss-long"],
             ],
         }
     )
@@ -134,10 +149,10 @@ def test_flip_a3ss_a5ss_in_minus_strand():
         {
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "skipped", "a5ss"],
-                ["constitutive", "overlap", "a3ss"],
-                ["constitutive", "unique", "a5ss"],
-                ["constitutive", "cassette", "a3ss"],
+                ["constitutive", "skipped", "a5ss-long"],
+                ["constitutive", "overlap", "a3ss-short"],
+                ["constitutive", "unique", "a5ss-short"],
+                ["constitutive", "cassette", "a3ss-long"],
             ],
         }
     )
@@ -145,14 +160,10 @@ def test_flip_a3ss_a5ss_in_minus_strand():
         {
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "skipped", "a5ss"],  # plus strandは変化なし
-                ["constitutive", "overlap", "a3ss"],
-                [
-                    "constitutive",
-                    "unique",
-                    "a3ss",
-                ],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
-                ["constitutive", "cassette", "a5ss"],
+                ["constitutive", "skipped", "a5ss-long"],  # plus strandは変化なし
+                ["constitutive", "overlap", "a3ss-short"],
+                ["constitutive","unique","a3ss-short",],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
+                ["constitutive", "cassette", "a5ss-long"],
             ],
         }
     )

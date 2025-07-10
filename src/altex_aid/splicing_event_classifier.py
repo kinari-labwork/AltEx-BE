@@ -23,7 +23,9 @@ def classify_splicing_event(
 
     exact_match = 0
     start_match_only = False
+    start_match_only_and_exist_later_end = False
     end_match_only = False
+    end_match_only_and_exist_earlier_start = False
     overlap_without_startend_match = False
 
     for tx in all_transcripts:
@@ -37,10 +39,14 @@ def classify_splicing_event(
                 start_match_only = (
                     True  # start だけ他のエキソンと一致し、 end は一致しない
                 )
+                if ex[1] > end: #startが一致するが、endが他のエキソンのendよりも小さい場合
+                    start_match_only_and_exist_later_end = True
             elif ex[1] == end and ex[0] != start:
                 end_match_only = (
                     True  # endだけ他のエキソンと一致し、startは一致しない場合
                 )
+                if ex[0] < start: # endが一致するが、startが他のエキソンのstartよりも大きい場合
+                    end_match_only_and_exist_earlier_start = True
             elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
                 overlap_without_startend_match = True  # start, endどちらも他のエキソンと一致しないが、他のエキソンと1塩基以上の重複が生じている
 
@@ -58,10 +64,14 @@ def classify_splicing_event(
         and not overlap_without_startend_match
     ):
         return "skipped"  # 2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
-    elif start_match_only and not end_match_only:
-        return "a5ss"
-    elif end_match_only and not start_match_only:
-        return "a3ss"
+    elif start_match_only and not end_match_only and start_match_only_and_exist_later_end:
+        return "a5ss-short" # ほかのエキソンとstartが一致するが、endはstartが一致する他のエキソンのendよりも小さい場合 例: [100,200],[100,300]の場合、[100,200]がa5ss-short, [100,300]がa5ss-long
+    elif start_match_only and not end_match_only and not start_match_only_and_exist_later_end:
+        return "a5ss-long" # ほかのエキソンとstartが一致するが、endはstartが一致するエキソンの中で一番長い
+    elif end_match_only and not start_match_only and end_match_only_and_exist_earlier_start:
+        return "a3ss-short" # ほかのエキソンとendが一致するが、startはendが一致する他のエキソンのstartよりも大きい場合 例: [100,200],[150,200]の場合、[100,200]がa3ss-long, [150,200]がa3ss-short
+    elif end_match_only and not start_match_only and not end_match_only_and_exist_earlier_start:
+        return "a3ss-long"
     elif start_match_only and end_match_only:
         return "intron_retention"
     elif overlap_without_startend_match:
@@ -109,7 +119,7 @@ def flip_a3ss_a5ss_on_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataF
         pd.DataFrame
     """
 
-    flip_dict = {"a3ss": "a5ss", "a5ss": "a3ss"}
+    flip_dict = {"a3ss-short": "a5ss-short", "a5ss-short": "a3ss-short", "a3ss-long": "a5ss-long", "a5ss-long": "a3ss-long"}
     mask = classified_refflat["strand"] == "-"
 
     # apply: リスト内の a3ss/a5ss を flip_dict で置換
