@@ -307,6 +307,7 @@ def modify_sgrna_start_end_position_to_position_in_chromosome(
     # 不要な列を削除
     target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.drop(
         columns=[
+            "name",
             "acceptor_sgrna_start_in_sequence",
             "acceptor_sgrna_end_in_sequence",
             "donor_sgrna_start_in_sequence",
