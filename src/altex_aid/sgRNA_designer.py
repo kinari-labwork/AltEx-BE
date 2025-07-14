@@ -194,7 +194,18 @@ def design_sgrna_for_target_exon_df(
 
 
 def extract_acceptor_sgrna_features(sgrna_list):
-    """acceptor用sgRNAリストから各特徴を抽出"""
+    """
+    Purpose:
+    acceptor用sgRNAリストから各特徴を抽出
+    dataclassを使うことで、各sgRNAの情報をメソッド化できる
+    Parameters:
+        sgrna_list: list[SgrnaInfo], acceptor用sgRNAinfoのリスト
+    Returns:
+        各sgRNAの特徴を抽出したリスト
+        各リストの要素は、sgRNAのターゲット配列、
+        実際の配列、開始位置、終了位置、ターゲット位置、
+        編集ウィンドウとCDSの重なり、意図しない編集塩基の数
+    """
     if not sgrna_list:
         return [], [], [], [], [], [], []
     return (
@@ -208,7 +219,17 @@ def extract_acceptor_sgrna_features(sgrna_list):
     )
 
 def extract_donor_sgrna_features(sgrna_list):
-    """donor用sgRNAリストから各特徴を抽出"""
+    """
+    Purpose:
+    donor用sgRNAリストから各特徴を抽出
+    Parameters:
+        sgrna_list: list[SgrnaInfo], donor用sgRNAinfoのリスト
+    Returns:
+        各sgRNAの特徴を抽出したリスト
+        各リストの要素は、sgRNAのターゲット配列、
+        実際の配列、開始位置、終了位置、ターゲット位置、
+        編集ウィンドウとCDSの重なり、意図しない編集塩基の数
+    """
     if not sgrna_list:
         return [], [], [], [], [], []
     return (
@@ -222,7 +243,18 @@ def extract_donor_sgrna_features(sgrna_list):
     )
 
 def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence: pd.DataFrame) -> pd.DataFrame:
-    """grna列から各特徴量列を展開（1エキソン1行、各列はリスト）"""
+    """
+    Purpose:
+    grna列から各特徴量列を展開する（1エキソン1行、各列はリスト）
+    Parameters:
+        target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
+    Returns:
+        pd.DataFrame, 各エキソンに対してsgRNAの情報を展開したDataFrame
+    Comments:
+        各エキソンに対して、acceptorとdonorのsgRNA情報を展開する。
+        各列はリストで、sgRNAのターゲット配列、実際の配列、開始位置、終了位置、ターゲット位置
+        編集ウィンドウとCDSの重なり、意図しない編集塩基の数を含む。
+    """
     (
         target_exon_df_with_grna_sequence["acceptor_sgrna_target_sequence"],
         target_exon_df_with_grna_sequence["acceptor_sgrna_actual_sequence"],
