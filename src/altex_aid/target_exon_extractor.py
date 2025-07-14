@@ -34,7 +34,7 @@ def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
         int
     )  # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
-    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]
+    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
     # 重複を削除し一方だけ残す
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
