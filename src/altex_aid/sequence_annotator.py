@@ -54,15 +54,22 @@ def join_sequence_to_single_exon_df(
     Parameters:
         single_exon_df: pd.DataFrame, アノテーションを与えるデータフレーム
         acceptor_bed_with_sequences: pd.DataFrame, acceptorのBED形式のデータフレームに配列アノテーションが追加されたもの
-        donor_bed_with_sequences: pd.DataFrame, donorのBED形式のデータフ
+        donor_bed_with_sequences: pd.DataFrame, donorのBED形式のデータフレーム
     Returns:
         single_exon_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム
     """
+
+    acceptor_bed_with_sequences.rename(
+        columns = {"chromStart": "chromStart_acceptor", "chromEnd": "chromEnd_acceptor"})
+    
+    donor_bed_with_sequences.rename(
+        columns = {"chromStart": "chromStart_donor", "chromEnd": "chromEnd_donor"})
+
     for label, bed in [
         ("acceptor", acceptor_bed_with_sequences),
         ("donor", donor_bed_with_sequences),
     ]:
         single_exon_df = single_exon_df.merge(
-            bed[["name", "sequence"]], on="name", how="left"
+            bed[["name", f"chromStart_{label}", f"chromEnd_{label}", "sequence"]], on="name", how="left"
         ).rename(columns={"sequence": f"{label}_sequence"})
     return single_exon_df

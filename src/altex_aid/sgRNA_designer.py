@@ -286,5 +286,37 @@ def organize_target_exon_df_with_grna_sequence(
     # 不要な列を削除
     return target_exon_df_with_grna_sequence.drop(columns=["grna_acceptor", "grna_donor"]).reset_index(drop=True)
 
+def modify_sgrna_start_end_position(
+    target_exon_df_with_grna_sequence: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Purpose:
+        この段階でのacceptor/donor_start_in_sequenceは、ゲノム上の位置ではなく、取得した配列内での位置である。
+        sgRNAの開始位置と終了位置を、ゲノム上の位置に変換する
+    Parameters:
+        target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
+    Returns:
+        pd.DataFrame, sgRNAの開始位置と終了位置がゲノム上の位置に変換されたDataFrame
+    """
+    target_exon_df_with_grna_sequence["acceptor_sgrna_start_in_genome"] = (
+        target_exon_df_with_grna_sequence["acceptor_sgrna_start_in_sequence"]
+        + target_exon_df_with_grna_sequence["chromStart_acceptor"]
+    )
+    target_exon_df_with_grna_sequence["acceptor_sgrna_end_in_genome"] = (
+        target_exon_df_with_grna_sequence["chromStart_acceptor"]
+        + target_exon_df_with_grna_sequence["acceptor_sgrna_end_in_sequence"]
+        
+    )
+    
+    target_exon_df_with_grna_sequence["donor_sgrna_start_in_genome"] = (
+        target_exon_df_with_grna_sequence["donor_sgrna_start_in_sequence"]
+        + target_exon_df_with_grna_sequence["chromStart_donor"]
 
+    )
+    target_exon_df_with_grna_sequence["donor_sgrna_end_in_genome"] = (
+        target_exon_df_with_grna_sequence["chromEnd_donor"]
+        + target_exon_df_with_grna_sequence["donor_sgrna_end_in_sequence"]
+    )
+
+    return target_exon_df_with_grna_sequence.reset_index(drop=True)
 
