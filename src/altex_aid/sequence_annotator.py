@@ -59,10 +59,10 @@ def join_sequence_to_single_exon_df(
         single_exon_df: pd.DataFrame, 配列アノテーションが追加されたデータフレーム
     """
 
-    acceptor_bed_with_sequences.rename(
+    acceptor_bed_with_sequences = acceptor_bed_with_sequences.rename(
         columns = {"chromStart": "chromStart_acceptor", "chromEnd": "chromEnd_acceptor"})
     
-    donor_bed_with_sequences.rename(
+    donor_bed_with_sequences = donor_bed_with_sequences.rename(
         columns = {"chromStart": "chromStart_donor", "chromEnd": "chromEnd_donor"})
 
     for label, bed in [
