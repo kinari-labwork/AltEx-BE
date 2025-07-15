@@ -1,5 +1,5 @@
 import pandas as pd
-from altex_aid.sgRNA_designer import (
+from altex_aid.sgrna_designer import (
     SgrnaInfo,
     get_reversed_complement,
     reverse_pam_sequence,
