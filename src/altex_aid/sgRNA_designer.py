@@ -50,7 +50,7 @@ def design_sgrna(
     pam_sequence: str,
     editing_window_start_in_grna: int, # 1-indexed
     editing_window_end_in_grna: int, # 1-indexed
-    splice_site_pos: int,
+    target_g_pos_in_sequence: int,
     cds_boundary: int,
     site_type: str,
 ) -> list[SgrnaInfo]:
@@ -86,30 +86,29 @@ def design_sgrna(
     reversed_pam = f"(?=({reversed_pam}))"  # lookaheadを使って、重複を許して探索する
     sgrna_list = []
 
-    splice_site = editing_sequence[splice_site_pos : splice_site_pos + 2].upper()
+    splice_site = editing_sequence[target_g_pos_in_sequence - 1: target_g_pos_in_sequence + 1].upper() if site_type == "acceptor" else editing_sequence[target_g_pos_in_sequence : target_g_pos_in_sequence + 2].upper()
     expected_site = "AG" if site_type == "acceptor" else "GT"
     if splice_site != expected_site:
         return sgrna_list
 
     for match in re.finditer(reversed_pam, editing_sequence):
-        print(match.start(1), match.end(1), match.group(1))  # デバッグ用にPAM配列を出力
-        grna_start = match.end(1) +1 
+        grna_start = match.end(1) 
+        print(f"grna_start: {grna_start}, target_g_pos_in_sequence: {target_g_pos_in_sequence}")
         grna_end = grna_start + 20
         if grna_end > len(editing_sequence):
             continue
 
-        target_g_pos = splice_site_pos + 1 if site_type == "acceptor" else splice_site_pos 
-        if not (grna_start <= target_g_pos < grna_end):
+        if not (grna_start <= target_g_pos_in_sequence < grna_end):
             continue
 
         window_start_in_seq = grna_start + editing_window_start_in_grna -1 # 1-indexedから0-indexedに変換するため、余分に1を引く
         window_end_in_seq = grna_start + editing_window_end_in_grna -1
-        if not (window_start_in_seq <= target_g_pos <= window_end_in_seq):
+        if not (window_start_in_seq <= target_g_pos_in_sequence <= window_end_in_seq):
             continue
 
         target_sequence = editing_sequence[grna_start:grna_end]
         actual_sequence = get_reversed_complement(target_sequence)
-        target_pos_in_sgrna = target_g_pos - grna_start + 1
+        target_pos_in_sgrna = target_g_pos_in_sequence - grna_start + 1
 
         overlap = 0
         unintended_edits = 0
@@ -158,9 +157,7 @@ def design_sgrna_for_target_exon_df(
     Returns:
         各エキソンに対して設計されたsgRNAの情報を含むDataFrame
     """
-    ACCEPTOR_SPLICE_POS = 23
     ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
-    DONOR_SPLICE_POS = 25
     DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
 
     def apply_design(row, site_type):
@@ -175,8 +172,8 @@ def design_sgrna_for_target_exon_df(
                 pam_sequence=pam_sequence,
                 editing_window_start_in_grna=editing_window_start_in_grna,
                 editing_window_end_in_grna=editing_window_end_in_grna,
-                splice_site_pos=(
-                    ACCEPTOR_SPLICE_POS if site_type == "acceptor" else DONOR_SPLICE_POS
+                target_g_pos_in_sequence=(
+                    24 if site_type == "acceptor" else 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
                 ),
                 cds_boundary=(
                     ACCEPTOR_CDS_BOUNDARY
@@ -186,6 +183,7 @@ def design_sgrna_for_target_exon_df(
                 site_type=site_type,
             )
         return []
+    
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
     # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(

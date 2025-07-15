@@ -26,19 +26,19 @@ def test_reverse_pam_sequence():
     assert output_sequence == expected_output
 
 def test_design_sgrna():
-    editing_sequence = "NNCCCCCNNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
+    editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    splice_site_pos = 23
+    target_g_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
     cds_boundary = 25
     site_type = "acceptor"
 
     expected_output = [
         SgrnaInfo(
-            target_sequence="CNNNNNNNNNNNNNNNNAGG",
-            actual_sequence="CCUNNNNNNNNNNNNNNNNG",
+            target_sequence="CCNNNNNNNNNNNNNNNAGG",
+            actual_sequence="CCUNNNNNNNNNNNNNNNGG",
             start_in_sequence = 6,
             end_in_sequence=26,
             target_pos_in_sgrna=19,
@@ -46,8 +46,8 @@ def test_design_sgrna():
             possible_unintended_edited_base_count= 0
         ),
         SgrnaInfo(
-            target_sequence="NNNNNNNNNNNNNNNNAGGG",
-            actual_sequence="CCCUNNNNNNNNNNNNNNNN",
+            target_sequence="CNNNNNNNNNNNNNNNAGGG",
+            actual_sequence="CCCUNNNNNNNNNNNNNNNG",
             start_in_sequence = 7,
             end_in_sequence=27,
             target_pos_in_sgrna=18,
@@ -69,7 +69,7 @@ def test_design_sgrna():
         pam_sequence=pam_sequence,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        splice_site_pos=splice_site_pos,
+        target_g_pos_in_sequence=target_g_pos_in_sequence,
         cds_boundary=cds_boundary,
         site_type=site_type
     )
@@ -111,12 +111,12 @@ def test_design_sgrna_for_target_exon_df():
         "grna_acceptor": [
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNAGNNN",
-                actual_sequence="NNNCUNNNNNNNNNNNNNNN",
-                start_in_sequence=8,
-                end_in_sequence=28,
-                target_pos_in_sgrna=17,
-                overlap_between_cds_and_editing_window=2,
+                target_sequence="NNNNNNNNNNNNNNNNAGNN",
+                actual_sequence="NNCUNNNNNNNNNNNNNNNN",
+                start_in_sequence=7,
+                end_in_sequence=27,
+                target_pos_in_sgrna=18,
+                overlap_between_cds_and_editing_window=1,
                 possible_unintended_edited_base_count=0
             )
             ],
@@ -125,23 +125,23 @@ def test_design_sgrna_for_target_exon_df():
         "grna_donor": [
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNNGTNN",
-                actual_sequence="NNACNNNNNNNNNNNNNNNN",
+                target_sequence="NNNNNNNNNNNNNNNNNGTN",
+                actual_sequence="NACNNNNNNNNNNNNNNNNN",
                 start_in_sequence=8,
                 end_in_sequence=28,
-                target_pos_in_sgrna=17,
-                overlap_between_cds_and_editing_window=2,
+                target_pos_in_sgrna=18,
+                overlap_between_cds_and_editing_window=1,
                 possible_unintended_edited_base_count=0
             )
             ],
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNAGNNN",
-                actual_sequence="NNNCUNNNNNNNNNNNNNNN",
+                target_sequence="NNNNNNNNNNNNNNNNNGTN",
+                actual_sequence="NACNNNNNNNNNNNNNNNNN",
                 start_in_sequence=8,
                 end_in_sequence=28,
-                target_pos_in_sgrna=17,
-                overlap_between_cds_and_editing_window=2,
+                target_pos_in_sgrna=18,
+                overlap_between_cds_and_editing_window=1,
                 possible_unintended_edited_base_count=0
             )
             ]
@@ -153,6 +153,7 @@ def test_design_sgrna_for_target_exon_df():
         editing_window_start_in_grna=17,
         editing_window_end_in_grna=19,
         )
+    print(output_data["grna_acceptor"].tolist())
     print(output_data["grna_donor"].tolist())
 
     # pd.testing.assert_frame_equalの問題で、SgrnaInfoオブジェクトのようなカスタムクラスを直接比較するとエラーが出るため、リストに変換して比較する
