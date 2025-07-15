@@ -28,7 +28,10 @@ def get_reversed_complement(sequence: str) -> str:
     Returns:
         逆相補の塩基配列
     """
-    complement_map = {"A": "U", "T": "A", "C": "G", "G": "C", "N": "N"}
+    complement_map = {
+        "A": "U", "T": "A", "C": "G", "G": "C", "N": "N",
+        "a": "u", "t": "a", "c": "g", "g": "c"
+        }
     return "".join([complement_map[base] for base in reversed(sequence)])
 
 
