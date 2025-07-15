@@ -48,8 +48,8 @@ def reverse_pam_sequence(pam_sequence: str) -> str:
 def design_sgrna(
     editing_sequence: str,
     pam_sequence: str,
-    editing_window_start_in_grna: int,
-    editing_window_end_in_grna: int,
+    editing_window_start_in_grna: int, # 1-indexed
+    editing_window_end_in_grna: int, # 1-indexed
     splice_site_pos: int,
     cds_boundary: int,
     site_type: str,
@@ -91,17 +91,18 @@ def design_sgrna(
         return sgrna_list
 
     for match in re.finditer(reversed_pam, editing_sequence):
-        grna_start = match.end()
+        print(match)
+        grna_start = match.end() +1
         grna_end = grna_start + 20
         if grna_end > len(editing_sequence):
             continue
 
-        target_g_pos = splice_site_pos - 1 if site_type == "acceptor" else splice_site_pos + 1
+        target_g_pos = splice_site_pos + 1 if site_type == "acceptor" else splice_site_pos 
         if not (grna_start <= target_g_pos < grna_end):
             continue
 
-        window_start_in_seq = grna_start + editing_window_start_in_grna -2 # 1-indexedから0-indexedに変換するため、余分に1を引く
-        window_end_in_seq = grna_start + editing_window_end_in_grna -2 
+        window_start_in_seq = grna_start + editing_window_start_in_grna -1 # 1-indexedから0-indexedに変換するため、余分に1を引く
+        window_end_in_seq = grna_start + editing_window_end_in_grna -1
         if not (window_start_in_seq <= target_g_pos <= window_end_in_seq):
             continue
 
@@ -113,15 +114,15 @@ def design_sgrna(
         unintended_edits = 0
         if site_type == "acceptor":
             if window_start_in_seq <= cds_boundary:
-                overlap = cds_boundary - window_start_in_seq + 1
+                overlap = window_end_in_seq - cds_boundary +1
                 unintended_edits = editing_sequence[
-                    window_start_in_seq : cds_boundary + 1
+                    cds_boundary: window_end_in_seq +1 # +1はinclusiveにするため
                 ].count("G")
         else:  # donor
-            if window_end_in_seq >= cds_boundary:
-                overlap = window_end_in_seq - cds_boundary + 1
+            if window_start_in_seq >= cds_boundary:
+                overlap = cds_boundary + 1 - window_start_in_seq
                 unintended_edits = editing_sequence[
-                    cds_boundary : window_end_in_seq + 1
+                    window_start_in_seq: cds_boundary + 1 # +1はinclusiveにするため
                 ].count("G")
 
         sgrna_list.append(
@@ -135,6 +136,7 @@ def design_sgrna(
                 possible_unintended_edited_base_count=unintended_edits,
             )
         )
+        print(window_start_in_seq,window_end_in_seq,grna_start,grna_end)
     return sgrna_list
 
 
@@ -156,9 +158,9 @@ def design_sgrna_for_target_exon_df(
         各エキソンに対して設計されたsgRNAの情報を含むDataFrame
     """
     ACCEPTOR_SPLICE_POS = 23
-    ACCEPTOR_CDS_BOUNDARY = 24
+    ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
     DONOR_SPLICE_POS = 25
-    DONOR_CDS_BOUNDARY = 24
+    DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
 
     def apply_design(row, site_type):
         sequence_col = f"{site_type}_sequence"
@@ -183,8 +185,8 @@ def design_sgrna_for_target_exon_df(
                 site_type=site_type,
             )
         return []
-    # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a3ssはacceptorの位置が-shortと同じだから。
-    # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a5ssはdonorの位置が-shortと同じだから。
+    # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
+    # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
         lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor"), axis=1
     )
@@ -232,7 +234,7 @@ def extract_donor_sgrna_features(sgrna_list):
         編集ウィンドウとCDSの重なり、意図しない編集塩基の数
     """
     if not sgrna_list:
-        return [], [], [], [], [], []
+        return [], [], [], [], [], [], []
     return (
         [t.target_sequence for t in sgrna_list],
         [t.actual_sequence for t in sgrna_list],
@@ -267,7 +269,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
     ) = zip(*target_exon_df_with_grna_sequence["grna_acceptor"].apply(extract_acceptor_sgrna_features))
     (
         target_exon_df_with_grna_sequence["donor_sgrna_target_sequence"],
-        target_exon_df_with_grna_sequence["donor_sgrna_start_in_sequence"],
+        target_exon_df_with_grna_sequence["donor_sgrna_actual_sequence"],
         target_exon_df_with_grna_sequence["donor_sgrna_start_in_sequence"],
         target_exon_df_with_grna_sequence["donor_sgrna_end_in_sequence"],
         target_exon_df_with_grna_sequence["donor_sgrna_target_pos_in_sgrna"],
