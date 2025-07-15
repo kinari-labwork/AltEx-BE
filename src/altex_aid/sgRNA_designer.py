@@ -83,6 +83,7 @@ def design_sgrna(
         しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
     """
     reversed_pam = reverse_pam_sequence(pam_sequence)
+    reversed_pam = f"(?=({reversed_pam}))"  # lookaheadを使って、重複を許して探索する
     sgrna_list = []
 
     splice_site = editing_sequence[splice_site_pos : splice_site_pos + 2].upper()
@@ -91,8 +92,8 @@ def design_sgrna(
         return sgrna_list
 
     for match in re.finditer(reversed_pam, editing_sequence):
-        print(match)
-        grna_start = match.end() +1
+        print(match.start(1), match.end(1), match.group(1))  # デバッグ用にPAM配列を出力
+        grna_start = match.end(1) +1 
         grna_end = grna_start + 20
         if grna_end > len(editing_sequence):
             continue
@@ -113,14 +114,14 @@ def design_sgrna(
         overlap = 0
         unintended_edits = 0
         if site_type == "acceptor":
-            if window_start_in_seq <= cds_boundary:
+            if window_end_in_seq >= cds_boundary:
                 overlap = window_end_in_seq - cds_boundary +1
                 unintended_edits = editing_sequence[
                     cds_boundary: window_end_in_seq +1 # +1はinclusiveにするため
                 ].count("G")
         else:  # donor
-            if window_start_in_seq >= cds_boundary:
-                overlap = cds_boundary + 1 - window_start_in_seq
+            if window_start_in_seq <= cds_boundary:
+                overlap = cds_boundary - window_start_in_seq +1
                 unintended_edits = editing_sequence[
                     window_start_in_seq: cds_boundary + 1 # +1はinclusiveにするため
                 ].count("G")
@@ -136,7 +137,7 @@ def design_sgrna(
                 possible_unintended_edited_base_count=unintended_edits,
             )
         )
-        print(window_start_in_seq,window_end_in_seq,grna_start,grna_end)
+        
     return sgrna_list
 
 
