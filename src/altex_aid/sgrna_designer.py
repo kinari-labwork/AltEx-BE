@@ -93,7 +93,6 @@ def design_sgrna(
 
     for match in re.finditer(reversed_pam, editing_sequence):
         grna_start = match.end(1) 
-        print(f"grna_start: {grna_start}, target_g_pos_in_sequence: {target_g_pos_in_sequence}")
         grna_end = grna_start + 20
         if grna_end > len(editing_sequence):
             continue
