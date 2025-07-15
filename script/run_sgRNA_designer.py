@@ -15,7 +15,7 @@ target_exons_df_with_grna_info = design_sgrna_for_target_exon_df(
     editing_window_start_in_grna=17,
     editing_window_end_in_grna=19
 )
-target_exons_df_with_grna_info = organize_target_exon_df_with_grna_sequence(target_exons_df_with_acceptor_and_donor_sequence)
+target_exons_df_with_grna_info = organize_target_exon_df_with_grna_sequence(target_exons_df_with_grna_info)
 
 target_exons_df_with_grna_info = modify_sgrna_start_end_position_to_position_in_chromosome(target_exons_df_with_grna_info)
 
