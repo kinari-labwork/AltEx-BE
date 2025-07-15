@@ -163,9 +163,9 @@ def design_sgrna_for_target_exon_df(
     def apply_design(row, site_type):
         sequence_col = f"{site_type}_sequence"
         if row["exon_position"] in (
-            ["internal", "last", "a3ss-long"]
+            ["internal", "last"]
             if site_type == "acceptor"
-            else ["internal", "first", "a5ss-long"]
+            else ["internal", "first"]
         ):
             return design_sgrna(
                 editing_sequence=row[sequence_col],
@@ -183,12 +183,13 @@ def design_sgrna_for_target_exon_df(
                 site_type=site_type,
             )
         return []
-
+    # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a3ssはacceptorの位置が-shortと同じだから。
+    # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a5ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
-        lambda r: apply_design(r, "acceptor"), axis=1
+        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor"), axis=1
     )
     target_exon_df["grna_donor"] = target_exon_df.apply(
-        lambda r: apply_design(r, "donor"), axis=1
+        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor"), axis=1
     )
     return target_exon_df
 
@@ -307,7 +308,6 @@ def modify_sgrna_start_end_position_to_position_in_chromosome(
     # 不要な列を削除
     target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.drop(
         columns=[
-            "name",
             "acceptor_sgrna_start_in_sequence",
             "acceptor_sgrna_end_in_sequence",
             "donor_sgrna_start_in_sequence",
