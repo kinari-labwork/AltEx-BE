@@ -22,11 +22,11 @@ def classify_splicing_event(
     target_start, target_end = target_exon
 
     exact_match = 0
-    start_match_only = False
-    start_match_only_and_exist_later_end = False
-    end_match_only = False
-    end_match_only_and_exist_earlier_start = False
-    overlap_without_startend_match = False
+    has_start_match_only = False
+    has_start_match_only_and_exist_later_end = False
+    has_end_match_only = False
+    has_end_match_only_and_exist_earlier_start = False
+    has_overlap_without_startend_match = False
 
     for transcript in all_transcripts:
         if target_exon in transcript:
@@ -36,19 +36,19 @@ def classify_splicing_event(
             if (
                 exon[0] == target_start and exon[1] != target_end
             ):  # ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
-                start_match_only = (
+                has_start_match_only = (
                     True  # start だけ他のエキソンと一致し、 end は一致しない
                 )
                 if exon[1] > target_end: #startが一致するが、endが他のエキソンのendよりも小さい場合
-                    start_match_only_and_exist_later_end = True
+                    has_start_match_only_and_exist_later_end = True
             elif exon[1] == target_end and exon[0] != target_start:
-                end_match_only = (
+                has_end_match_only = (
                     True  # endだけ他のエキソンと一致し、startは一致しない場合
                 )
                 if exon[0] < target_start: # endが一致するが、startが他のエキソンのstartよりも大きい場合
-                    end_match_only_and_exist_earlier_start = True
+                    has_end_match_only_and_exist_earlier_start = True
             elif (exon[0] < target_end and exon[1] > target_start) and (exon[0] != target_start or exon[1] != target_end):
-                overlap_without_startend_match = True  # start, endどちらも他のエキソンと一致しないが、他のエキソンと1塩基以上の重複が生じている
+                has_overlap_without_startend_match = True  # start, endどちらも他のエキソンと一致しないが、他のエキソンと1塩基以上の重複が生じている
 
     total = len(all_transcripts)
 
@@ -59,22 +59,22 @@ def classify_splicing_event(
     elif (
         exact_match > 1
         and exact_match != total
-        and not start_match_only
-        and not end_match_only
-        and not overlap_without_startend_match
+        and not has_start_match_only
+        and not has_end_match_only
+        and not has_overlap_without_startend_match
     ):
         return "skipped"  # 2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
-    if start_match_only and not end_match_only and start_match_only_and_exist_later_end:
+    if has_start_match_only and not has_end_match_only and has_start_match_only_and_exist_later_end:
         return "a5ss-short" # ほかのエキソンとstartが一致するが、endはstartが一致する他のエキソンのendよりも小さい場合 例: [100,200],[100,300]の場合、[100,200]がa5ss-short, [100,300]がa5ss-long
-    if start_match_only and not end_match_only and not start_match_only_and_exist_later_end:
+    if has_start_match_only and not has_end_match_only and not has_start_match_only_and_exist_later_end:
         return "a5ss-long" # ほかのエキソンとstartが一致するが、endはstartが一致するエキソンの中で一番長い
-    if end_match_only and not start_match_only and end_match_only_and_exist_earlier_start:
+    if has_end_match_only and not has_start_match_only and has_end_match_only_and_exist_earlier_start:
         return "a3ss-short" # ほかのエキソンとendが一致するが、startはendが一致する他のエキソンのstartよりも大きい場合 例: [100,200],[150,200]の場合、[100,200]がa3ss-long, [150,200]がa3ss-short
-    if end_match_only and not start_match_only and not end_match_only_and_exist_earlier_start:
+    if has_end_match_only and not has_start_match_only and not has_end_match_only_and_exist_earlier_start:
         return "a3ss-long"
-    if start_match_only and end_match_only:
+    if has_start_match_only and has_end_match_only:
         return "intron_retention"
-    if overlap_without_startend_match:
+    if has_overlap_without_startend_match:
         return "overlap"
     if exact_match == 1 and exact_match != total:
         return "unique"  # 他のトランスクリプトには全く見られないエキソン
