@@ -4,6 +4,7 @@ from altex_aid.sgrna_designer import (
     get_reversed_complement,
     reverse_complement_pam_as_regex,
     design_sgrna,
+    is_valid_exon_position,
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
     organize_target_exon_df_with_grna_sequence,
@@ -74,6 +75,18 @@ def test_design_sgrna():
     )
     print(output_data)
     assert output_data == expected_output
+
+def test_is_valid_exon_position_acceptor():
+    # acceptor の場合のテスト
+    assert is_valid_exon_position("internal", "acceptor") is True
+    assert is_valid_exon_position("last", "acceptor") is True
+    assert is_valid_exon_position("first", "acceptor") is False
+
+def test_is_valid_exon_position_donor():
+    # donor の場合のテスト
+    assert is_valid_exon_position("internal", "donor") is True
+    assert is_valid_exon_position("first", "donor") is True
+    assert is_valid_exon_position("last", "donor") is False
 
 def test_design_sgrna_for_target_exon_df():
     target_exon_df = pd.DataFrame({

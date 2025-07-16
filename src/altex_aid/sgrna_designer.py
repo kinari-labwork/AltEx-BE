@@ -142,6 +142,21 @@ def design_sgrna(
     return sgrna_list
 
 
+def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
+    """
+    Purpose:
+        exon_position が site_type に応じて有効かどうかを判定する
+    Parameters:
+        exon_position: str, エキソンの位置 ("internal", "first", "last" のいずれか)
+        site_type: str, "acceptor" または "donor"
+    Returns:
+        bool, 有効なら True, 無効なら False
+    """
+    valid_positions = ["internal", "last"] if site_type == "acceptor" else ["internal", "first"]
+    return exon_position in valid_positions
+
+
+
 def design_sgrna_for_target_exon_df(
     target_exon_df: pd.DataFrame,
     pam_sequence: str,
@@ -164,11 +179,7 @@ def design_sgrna_for_target_exon_df(
 
     def apply_design(row, site_type):
         sequence_col = f"{site_type}_sequence"
-        if row["exon_position"] in (
-            ["internal", "last"]
-            if site_type == "acceptor"
-            else ["internal", "first"]
-        ):
+        if is_valid_exon_position(row["exon_position"], site_type):
             return design_sgrna(
                 editing_sequence=row[sequence_col],
                 pam_sequence=pam_sequence,
