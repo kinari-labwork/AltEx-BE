@@ -5,8 +5,7 @@ from altex_aid.sgrna_designer import (
     reverse_pam_sequence,
     design_sgrna,
     design_sgrna_for_target_exon_df,
-    extract_acceptor_sgrna_features,
-    extract_donor_sgrna_features,
+    extract_sgrna_features,
     organize_target_exon_df_with_grna_sequence,
     modify_sgrna_start_end_position_to_position_in_chromosome
 )   
@@ -160,7 +159,7 @@ def test_design_sgrna_for_target_exon_df():
     assert output_data["grna_acceptor"].tolist() == expected_output["grna_acceptor"].tolist()
     assert output_data["grna_donor"].tolist() == expected_output["grna_donor"].tolist()
 
-def test_extract_acceptor_sgrna_features():
+def test_extract_sgrna_features():
     sgrna_list = [
         SgrnaInfo(
             target_sequence="AAA",
@@ -181,7 +180,7 @@ def test_extract_acceptor_sgrna_features():
             possible_unintended_edited_base_count=2,
         ),
     ]
-    result = extract_acceptor_sgrna_features(sgrna_list)
+    result = extract_sgrna_features(sgrna_list)
     assert result[0] == ["AAA", "CCC"]
     assert result[1] == ["UUU", "GGG"]
     assert result[2] == [1, 2]
@@ -191,42 +190,7 @@ def test_extract_acceptor_sgrna_features():
     assert result[6] == [1, 2]
 
 def test_extract_acceptor_sgrna_features_empty():
-    result = extract_acceptor_sgrna_features([])
-    assert result == ([], [], [], [], [], [], [])
-
-
-def test_extract_donor_sgrna_features():
-    sgrna_list = [
-        SgrnaInfo(
-            target_sequence="AAA",
-            actual_sequence="UUU",
-            start_in_sequence=1,
-            end_in_sequence=21,
-            target_pos_in_sgrna=5,
-            overlap_between_cds_and_editing_window=3,
-            possible_unintended_edited_base_count=1,
-        ),
-        SgrnaInfo(
-            target_sequence="CCC",
-            actual_sequence="GGG",
-            start_in_sequence=2,
-            end_in_sequence=22,
-            target_pos_in_sgrna=6,
-            overlap_between_cds_and_editing_window=4,
-            possible_unintended_edited_base_count=2,
-        ),
-    ]
-    result = extract_donor_sgrna_features(sgrna_list)
-    assert result[0] == ["AAA", "CCC"]
-    assert result[1] == ["UUU", "GGG"]
-    assert result[2] == [1, 2]
-    assert result[3] == [21, 22]
-    assert result[4] == [5, 6]
-    assert result[5] == [3, 4]
-    assert result[6] == [1, 2]
-
-def test_extract_donor_sgrna_features_empty():
-    result = extract_donor_sgrna_features([])
+    result = extract_sgrna_features([])
     assert result == ([], [], [], [], [], [], [])
 
 def test_organize_target_exon_df_with_grna_sequence():

@@ -197,32 +197,9 @@ def design_sgrna_for_target_exon_df(
     return target_exon_df
 
 
-def extract_acceptor_sgrna_features(sgrna_list):
-    """
-    Purpose:
-    acceptor用sgRNAリストから各特徴を抽出
-    dataclassを使うことで、各sgRNAの情報をメソッド化できる
-    Parameters:
-        sgrna_list: list[SgrnaInfo], acceptor用sgRNAinfoのリスト
-    Returns:
-        各sgRNAの特徴を抽出したリスト
-        各リストの要素は、sgRNAのターゲット配列、
-        実際の配列、開始位置、終了位置、ターゲット位置、
-        編集ウィンドウとCDSの重なり、意図しない編集塩基の数
-    """
-    if not sgrna_list:
-        return [], [], [], [], [], [], []
-    return (
-        [t.target_sequence for t in sgrna_list],
-        [t.actual_sequence for t in sgrna_list],
-        [t.start_in_sequence for t in sgrna_list],
-        [t.end_in_sequence for t in sgrna_list],
-        [t.target_pos_in_sgrna for t in sgrna_list],
-        [t.overlap_between_cds_and_editing_window for t in sgrna_list],
-        [t.possible_unintended_edited_base_count for t in sgrna_list],
-    )
 
-def extract_donor_sgrna_features(sgrna_list):
+
+def extract_sgrna_features(sgrna_list):
     """
     Purpose:
     donor用sgRNAリストから各特徴を抽出
@@ -267,7 +244,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
         target_exon_df_with_grna_sequence["acceptor_sgrna_target_pos_in_sgrna"],
         target_exon_df_with_grna_sequence["acceptor_sgrna_overlap_between_cds_and_editing_window"],
         target_exon_df_with_grna_sequence["acceptor_sgrna_possible_unintended_edited_base_count"],
-    ) = zip(*target_exon_df_with_grna_sequence["grna_acceptor"].apply(extract_acceptor_sgrna_features))
+    ) = zip(*target_exon_df_with_grna_sequence["grna_acceptor"].apply(extract_sgrna_features))
     (
         target_exon_df_with_grna_sequence["donor_sgrna_target_sequence"],
         target_exon_df_with_grna_sequence["donor_sgrna_actual_sequence"],
@@ -276,7 +253,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
         target_exon_df_with_grna_sequence["donor_sgrna_target_pos_in_sgrna"],
         target_exon_df_with_grna_sequence["donor_sgrna_overlap_between_cds_and_editing_window"],
         target_exon_df_with_grna_sequence["donor_sgrna_possible_unintended_edited_base_count"],
-    ) = zip(*target_exon_df_with_grna_sequence["grna_donor"].apply(extract_donor_sgrna_features))
+    ) = zip(*target_exon_df_with_grna_sequence["grna_donor"].apply(extract_sgrna_features))
     # 不要な列を削除
     return target_exon_df_with_grna_sequence.drop(columns=["grna_acceptor", "grna_donor"]).reset_index(drop=True)
 
