@@ -19,7 +19,7 @@ def classify_splicing_event(
     Returns:
         exon_type: str
     """
-    start, end = target_exon
+    target_start, target_end = target_exon
 
     exact_match = 0
     start_match_only = False
@@ -28,26 +28,26 @@ def classify_splicing_event(
     end_match_only_and_exist_earlier_start = False
     overlap_without_startend_match = False
 
-    for tx in all_transcripts:
-        if target_exon in tx:
+    for transcript in all_transcripts:
+        if target_exon in transcript:
             exact_match += 1
             continue
-        for ex in tx:
+        for exon in transcript:
             if (
-                ex[0] == start and ex[1] != end
+                exon[0] == target_start and exon[1] != target_end
             ):  # ex[0]は比較対象のexonのstart,ex[1]は比較対象のexonのend
                 start_match_only = (
                     True  # start だけ他のエキソンと一致し、 end は一致しない
                 )
-                if ex[1] > end: #startが一致するが、endが他のエキソンのendよりも小さい場合
+                if exon[1] > target_end: #startが一致するが、endが他のエキソンのendよりも小さい場合
                     start_match_only_and_exist_later_end = True
-            elif ex[1] == end and ex[0] != start:
+            elif exon[1] == target_end and exon[0] != target_start:
                 end_match_only = (
                     True  # endだけ他のエキソンと一致し、startは一致しない場合
                 )
-                if ex[0] < start: # endが一致するが、startが他のエキソンのstartよりも大きい場合
+                if exon[0] < target_start: # endが一致するが、startが他のエキソンのstartよりも大きい場合
                     end_match_only_and_exist_earlier_start = True
-            elif (ex[0] < end and ex[1] > start) and (ex[0] != start or ex[1] != end):
+            elif (exon[0] < target_end and exon[1] > target_start) and (exon[0] != target_start or exon[1] != target_end):
                 overlap_without_startend_match = True  # start, endどちらも他のエキソンと一致しないが、他のエキソンと1塩基以上の重複が生じている
 
     total = len(all_transcripts)
@@ -64,19 +64,19 @@ def classify_splicing_event(
         and not overlap_without_startend_match
     ):
         return "skipped"  # 2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
-    elif start_match_only and not end_match_only and start_match_only_and_exist_later_end:
+    if start_match_only and not end_match_only and start_match_only_and_exist_later_end:
         return "a5ss-short" # ほかのエキソンとstartが一致するが、endはstartが一致する他のエキソンのendよりも小さい場合 例: [100,200],[100,300]の場合、[100,200]がa5ss-short, [100,300]がa5ss-long
-    elif start_match_only and not end_match_only and not start_match_only_and_exist_later_end:
+    if start_match_only and not end_match_only and not start_match_only_and_exist_later_end:
         return "a5ss-long" # ほかのエキソンとstartが一致するが、endはstartが一致するエキソンの中で一番長い
-    elif end_match_only and not start_match_only and end_match_only_and_exist_earlier_start:
+    if end_match_only and not start_match_only and end_match_only_and_exist_earlier_start:
         return "a3ss-short" # ほかのエキソンとendが一致するが、startはendが一致する他のエキソンのstartよりも大きい場合 例: [100,200],[150,200]の場合、[100,200]がa3ss-long, [150,200]がa3ss-short
-    elif end_match_only and not start_match_only and not end_match_only_and_exist_earlier_start:
+    if end_match_only and not start_match_only and not end_match_only_and_exist_earlier_start:
         return "a3ss-long"
-    elif start_match_only and end_match_only:
+    if start_match_only and end_match_only:
         return "intron_retention"
-    elif overlap_without_startend_match:
+    if overlap_without_startend_match:
         return "overlap"
-    elif exact_match == 1 and exact_match != total:
+    if exact_match == 1 and exact_match != total:
         return "unique"  # 他のトランスクリプトには全く見られないエキソン
     else:
         return "other"
