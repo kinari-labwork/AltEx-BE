@@ -35,7 +35,7 @@ def get_reversed_complement(sequence: str) -> str:
     return "".join([complement_map[base] for base in reversed(sequence)])
 
 
-def reverse_pam_sequence(pam_sequence: str) -> str:
+def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     """
     Purpose:
         PAM配列を逆相補鎖に変換し、Nをワイルドカードに変換
@@ -85,7 +85,7 @@ def design_sgrna(
         つまり、+鎖を逆相補にしたものがsgRNAとなる。
         しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
     """
-    reversed_pam = reverse_pam_sequence(pam_sequence)
+    reversed_pam = reverse_complement_pam_as_regex(pam_sequence)
     reversed_pam = f"(?=({reversed_pam}))"  # lookaheadを使って、重複を許して探索する
     sgrna_list = []
 

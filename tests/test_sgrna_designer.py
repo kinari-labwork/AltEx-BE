@@ -2,7 +2,7 @@ import pandas as pd
 from altex_aid.sgrna_designer import (
     SgrnaInfo,
     get_reversed_complement,
-    reverse_pam_sequence,
+    reverse_complement_pam_as_regex,
     design_sgrna,
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
@@ -18,10 +18,10 @@ def test_get_reversed_complement():
     output_sequence = get_reversed_complement(input_sequence)
     assert output_sequence == expected_output
 
-def test_reverse_pam_sequence():
+def test_reverse_complement_pam_as_regex():
     input_sequence = "NGG"
     expected_output = "[Cc][Cc][ATGCatgc]" 
-    output_sequence = reverse_pam_sequence(input_sequence)
+    output_sequence = reverse_complement_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
 def test_design_sgrna():
