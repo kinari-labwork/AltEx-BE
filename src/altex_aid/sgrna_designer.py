@@ -236,24 +236,19 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
         各列はリストで、sgRNAのターゲット配列、実際の配列、開始位置、終了位置、ターゲット位置
         編集ウィンドウとCDSの重なり、意図しない編集塩基の数を含む。
     """
-    (
-        target_exon_df_with_grna_sequence["acceptor_sgrna_target_sequence"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_actual_sequence"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_start_in_sequence"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_end_in_sequence"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_target_pos_in_sgrna"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_overlap_between_cds_and_editing_window"],
-        target_exon_df_with_grna_sequence["acceptor_sgrna_possible_unintended_edited_base_count"],
-    ) = zip(*target_exon_df_with_grna_sequence["grna_acceptor"].apply(extract_sgrna_features))
-    (
-        target_exon_df_with_grna_sequence["donor_sgrna_target_sequence"],
-        target_exon_df_with_grna_sequence["donor_sgrna_actual_sequence"],
-        target_exon_df_with_grna_sequence["donor_sgrna_start_in_sequence"],
-        target_exon_df_with_grna_sequence["donor_sgrna_end_in_sequence"],
-        target_exon_df_with_grna_sequence["donor_sgrna_target_pos_in_sgrna"],
-        target_exon_df_with_grna_sequence["donor_sgrna_overlap_between_cds_and_editing_window"],
-        target_exon_df_with_grna_sequence["donor_sgrna_possible_unintended_edited_base_count"],
-    ) = zip(*target_exon_df_with_grna_sequence["grna_donor"].apply(extract_sgrna_features))
+    for site in ["acceptor", "donor"]:
+        extracted = zip(*target_exon_df_with_grna_sequence[f"grna_{site}"].apply(extract_sgrna_features))
+        columns =[
+            f"{site}_sgrna_target_sequence",
+            f"{site}_sgrna_actual_sequence",
+            f"{site}_sgrna_start_in_sequence",
+            f"{site}_sgrna_end_in_sequence",
+            f"{site}_sgrna_target_pos_in_sgrna",
+            f"{site}_sgrna_overlap_between_cds_and_editing_window",
+            f"{site}_sgrna_possible_unintended_edited_base_count",
+        ]
+        for col, values in zip(columns, extracted):
+            target_exon_df_with_grna_sequence[col] = values
     # 不要な列を削除
     return target_exon_df_with_grna_sequence.drop(columns=["grna_acceptor", "grna_donor"]).reset_index(drop=True)
 
