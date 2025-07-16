@@ -7,7 +7,7 @@ from altex_aid.sgrna_designer import (
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
     organize_target_exon_df_with_grna_sequence,
-    modify_sgrna_start_end_position_to_position_in_chromosome
+    convert_sgrna_start_end_position_to_position_in_chromosome
 )   
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
@@ -252,7 +252,7 @@ def test_organize_target_exon_df_with_grna_sequence_empty():
     for col in result.columns:
         assert result[col][0] == []
 
-def test_modify_sgrna_start_end_position_to_position_in_chromosome():
+def test_convert_sgrna_start_end_position_to_position_in_chromosome():
     df = pd.DataFrame({
         "acceptor_sgrna_start_in_sequence": [[1, 5]],
         "acceptor_sgrna_end_in_sequence": [[21, 25]],
@@ -265,7 +265,7 @@ def test_modify_sgrna_start_end_position_to_position_in_chromosome():
         "other_col": [123]  # 他の列も含める
     })
 
-    result = modify_sgrna_start_end_position_to_position_in_chromosome(df)
+    result = convert_sgrna_start_end_position_to_position_in_chromosome(df)
 
     # ゲノム座標が正しく計算されているか
     assert result["acceptor_sgrna_start_in_genome"][0] == [101, 105]
@@ -275,7 +275,7 @@ def test_modify_sgrna_start_end_position_to_position_in_chromosome():
     # 他の列が残っていること
     assert result["other_col"][0] == 123
 
-def test_modify_sgrna_start_end_position_to_position_in_chromosome_empty():
+def test_convert_sgrna_start_end_position_to_position_in_chromosome_empty():
     df = pd.DataFrame({
         "acceptor_sgrna_start_in_sequence": [[]],
         "acceptor_sgrna_end_in_sequence": [[]],
@@ -286,7 +286,7 @@ def test_modify_sgrna_start_end_position_to_position_in_chromosome_empty():
         "chromStart_donor": [200],
         "chromEnd_donor": [250],
     })
-    result = modify_sgrna_start_end_position_to_position_in_chromosome(df)
+    result = convert_sgrna_start_end_position_to_position_in_chromosome(df)
     assert result["acceptor_sgrna_start_in_genome"][0] == []
     assert result["acceptor_sgrna_end_in_genome"][0] == []
     assert result["donor_sgrna_start_in_genome"][0] == []

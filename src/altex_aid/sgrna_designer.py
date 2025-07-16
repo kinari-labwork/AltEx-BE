@@ -257,7 +257,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
     # 不要な列を削除
     return target_exon_df_with_grna_sequence.drop(columns=["grna_acceptor", "grna_donor"]).reset_index(drop=True)
 
-def modify_sgrna_start_end_position_to_position_in_chromosome(
+def convert_sgrna_start_end_position_to_position_in_chromosome(
     target_exon_df_with_grna_sequence: pd.DataFrame,
 ) -> pd.DataFrame:
     """
