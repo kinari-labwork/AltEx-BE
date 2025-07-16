@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import (dataclass,astuple)
 import pandas as pd
 import re
 
@@ -210,7 +210,7 @@ def design_sgrna_for_target_exon_df(
 
 
 
-def extract_sgrna_features(sgrna_list):
+def extract_sgrna_features(sgrna_list: list[SgrnaInfo]) -> tuple[list,list,list,list,list,list,list]:
     """
     Purpose:
     donor用sgRNAリストから各特徴を抽出
@@ -223,16 +223,8 @@ def extract_sgrna_features(sgrna_list):
         編集ウィンドウとCDSの重なり、意図しない編集塩基の数
     """
     if not sgrna_list:
-        return [], [], [], [], [], [], []
-    return (
-        [t.target_sequence for t in sgrna_list],
-        [t.actual_sequence for t in sgrna_list],
-        [t.start_in_sequence for t in sgrna_list],
-        [t.end_in_sequence for t in sgrna_list],
-        [t.target_pos_in_sgrna for t in sgrna_list],
-        [t.overlap_between_cds_and_editing_window for t in sgrna_list],
-        [t.possible_unintended_edited_base_count for t in sgrna_list],
-    )
+        return tuple([] for _ in range(7))  # 空のリストを返す
+    return tuple(map(list,zip(*map(astuple, sgrna_list))))
 
 def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence: pd.DataFrame) -> pd.DataFrame:
     """
