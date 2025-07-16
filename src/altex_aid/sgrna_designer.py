@@ -4,7 +4,7 @@ import pandas as pd
 import re
 
 
-@dataclass
+@dataclass(frozen=True)
 class SgrnaInfo:
     """
     使うデータをdataclassで定義することで、コードの可読性を向上させる。
