@@ -42,7 +42,7 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     Parameters:
         pam_sequence: str, PAM配列
     Returns:
-        reversed_pam_sequence: str, 反転されたPAM配列
+        reversed_pam_sequence: str, 反転されたPAM配列を探すための正規表現パターン
     """
     complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]"}
     return "".join([complement_dict[base] for base in reversed(pam_sequence)])
