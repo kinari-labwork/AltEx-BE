@@ -63,10 +63,10 @@ def test_join_sequence_to_single_exon_df():
 
     # --- acceptorの場合のテスト ---
     acceptor_bed_with_sequences = pd.DataFrame(
-        {"name": ["UUID1", "UUID2"], "sequence": ["ATGC", "GTCTAAT"]}
+        {"name": ["UUID1", "UUID2"], "sequence": ["ATGC", "GTCTAAT"], "chromStart_acceptor": [0, 5], "chromEnd_acceptor": [4, 12]}
     )
     donor_bed_with_sequences = pd.DataFrame(
-        {"name": ["UUID1","UUID2"], "sequence": ["TACG", "TAGATTA"]}
+        {"name": ["UUID1","UUID2"], "sequence": ["TACG", "TAGATTA"], "chromStart_donor": [0, 5], "chromEnd_donor": [4, 12]}
     )
 
     expected_output = single_exon_df.copy()
@@ -78,7 +78,11 @@ def test_join_sequence_to_single_exon_df():
             "name": ["UUID1", "UUID2"],
             "score": [0, 0],
             "strand": ["+", "-"],
+            "chromStart_acceptor": [0, 5],
+            "chromEnd_acceptor": [4, 12],
             "acceptor_sequence": ["ATGC", "GTCTAAT"],
+            "chromStart_donor": [0, 5],
+            "chromEnd_donor": [4, 12],
             "donor_sequence": ["TACG", "TAGATTA"],
         }
     )

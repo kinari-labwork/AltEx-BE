@@ -17,8 +17,8 @@ def test_extract_target_exon():
             "exontype": [
                 ["skipped", "constitutive", "skipped"],
                 ["skipped", "constitutive"],
-                ["skipped", "constitutive"],
-                ["unique", "constitutive"],
+                ["a3ss-long", "constitutive"],
+                ["a5ss-long", "constitutive"],
                 ["constitutive"],
             ],
             "exon_position": [
@@ -41,7 +41,7 @@ def test_extract_target_exon():
             # ここでは、ダミーのUUIDを使用（テストではoutput, expected_outputからは除外して比較する）
             "name": ["UUID1", "UUID2", "UUID3", "UUID4"],
             "strand": ["+", "+", "-", "-"],
-            "exontype": ["skipped", "skipped", "skipped", "unique"],
+            "exontype": ["skipped", "skipped", "a3ss-long", "a5ss-long"],
             "exon_position": ["first", "last", "first", "first"],
         }
     )
