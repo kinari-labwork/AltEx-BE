@@ -44,7 +44,11 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     Returns:
         reversed_pam_sequence: str, 反転されたPAM配列を探すための正規表現パターン
     """
-    complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]"}
+    pam_sequence = pam_sequence.upper()  # 大文字に変換
+    complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]",
+                        "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
+                        "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
+                        "D": "[AaTtCc]", "B": "[CcGgAa]"}
     return "".join([complement_dict[base] for base in reversed(pam_sequence)])
 
 def calculate_overlap_and_unintended_edits_to_cds(
