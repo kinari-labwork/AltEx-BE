@@ -47,6 +47,43 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]"}
     return "".join([complement_dict[base] for base in reversed(pam_sequence)])
 
+def calculate_overlap_and_unintended_edits_to_cds(
+    editing_sequence: str,
+    window_start_in_seq: int,
+    window_end_in_seq: int,
+    cds_boundary: int,
+    site_type: str,
+) -> tuple[int, int]:
+    """
+    Purpose:
+        編集ウィンドウとCDSの重なりの長さ、およびcds中で意図しない編集を受ける可能性のある塩基の数を計算する
+    Parameters:
+        editing_sequence: str, 編集対象の塩基配列
+        window_start_in_seq: int, 編集ウィンドウの開始位置 (0-indexed)
+        window_end_in_seq: int, 編集ウィンドウの終了位置 (0-indexed)
+        cds_boundary: int, CDSの境界位置 (0-indexed)
+        site_type: str, "acceptor" または "donor"
+    Returns:
+        overlap: int, 編集ウィンドウとCDSの重なりの長さ
+        unintended_edits: int, cds中の意図しない編集を受ける可能性のある塩基の数
+    """
+    overlap = 0
+    unintended_edits = 0
+
+    if site_type == "acceptor":
+        if window_end_in_seq >= cds_boundary:
+            overlap = window_end_in_seq - cds_boundary + 1
+            unintended_edits = editing_sequence[
+                cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
+            ].count("G")
+    else:  # donor
+        if window_start_in_seq <= cds_boundary:
+            overlap = cds_boundary - window_start_in_seq + 1
+            unintended_edits = editing_sequence[
+                window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
+            ].count("G")
+
+    return overlap, unintended_edits
 
 def design_sgrna(
     editing_sequence: str,
@@ -110,21 +147,13 @@ def design_sgrna(
         actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
         target_pos_in_sgrna = target_g_pos_in_sequence - grna_start + 1
 
-        overlap = 0
-        unintended_edits = 0
-        if site_type == "acceptor":
-            if window_end_in_seq >= cds_boundary:
-                overlap = window_end_in_seq - cds_boundary +1
-                unintended_edits = editing_sequence[
-                    cds_boundary: window_end_in_seq +1 # +1はinclusiveにするため
-                ].count("G")
-        else:  # donor
-            if window_start_in_seq <= cds_boundary:
-                overlap = cds_boundary - window_start_in_seq +1
-                unintended_edits = editing_sequence[
-                    window_start_in_seq: cds_boundary + 1 # +1はinclusiveにするため
-                ].count("G")
-
+        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+            editing_sequence=editing_sequence,
+            window_start_in_seq=window_start_in_seq,
+            window_end_in_seq=window_end_in_seq,
+            cds_boundary=cds_boundary,
+            site_type=site_type,
+        )
         sgrna_list.append(
             SgrnaInfo(
                 target_sequence=target_sequence,
