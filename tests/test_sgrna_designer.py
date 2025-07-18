@@ -1,7 +1,7 @@
 import pandas as pd
 from altex_aid.sgrna_designer import (
     SgrnaInfo,
-    get_reversed_complement,
+    convert_dna_to_reversed_complement_rna,
     reverse_complement_pam_as_regex,
     design_sgrna,
     is_valid_exon_position,
@@ -13,10 +13,10 @@ from altex_aid.sgrna_designer import (
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
 
-def test_get_reversed_complement():
+def test_convert_dna_to_reversed_complement_rna():
     input_sequence = "ATGCATGC"
     expected_output = "GCAUGCAU" # RNAにした逆相補鎖
-    output_sequence = get_reversed_complement(input_sequence)
+    output_sequence = convert_dna_to_reversed_complement_rna(input_sequence)
     assert output_sequence == expected_output
 
 def test_reverse_complement_pam_as_regex():

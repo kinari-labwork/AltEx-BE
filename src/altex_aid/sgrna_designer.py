@@ -19,14 +19,14 @@ class SgrnaInfo:
     possible_unintended_edited_base_count: int # 意図しないcdsでの変異が起こる可能性のある塩基の数
 
 
-def get_reversed_complement(sequence: str) -> str:
+def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
     """
     purpose:
         塩基配列を逆相補のRNAに変換する
     Parameters:
-        sequence: 変換したい塩基配列
+        sequence: 変換したいDNA配列
     Returns:
-        逆相補の塩基配列
+        reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
     """
     complement_map = {
         "A": "U", "T": "A", "C": "G", "G": "C", "N": "N",
@@ -109,7 +109,7 @@ def design_sgrna(
             continue
 
         target_sequence = editing_sequence[grna_start:grna_end]
-        actual_sequence = get_reversed_complement(target_sequence)
+        actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
         target_pos_in_sgrna = target_g_pos_in_sequence - grna_start + 1
 
         overlap = 0
