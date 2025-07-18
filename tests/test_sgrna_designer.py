@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 from altex_aid.sgrna_designer import (
     SgrnaInfo,
     convert_dna_to_reversed_complement_rna,
@@ -28,7 +29,8 @@ def test_reverse_complement_pam_as_regex():
 def test_design_sgrna():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
-    pam_sequence = "NGG"
+    pam_sequence = "NGG"  # 例としてNGGを使用
+    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  # PAMはNGGなので、逆相補化してCCNとする
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
     target_g_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
@@ -66,7 +68,7 @@ def test_design_sgrna():
 ]
     output_data = design_sgrna(
         editing_sequence=editing_sequence,
-        pam_sequence=pam_sequence,
+        reversed_pam_regex=reversed_pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
         target_g_pos_in_sequence=target_g_pos_in_sequence,

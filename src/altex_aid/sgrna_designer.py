@@ -50,7 +50,7 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
 
 def design_sgrna(
     editing_sequence: str,
-    pam_sequence: str,
+    reversed_pam_regex: re.Pattern, # 正規表現パターン
     editing_window_start_in_grna: int, # 1-indexed
     editing_window_end_in_grna: int, # 1-indexed
     target_g_pos_in_sequence: int,
@@ -85,8 +85,6 @@ def design_sgrna(
         つまり、+鎖を逆相補にしたものがsgRNAとなる。
         しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
     """
-    reversed_pam = reverse_complement_pam_as_regex(pam_sequence)
-    reversed_pam = f"(?=({reversed_pam}))"  # lookaheadを使って、重複を許して探索する
     sgrna_list = []
 
     splice_site = editing_sequence[target_g_pos_in_sequence - 1: target_g_pos_in_sequence + 1].upper() if site_type == "acceptor" else editing_sequence[target_g_pos_in_sequence : target_g_pos_in_sequence + 2].upper()
@@ -94,8 +92,8 @@ def design_sgrna(
     if splice_site != expected_site:
         return sgrna_list
 
-    for match in re.finditer(reversed_pam, editing_sequence):
-        grna_start = match.end(1) 
+    for match in reversed_pam_regex.finditer(editing_sequence):
+        grna_start = match.end(1)
         grna_end = grna_start + 20
         if grna_end > len(editing_sequence):
             continue
@@ -177,12 +175,14 @@ def design_sgrna_for_target_exon_df(
     ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
     DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
 
+    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  
+
     def apply_design(row, site_type):
         sequence_col = f"{site_type}_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
             return design_sgrna(
                 editing_sequence=row[sequence_col],
-                pam_sequence=pam_sequence,
+                reversed_pam_regex=reversed_pam_regex,
                 editing_window_start_in_grna=editing_window_start_in_grna,
                 editing_window_end_in_grna=editing_window_end_in_grna,
                 target_g_pos_in_sequence=(
