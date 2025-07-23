@@ -4,7 +4,7 @@ from altex_aid.sgrna_designer import (
     SgrnaInfo,
     convert_dna_to_reversed_complement_rna,
     reverse_complement_pam_as_regex,
-    design_sgrna,
+    design_sgrna_cbe,
     is_valid_exon_position,
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
@@ -26,7 +26,7 @@ def test_reverse_complement_pam_as_regex():
     output_sequence = reverse_complement_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
-def test_design_sgrna():
+def test_design_sgrna_cbe():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
@@ -66,7 +66,7 @@ def test_design_sgrna():
             possible_unintended_edited_base_count= 2
         ),
 ]
-    output_data = design_sgrna(
+    output_data = design_sgrna_cbe(
         editing_sequence=editing_sequence,
         reversed_pam_regex=reversed_pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,

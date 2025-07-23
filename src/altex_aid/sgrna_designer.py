@@ -89,7 +89,7 @@ def calculate_overlap_and_unintended_edits_to_cds(
 
     return overlap, unintended_edits
 
-def design_sgrna(
+def design_sgrna_cbe(
     editing_sequence: str,
     reversed_pam_regex: re.Pattern, # 正規表現パターン
     editing_window_start_in_grna: int, # 1-indexed
@@ -173,6 +173,8 @@ def design_sgrna(
     return sgrna_list
 
 
+
+
 def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     """
     Purpose:
@@ -213,7 +215,7 @@ def design_sgrna_for_target_exon_df(
     def apply_design(row, site_type):
         sequence_col = f"{site_type}_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
-            return design_sgrna(
+            return design_sgrna_cbe(
                 editing_sequence=row[sequence_col],
                 reversed_pam_regex=reversed_pam_regex,
                 editing_window_start_in_grna=editing_window_start_in_grna,
