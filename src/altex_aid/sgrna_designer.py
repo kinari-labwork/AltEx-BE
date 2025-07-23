@@ -106,7 +106,8 @@ def design_sgrna_cbe(
         pam_sequence: str, PAM配列
         editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
         editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
-        splice_site_pos: int, 5'から数えたときのSA/SDの開始位置(0-indexed) つまり、SAなら23番目のA, SDなら25番目のG
+        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
+            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
         cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
         site_type: str, "acceptor"または"donor"のどちらかを指定
     Returns:
@@ -172,8 +173,34 @@ def design_sgrna_cbe(
         
     return sgrna_list
 
-
-
+def decide_target_base_pos_in_sequence(
+    base_editor_type: str,
+    site_type:str,
+) ->int:
+    """
+    purpose:
+        base_editorの種類とサイトタイプに応じてターゲットとなる塩基の取得塩基中での位置を決定する
+    Parameters:
+        base_editor_type: str, "abe" または "cbe"
+        site_type: str, "acceptor" または "donor"
+    Returns:
+        target_base_pos_in_sequence: int, 
+            ターゲットとなる塩基の取得塩基中での位置 (0-indexed)
+    Comments:
+        取得した50塩基の配列の99%は、以下のルールに従う。
+        acceptorの場合:
+            23 24
+        5'-- A  G  [---exon---]
+        3'-- T  C  [---exon---]
+        donorの場合:
+                        25 26
+        5'--[---exon---] G  T --3'
+        3'--[---exon---] C  A --5'
+    """
+    if base_editor_type == "cbe":
+        return 24 if site_type == "acceptor" else 25
+    if base_editor_type == "abe":
+        return 23 if site_type == "acceptor" else 26
 
 def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     """
@@ -195,6 +222,7 @@ def design_sgrna_for_target_exon_df(
     pam_sequence: str,
     editing_window_start_in_grna: int,
     editing_window_end_in_grna: int,
+    base_editor_type: str 
 ) -> pd.DataFrame:
     """
     Purpose:
@@ -212,33 +240,31 @@ def design_sgrna_for_target_exon_df(
 
     reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  
 
-    def apply_design(row, site_type):
+    def apply_design(row, site_type, base_editor_type):
         sequence_col = f"{site_type}_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
-            return design_sgrna_cbe(
-                editing_sequence=row[sequence_col],
-                reversed_pam_regex=reversed_pam_regex,
-                editing_window_start_in_grna=editing_window_start_in_grna,
-                editing_window_end_in_grna=editing_window_end_in_grna,
-                target_g_pos_in_sequence=(
-                    24 if site_type == "acceptor" else 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
-                ),
-                cds_boundary=(
-                    ACCEPTOR_CDS_BOUNDARY
-                    if site_type == "acceptor"
-                    else DONOR_CDS_BOUNDARY
-                ),
-                site_type=site_type,
-            )
+            if base_editor_type == "cbe":
+                return design_sgrna_cbe(
+                    editing_sequence=row[sequence_col],
+                    reversed_pam_regex=reversed_pam_regex,
+                    editing_window_start_in_grna=editing_window_start_in_grna,
+                    editing_window_end_in_grna=editing_window_end_in_grna,
+                    target_g_pos_in_sequence=decide_target_base_pos_in_sequence(
+                        base_editor_type=base_editor_type,
+                        site_type=site_type
+                    ),
+                    cds_boundary= ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
+                    site_type=site_type
+                )
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
     # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor"), axis=1
+        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor", base_editor_type), axis=1
     )
     target_exon_df["grna_donor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor"), axis=1
+        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor", base_editor_type), axis=1
     )
     return target_exon_df
 
