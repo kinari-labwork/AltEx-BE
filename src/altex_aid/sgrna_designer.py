@@ -19,6 +19,16 @@ class SgrnaInfo:
     overlap_between_cds_and_editing_window: int # 編集ウィンドウとCDSの重なりの長さ
     possible_unintended_edited_base_count: int # 意図しないcdsでの変異が起こる可能性のある塩基の数
 
+@dataclass(frozen=True)
+class BaseEditor:
+    """
+    BaseEditorの情報を保持するためのdataclass
+    """
+    base_editor_name: str # BaseEditorの名前
+    pam_sequence: str # PAM配列
+    editing_window_start_in_grna: int # 編集ウィンドウの開始位置 (1-indexed)
+    editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
+    base_editor_type: str # "CBE" or "ABE"
 
 def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
     """
@@ -404,8 +414,6 @@ def design_sgrna_for_target_exon_df(
     return target_exon_df
 
 
-
-
 def extract_sgrna_features(sgrna_list: list[SgrnaInfo]) -> tuple[list,list,list,list,list,list,list]:
     """
     Purpose:
@@ -493,4 +501,45 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
         ]
     )
 
+    return target_exon_df_with_grna_sequence.reset_index(drop=True)
+
+# 今までの動作をまとめて、sgrnaを設計する関数
+# 実際に実行するのはこの関数だけでよい
+def design_sgrna_for_base_editors(
+    target_exon_df: pd.DataFrame,
+    base_editors: list[BaseEditor],
+) -> pd.DataFrame:
+    """
+    Purpose:
+        各BaseEditorに対してsgRNAを設計し、結果をDataFrameにまとめる
+        これより上の関数の呼び出しをまとめて行う
+    Parameters:
+        target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
+        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+    Returns:
+        pd.DataFrame, 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
+    """
+    for base_editor in base_editors:
+        # 1. sgRNAを設計する
+        target_exon_df = design_sgrna_for_target_exon_df(
+            target_exon_df=target_exon_df,
+            pam_sequence=base_editor.pam_sequence,
+            editing_window_start_in_grna=base_editor.editing_window_start_in_grna,
+            editing_window_end_in_grna=base_editor.editing_window_end_in_grna,
+            base_editor_type=base_editor.base_editor_type
+        )
+        # 2. sgRNAの情報を展開する
+        target_exon_df_with_grna_sequence = organize_target_exon_df_with_grna_sequence(target_exon_df)
+        # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
+        target_exon_df_with_grna_sequence = convert_sgrna_start_end_position_to_position_in_chromosome(target_exon_df_with_grna_sequence)
+
+        # 4. 列名にbase_editorの名前を付ける
+        # これにより、2.や3.が１度処理した列をもう一度処理することを防ぐ
+        target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.rename(
+            columns={
+                col: f"{base_editor.base_editor_name}_{col}" 
+                for col in target_exon_df_with_grna_sequence.columns
+                if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
+            }
+        )
     return target_exon_df_with_grna_sequence.reset_index(drop=True)
