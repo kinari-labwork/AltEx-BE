@@ -6,7 +6,11 @@ from altex_aid.sgrna_designer import (
     convert_dna_to_reversed_complement_rna,
     convert_dna_to_rna,
     reverse_complement_pam_as_regex,
+    convert_pam_as_regex,
+    calculate_overlap_and_unintended_edits_to_cds,
     design_sgrna_cbe,
+    design_sgrna_abe,
+    decide_target_base_pos_in_sequence,
     is_valid_exon_position,
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
@@ -32,6 +36,12 @@ def test_reverse_complement_pam_as_regex():
     input_sequence = "NGG"
     expected_output = re.compile("(?=([Cc][Cc][ATGCatgc]))")
     output_sequence = reverse_complement_pam_as_regex(input_sequence)
+    assert output_sequence == expected_output
+
+def test_convert_pam_as_regex():
+    input_sequence = "NGG"
+    expected_output = re.compile("(?=([ATGCatgc][Gg][Gg]))")  # PAM配列を正規表現に変換した結果
+    output_sequence = convert_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
 def test_design_sgrna_cbe():
@@ -85,6 +95,8 @@ def test_design_sgrna_cbe():
     )
     print(output_data)
     assert output_data == expected_output
+
+
 
 def test_is_valid_exon_position_acceptor():
     # acceptor の場合のテスト
