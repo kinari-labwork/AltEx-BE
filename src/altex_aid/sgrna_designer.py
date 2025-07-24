@@ -34,6 +34,18 @@ def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
         }
     return "".join([complement_map[base] for base in reversed(sequence)])
 
+def convert_dna_to_rna(sequence: str) -> str:
+    """
+    Purpose:
+        塩基配列をRNAに変換する
+    Parameters:
+        sequence: 変換したいDNA配列
+    Returns:
+        rna_sequence: 入力したDNA配列のRNA配列
+    """
+    sequence = sequence.replace("T", "U")
+    sequence = sequence.replace("t", "u")
+    return sequence
 
 def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     """
@@ -50,6 +62,23 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
                         "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
                         "D": "[AaTtCc]", "B": "[CcGgAa]"}
     return "".join([complement_dict[base] for base in reversed(pam_sequence)])
+
+def complement_pam_as_regex(pam_sequence: str) -> str:
+    """
+    Purpose:
+        PAM配列を正規表現パターンに変換
+    Parameters:
+        pam_sequence: str, PAM配列
+    Returns:
+        pam_regex: str, PAM配列を表す正規表現パターン
+    """
+    pam_sequence = pam_sequence.upper()  # 大文字に変換
+    complement_dict = {"N": "[ATGCatgc]", "A": "[Aa]", "T": "[Tt]", "G": "[Cc]", "C": "[Gg]",
+                        "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
+                        "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
+                        "D": "[AaTtCc]", "B": "[CcGgAa]"}
+    return "".join([complement_dict[base] for base in pam_sequence])
+
 
 def calculate_overlap_and_unintended_edits_to_cds(
     editing_sequence: str,
@@ -170,7 +199,93 @@ def design_sgrna_cbe(
                 possible_unintended_edited_base_count=unintended_edits,
             )
         )
-        
+    return sgrna_list
+
+def design_sgrna_abe(
+    editing_sequence: str,
+    reversed_pam_regex: re.Pattern, # 正規表現パターン
+    pam_regrex: str, # PAM配列を正規表現パターンに変換したもの
+    editing_window_start_in_grna: int, # 1-indexed
+    editing_window_end_in_grna: int, # 1-indexed
+    target_a_pos_in_sequence: int,
+    cds_boundary: int,
+    site_type: str,
+) -> list[SgrnaInfo]:
+    """
+    Purpose:
+        ゲノムから取り出したSA/SD周辺配列からsgRNAの条件に適合する配列を検索する
+    Parameters:
+        target_sequence: str, +鎖由来の50bpのSA/SD周辺の塩基配列
+        pam_sequence: str, PAM配列
+        editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
+        editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
+        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
+            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
+        cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
+        site_type: str, "acceptor"または"donor"のどちらかを指定
+    Returns:
+        sgrna_list: list[SgrnaInfo], 条件に適合するsgRNAの情報のリスト
+    Comments:
+        Acceptor splice siteの例:
+        5'--------AG[---NGG---exon]-3'
+             5'---AG----3" 20bpのsgRNA(-鎖に結合する)
+        3'--------TC[---NCC---exon]-5'
+
+        Donor splice siteの例:
+        5'-[---exon--CCN---]GT--3'
+                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
+        3'-[---exon--GGN---]CA--5'
+
+        この"C"をTに編集するために、+鎖に結合するsgRNAを設計する。
+        つまり、+鎖を逆相補にしたものがsgRNAとなる。
+        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
+    """
+    sgrna_list = []
+    
+    splice_site = editing_sequence[target_a_pos_in_sequence : target_a_pos_in_sequence + 2].upper() if site_type == "acceptor" else editing_sequence[target_a_pos_in_sequence - 1: target_a_pos_in_sequence + 1].upper()
+    expected_site = "AG" if site_type == "acceptor" else "GT"
+    if splice_site != expected_site:
+            return sgrna_list
+    # acceptorの場合は、編集対象塩基が+鎖に存在するため、-鎖に結合するsgRNAを設計する。したがって、入力した5'-3' PAMがそのまま+鎖の3'側に存在することになる
+    for match in pam_regrex.finditer(editing_sequence) if site_type == "acceptor" else reversed_pam_regex.finditer(editing_sequence):
+        if site_type == "acceptor": 
+            grna_end = match.start(1)  # -鎖に結合するsgRNAのため、PAMのstart位置がsgRNAの終端位置となる
+            grna_start = grna_end - 20
+        else:  # donor
+            grna_start = match.end(1)
+            grna_end = grna_start + 20
+
+        if grna_start < 0 or grna_end > len(editing_sequence):
+                continue
+        if not (grna_start <= target_a_pos_in_sequence < grna_end):
+            continue
+        window_start_in_seq = grna_start + editing_window_start_in_grna - 1  # 1-indexedから0-indexedに変換するため、余分に1を引く
+        window_end_in_seq = grna_start + editing_window_end_in_grna - 1
+        if not (window_start_in_seq <= target_a_pos_in_sequence <= window_end_in_seq):
+            continue
+        target_sequence = editing_sequence[grna_start:grna_end]
+        # acceptorの場合は、-鎖に結合するsgRNAを設計するため、逆相補化は必要ない
+        # donorの場合は、+鎖に結合するsgRNAを設計するため、逆相補化が必要
+        actual_sequence = convert_dna_to_rna(target_sequence)  if site_type == "acceptor" else convert_dna_to_reversed_complement_rna(target_sequence)
+        target_pos_in_sgrna = target_a_pos_in_sequence - grna_start + 1
+        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+            editing_sequence=editing_sequence,
+            window_start_in_seq=window_start_in_seq,
+            window_end_in_seq=window_end_in_seq,
+            cds_boundary=cds_boundary,
+            site_type=site_type,
+        )
+        sgrna_list.append(
+            SgrnaInfo(
+                target_sequence=target_sequence,
+                actual_sequence=actual_sequence,
+                start_in_sequence=grna_start,
+                end_in_sequence=grna_end,
+                target_pos_in_sgrna=target_pos_in_sgrna,
+                overlap_between_cds_and_editing_window=overlap,
+                possible_unintended_edited_base_count=unintended_edits,
+            )
+        )
     return sgrna_list
 
 def decide_target_base_pos_in_sequence(
