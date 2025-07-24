@@ -15,7 +15,8 @@ from altex_aid.sgrna_designer import (
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
     organize_target_exon_df_with_grna_sequence,
-    convert_sgrna_start_end_position_to_position_in_chromosome
+    convert_sgrna_start_end_position_to_position_in_chromosome,
+    design_sgrna_for_base_editors
 )   
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
