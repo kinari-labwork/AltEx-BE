@@ -2,7 +2,9 @@ import pandas as pd
 import re
 from altex_aid.sgrna_designer import (
     SgrnaInfo,
+    BaseEditor,
     convert_dna_to_reversed_complement_rna,
+    convert_dna_to_rna,
     reverse_complement_pam_as_regex,
     design_sgrna_cbe,
     is_valid_exon_position,
@@ -18,6 +20,12 @@ def test_convert_dna_to_reversed_complement_rna():
     input_sequence = "ATGCATGC"
     expected_output = "GCAUGCAU" # RNAにした逆相補鎖
     output_sequence = convert_dna_to_reversed_complement_rna(input_sequence)
+    assert output_sequence == expected_output
+
+def test_convert_dna_to_rna():
+    input_sequence = "ATGCATGC"
+    expected_output = "AUGCAUGC"  # RNAに変換した結果
+    output_sequence = convert_dna_to_rna(input_sequence)
     assert output_sequence == expected_output
 
 def test_reverse_complement_pam_as_regex():
