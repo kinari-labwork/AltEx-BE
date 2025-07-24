@@ -22,7 +22,7 @@ def test_convert_dna_to_reversed_complement_rna():
 
 def test_reverse_complement_pam_as_regex():
     input_sequence = "NGG"
-    expected_output = "[Cc][Cc][ATGCatgc]" 
+    expected_output = re.compile("(?=([Cc][Cc][ATGCatgc]))")
     output_sequence = reverse_complement_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
@@ -30,7 +30,7 @@ def test_design_sgrna_cbe():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
-    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  # PAMはNGGなので、逆相補化してCCNとする
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
     target_g_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット

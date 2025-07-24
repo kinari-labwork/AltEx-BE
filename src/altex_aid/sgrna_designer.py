@@ -377,6 +377,20 @@ def design_sgrna_for_target_exon_df(
                     cds_boundary= ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
                     site_type=site_type
                 )
+            elif base_editor_type == "abe":
+                return design_sgrna_abe(
+                    editing_sequence=row[sequence_col],
+                    reversed_pam_regex=reversed_pam_regex,
+                    pam_regrex=pam_regrex,
+                    editing_window_start_in_grna=editing_window_start_in_grna,
+                    editing_window_end_in_grna=editing_window_end_in_grna,
+                    target_a_pos_in_sequence=decide_target_base_pos_in_sequence(
+                        base_editor_type=base_editor_type,
+                        site_type=site_type
+                    ),
+                    cds_boundary= ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
+                    site_type=site_type
+                )
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
