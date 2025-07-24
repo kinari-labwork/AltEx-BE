@@ -47,7 +47,7 @@ def convert_dna_to_rna(sequence: str) -> str:
     sequence = sequence.replace("t", "u")
     return sequence
 
-def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
+def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
     Purpose:
         PAM配列を逆相補鎖に変換し、Nをワイルドカードに変換
@@ -61,7 +61,9 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
                         "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
                         "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
                         "D": "[AaTtCc]", "B": "[CcGgAa]"}
-    return "".join([complement_dict[base] for base in reversed(pam_sequence)])
+    reversed_complement_pam_regex = "".join([complement_dict[base] for base in reversed(pam_sequence)])
+    return re.compile(f"(?=({reversed_complement_pam_regex}))")
+
 
 def complement_pam_as_regex(pam_sequence: str) -> str:
     """
@@ -77,7 +79,8 @@ def complement_pam_as_regex(pam_sequence: str) -> str:
                         "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
                         "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
                         "D": "[AaTtCc]", "B": "[CcGgAa]"}
-    return "".join([complement_dict[base] for base in pam_sequence])
+    pam_regex = "".join([complement_dict[base] for base in pam_sequence])
+    return re.compile(f"(?=({pam_regex}))")  
 
 
 def calculate_overlap_and_unintended_edits_to_cds(
@@ -352,8 +355,9 @@ def design_sgrna_for_target_exon_df(
     """
     ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
     DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
-
-    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  
+    
+    pam_regrex = complement_pam_as_regex(pam_sequence)
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
 
     def apply_design(row, site_type, base_editor_type):
         sequence_col = f"{site_type}_sequence"
