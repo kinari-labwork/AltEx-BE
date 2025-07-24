@@ -87,10 +87,10 @@ def convert_pam_as_regex(pam_sequence: str) -> str:
         pam_regex: str, PAM配列を表す正規表現パターン
     """
     pam_sequence = pam_sequence.upper()  # 大文字に変換
-    complement_dict = {"N": "[ATGCatgc]", "A": "[Aa]", "T": "[Tt]", "G": "[Cc]", "C": "[Gg]",
-                        "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
-                        "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
-                        "D": "[AaTtCc]", "B": "[CcGgAa]"}
+    complement_dict = {"N": "[ATGCatgc]", "A": "[Aa]", "T": "[Tt]", "G": "[Gg]", "C": "[Cc]",
+                        "M": "[AaCc]", "R": "[AaGg]", "W": "[AaTt]", "S": "[CcGg]",
+                        "Y": "[CcTt]", "K": "[GgTt]", "V": "[AaCcGg]", "H": "[AaTtCc]",
+                        "D": "[GgAaTt]", "B": "[TtGgCc]"}
     pam_regex = "".join([complement_dict[base] for base in pam_sequence])
     return re.compile(f"(?=({pam_regex}))")  
 
