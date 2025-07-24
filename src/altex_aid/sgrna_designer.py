@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import (dataclass,astuple)
 import pandas as pd
 import re
+import functools
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ def convert_dna_to_rna(sequence: str) -> str:
     sequence = sequence.replace("t", "u")
     return sequence
 
+@functools.lru_cache(maxsize=None)
 def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
     Purpose:
@@ -64,7 +66,7 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     reversed_complement_pam_regex = "".join([complement_dict[base] for base in reversed(pam_sequence)])
     return re.compile(f"(?=({reversed_complement_pam_regex}))")
 
-
+@functools.lru_cache(maxsize=None)
 def complement_pam_as_regex(pam_sequence: str) -> str:
     """
     Purpose:
