@@ -77,7 +77,7 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     return re.compile(f"(?=({reversed_complement_pam_regex}))")
 
 @functools.lru_cache(maxsize=None)
-def complement_pam_as_regex(pam_sequence: str) -> str:
+def convert_pam_as_regex(pam_sequence: str) -> str:
     """
     Purpose:
         PAM配列を正規表現パターンに変換
@@ -367,8 +367,8 @@ def design_sgrna_for_target_exon_df(
     """
     ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
     DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
-    
-    pam_regrex = complement_pam_as_regex(pam_sequence)
+
+    pam_regex = convert_pam_as_regex(pam_sequence)
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
 
     def apply_design(row, site_type, base_editor_type):
@@ -391,7 +391,7 @@ def design_sgrna_for_target_exon_df(
                 return design_sgrna_abe(
                     editing_sequence=row[sequence_col],
                     reversed_pam_regex=reversed_pam_regex,
-                    pam_regrex=pam_regrex,
+                    pam_regex=pam_regex,
                     editing_window_start_in_grna=editing_window_start_in_grna,
                     editing_window_end_in_grna=editing_window_end_in_grna,
                     target_a_pos_in_sequence=decide_target_base_pos_in_sequence(
