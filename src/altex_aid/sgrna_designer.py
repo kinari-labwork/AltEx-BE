@@ -77,7 +77,7 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     return re.compile(f"(?=({reversed_complement_pam_regex}))")
 
 @functools.lru_cache(maxsize=None)
-def convert_pam_as_regex(pam_sequence: str) -> str:
+def convert_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
     Purpose:
         PAM配列を正規表現パターンに変換
