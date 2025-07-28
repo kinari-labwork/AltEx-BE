@@ -213,6 +213,7 @@ def design_sgrna_cbe(
             window_end_in_seq=window_end_in_seq,
             cds_boundary=cds_boundary,
             site_type=site_type,
+            base_editor_type="cbe"
         )
         sgrna_list.append(
             SgrnaInfo(
@@ -300,6 +301,7 @@ def design_sgrna_abe(
             window_end_in_seq=window_end_in_seq,
             cds_boundary=cds_boundary,
             site_type=site_type,
+            base_editor_type="abe"  # ABEの場合は常にABEを指定
         )
         sgrna_list.append(
             SgrnaInfo(
