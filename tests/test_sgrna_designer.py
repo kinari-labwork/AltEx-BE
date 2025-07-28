@@ -83,7 +83,7 @@ def test_calculate_overlap_and_unintended_edits_to_cds_abe():
     )
     assert (overlap, unintended_edits) == expected_output
 
-def test_design_sgrna_cbe():
+def test_design_sgrna_cbe_acceptor():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
@@ -121,6 +121,58 @@ def test_design_sgrna_cbe():
             target_pos_in_sgrna=17,
             overlap_between_cds_and_editing_window=2,
             possible_unintended_edited_base_count= 2
+        ),
+]
+    output_data = design_sgrna_cbe(
+        editing_sequence=editing_sequence,
+        reversed_pam_regex=reversed_pam_regex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_g_pos_in_sequence=target_g_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
+
+def test_design_sgrna_cbe_donor():
+    editing_sequence = "NNNNCCCCCNNNNNNNNNNNNNNGGGTNNNNNNNNNNNNNNNNNNNNN"
+    # これは+ strandのエキソンで、SDの配列。
+    pam_sequence = "NGG"  # 例としてNGGを使用
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_g_pos_in_sequence = 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    cds_boundary = 24
+    site_type = "donor"
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="CCNNNNNNNNNNNNNNGGGT",
+            actual_sequence="ACCCNNNNNNNNNNNNNNGG",
+            start_in_sequence = 7,
+            end_in_sequence=27,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=2,
+            possible_unintended_edited_base_count=2
+        ),
+        SgrnaInfo(
+            target_sequence="CNNNNNNNNNNNNNNGGGTN",
+            actual_sequence="NACCCNNNNNNNNNNNNNNG",
+            start_in_sequence = 8,
+            end_in_sequence=28,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count= 1
+        ),
+        SgrnaInfo(
+            target_sequence="NNNNNNNNNNNNNNGGGTNN",
+            actual_sequence="NNACCCNNNNNNNNNNNNNN",
+            start_in_sequence = 9,
+            end_in_sequence=29,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
         ),
 ]
     output_data = design_sgrna_cbe(
