@@ -45,6 +45,54 @@ def test_convert_pam_as_regex():
     output_sequence = convert_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
+def test_calculate_overlap_and_unintended_edits_to_cds_cbe():
+    editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
+    window_start_in_seq = 24
+    window_end_in_seq = 26 # このendはinclusiveなので、24,25,26の3塩基が編集される
+    cds_boundary = 25
+    site_type = "acceptor"
+    base_editor_type = "cbe"  # base editorのタイプを指定
+
+    expected_output = (2,2)
+    overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+        editing_sequence=editing_sequence,
+        window_start_in_seq=window_start_in_seq,
+        window_end_in_seq=window_end_in_seq,
+        cds_boundary=cds_boundary,
+        site_type=site_type,
+        base_editor_type=base_editor_type
+    )
+    assert (overlap, unintended_edits) == expected_output
+
+    def test_calculate_overlap_and_unintended_edits_to_cds_abe():
+        editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGAAANNNNNNNNNNNNNNNNNNNNNNNN"
+        window_start_in_seq = 23
+        window_end_in_seq = 25
+        cds_boundary = 25
+        site_type = "acceptor"
+        base_editor_type = "abe"  # base editorのタイプを指定
+
+        expected_output = (1,1)
+        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+            editing_sequence=editing_sequence,
+            window_start_in_seq=window_start_in_seq,
+            window_end_in_seq=window_end_in_seq,
+            cds_boundary=cds_boundary,
+            site_type=site_type,
+            base_editor_type=base_editor_type
+        )
+        assert (overlap, unintended_edits) == expected_output
+
+        expected_output = (2,2)
+        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+            editing_sequence=editing_sequence,
+            window_start_in_seq=window_start_in_seq,
+            window_end_in_seq=window_end_in_seq,
+            cds_boundary=cds_boundary,
+            site_type=site_type
+        )
+        assert (overlap, unintended_edits) == expected_output
+
 def test_design_sgrna_cbe():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
@@ -97,7 +145,61 @@ def test_design_sgrna_cbe():
     print(output_data)
     assert output_data == expected_output
 
+def test_design_sgrna_abe_acceptor():
+    # acceptorの場合のテスト
+    editing_sequence = "NNNNNNNNNNNNNNNNNNNNNNNAGAANNNNNNNNNNNNNGGGGGNNNNN"
+    pam_sequence = "NGG"
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
+    pam_regrex = convert_pam_as_regex(pam_sequence)
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_a_pos_in_sequence = 23
+    cds_boundary = 25
+    site_type = "acceptor"
 
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="NNNAGAANNNNNNNNNNNNN",
+            actual_sequence="NNNAGAANNNNNNNNNNNNN",
+            start_in_sequence= 20,
+            end_in_sequence= 40,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count=0
+        ),
+        SgrnaInfo(
+            target_sequence="NNAGAANNNNNNNNNNNNNG",
+            actual_sequence="NNAGAANNNNNNNNNNNNNG",
+            start_in_sequence= 21,
+            end_in_sequence= 41,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count=0
+        ),
+        SgrnaInfo(
+            target_sequence="NAGAANNNNNNNNNNNNNGG",
+            actual_sequence="NAGAANNNNNNNNNNNNNGG",
+            start_in_sequence= 22,
+            end_in_sequence= 42,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count=1
+        ),
+
+    ]
+    output_data = design_sgrna_abe(
+        editing_sequence=editing_sequence,
+        reversed_pam_regex=reversed_pam_regex,
+        pam_regrex=pam_regrex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_a_pos_in_sequence=target_a_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
 
 def test_is_valid_exon_position_acceptor():
     # acceptor の場合のテスト

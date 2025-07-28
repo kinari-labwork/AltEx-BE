@@ -283,18 +283,28 @@ def design_sgrna_abe(
             grna_end = grna_start + 20
 
         if grna_start < 0 or grna_end > len(editing_sequence):
-                continue
+            continue
         if not (grna_start <= target_a_pos_in_sequence < grna_end):
             continue
-        window_start_in_seq = grna_start + editing_window_start_in_grna - 1  # 1-indexedから0-indexedに変換するため、余分に1を引く
-        window_end_in_seq = grna_start + editing_window_end_in_grna - 1
+
+        if site_type == "acceptor":
+            window_start_in_seq = grna_end - editing_window_end_in_grna  # 1-indexedから0-indexedに変換するため、余分に1を引く
+            window_end_in_seq = grna_end - editing_window_start_in_grna
+        else: # donor
+            window_start_in_seq = grna_start + editing_window_start_in_grna - 1  # 1-indexedから0-indexedに変換するため、余分に1を引く
+            window_end_in_seq = grna_start + editing_window_end_in_grna - 1
         if not (window_start_in_seq <= target_a_pos_in_sequence <= window_end_in_seq):
             continue
         target_sequence = editing_sequence[grna_start:grna_end]
         # acceptorの場合は、-鎖に結合するsgRNAを設計するため、逆相補化は必要ない
         # donorの場合は、+鎖に結合するsgRNAを設計するため、逆相補化が必要
         actual_sequence = convert_dna_to_rna(target_sequence)  if site_type == "acceptor" else convert_dna_to_reversed_complement_rna(target_sequence)
-        target_pos_in_sgrna = target_a_pos_in_sequence - grna_start + 1
+        if site_type == "acceptor":
+            target_pos_in_sgrna = -(target_a_pos_in_sequence - grna_end) 
+            # acceptorの場合は、-鎖に結合するsgRNAのため、sgRNAの終端位置からの相対位置
+            # つまり、このパラメータの意味するところは、pamの位置からの相対位置となる
+        else:  # donor
+            target_pos_in_sgrna = target_a_pos_in_sequence - grna_start + 1
         overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
             editing_sequence=editing_sequence,
             window_start_in_seq=window_start_in_seq,
