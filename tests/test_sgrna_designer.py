@@ -191,6 +191,32 @@ def test_design_sgrna_abe_acceptor():
     print(output_data)
     assert output_data == expected_output
 
+def test_decide_target_base_pos_in_sequence():
+    # テストケース: CBE + acceptor
+    base_editor_type = "cbe"
+    site_type = "acceptor"
+    expected_output = 24
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: CBE + donor
+    base_editor_type = "cbe"
+    site_type = "donor"
+    expected_output = 25
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: ABE + acceptor
+    base_editor_type = "abe"
+    site_type = "acceptor"
+    expected_output = 23
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: ABE + donor
+    base_editor_type = "abe"
+    site_type = "donor"
+    expected_output = 26
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+
 def test_is_valid_exon_position_acceptor():
     # acceptor の場合のテスト
     assert is_valid_exon_position("internal", "acceptor") is True
