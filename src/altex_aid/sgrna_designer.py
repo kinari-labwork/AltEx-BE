@@ -140,7 +140,7 @@ def calculate_overlap_and_unintended_edits_to_cds(
             elif base_editor_type == "abe":
                 unintended_edits = editing_sequence[
                     window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
-                ].count("A")
+                ].count("T")
 
     return overlap, unintended_edits
 
