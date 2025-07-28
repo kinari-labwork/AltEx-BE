@@ -101,6 +101,7 @@ def calculate_overlap_and_unintended_edits_to_cds(
     window_end_in_seq: int,
     cds_boundary: int,
     site_type: str,
+    base_editor_type: str
 ) -> tuple[int, int]:
     """
     Purpose:
@@ -121,15 +122,25 @@ def calculate_overlap_and_unintended_edits_to_cds(
     if site_type == "acceptor":
         if window_end_in_seq >= cds_boundary:
             overlap = window_end_in_seq - cds_boundary + 1
-            unintended_edits = editing_sequence[
-                cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
-            ].count("G")
+            if base_editor_type == "cbe":
+                unintended_edits = editing_sequence[
+                    cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
+                    ].count("G") 
+            elif base_editor_type == "abe":
+                unintended_edits = editing_sequence[
+                    cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
+                    ].count("A")
     else:  # donor
         if window_start_in_seq <= cds_boundary:
             overlap = cds_boundary - window_start_in_seq + 1
-            unintended_edits = editing_sequence[
-                window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
-            ].count("G")
+            if base_editor_type == "cbe":
+                unintended_edits = editing_sequence[
+                    window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
+                ].count("G")
+            elif base_editor_type == "abe":
+                unintended_edits = editing_sequence[
+                    window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
+                ].count("A")
 
     return overlap, unintended_edits
 
