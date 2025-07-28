@@ -191,6 +191,60 @@ def test_design_sgrna_abe_acceptor():
     print(output_data)
     assert output_data == expected_output
 
+def test_design_sgrna_abe_donor():
+    editing_sequence = "NNNNNCCCCCNNNNNNNNNNNNNTTGTNNNNNNNNNNNNNNNNNNNNN"
+    # これは+ strandのエキソンで、SDの配列。
+    pam_sequence = "NGG"  # 例としてNGGを使用
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
+    pam_regrex = convert_pam_as_regex(pam_sequence) 
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_a_pos_in_sequence = 26 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    cds_boundary = 24
+    site_type = "donor"
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="CCNNNNNNNNNNNNNTTGTN",
+            actual_sequence="NACAANNNNNNNNNNNNNGG",
+            start_in_sequence = 8,
+            end_in_sequence=28,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count=1
+        ),
+        SgrnaInfo(
+            target_sequence="CNNNNNNNNNNNNNTTGTNN",
+            actual_sequence="NNACAANNNNNNNNNNNNNG",
+            start_in_sequence = 9,
+            end_in_sequence=29,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
+        ),
+        SgrnaInfo(
+            target_sequence="NNNNNNNNNNNNNTTGTNNN",
+            actual_sequence="NNNACAANNNNNNNNNNNNN",
+            start_in_sequence = 10,
+            end_in_sequence=30,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
+        ),
+]
+    output_data = design_sgrna_abe(
+        editing_sequence=editing_sequence,
+        reversed_pam_regex=reversed_pam_regex,
+        pam_regrex=pam_regrex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_a_pos_in_sequence=target_a_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
+
 def test_decide_target_base_pos_in_sequence():
     # テストケース: CBE + acceptor
     base_editor_type = "cbe"
