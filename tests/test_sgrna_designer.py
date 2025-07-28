@@ -64,34 +64,24 @@ def test_calculate_overlap_and_unintended_edits_to_cds_cbe():
     )
     assert (overlap, unintended_edits) == expected_output
 
-    def test_calculate_overlap_and_unintended_edits_to_cds_abe():
-        editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGAAANNNNNNNNNNNNNNNNNNNNNNNN"
-        window_start_in_seq = 23
-        window_end_in_seq = 25
-        cds_boundary = 25
-        site_type = "acceptor"
-        base_editor_type = "abe"  # base editorのタイプを指定
+def test_calculate_overlap_and_unintended_edits_to_cds_abe():
+    editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGAAANNNNNNNNNNNNNNNNNNNNNNNN"
+    window_start_in_seq = 23
+    window_end_in_seq = 25
+    cds_boundary = 25
+    site_type = "acceptor"
+    base_editor_type = "abe"  # base editorのタイプを指定
 
-        expected_output = (1,1)
-        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
-            editing_sequence=editing_sequence,
-            window_start_in_seq=window_start_in_seq,
-            window_end_in_seq=window_end_in_seq,
-            cds_boundary=cds_boundary,
-            site_type=site_type,
-            base_editor_type=base_editor_type
-        )
-        assert (overlap, unintended_edits) == expected_output
-
-        expected_output = (2,2)
-        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
-            editing_sequence=editing_sequence,
-            window_start_in_seq=window_start_in_seq,
-            window_end_in_seq=window_end_in_seq,
-            cds_boundary=cds_boundary,
-            site_type=site_type
-        )
-        assert (overlap, unintended_edits) == expected_output
+    expected_output = (1,1)
+    overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+        editing_sequence=editing_sequence,
+        window_start_in_seq=window_start_in_seq,
+        window_end_in_seq=window_end_in_seq,
+        cds_boundary=cds_boundary,
+        site_type=site_type,
+        base_editor_type=base_editor_type
+    )
+    assert (overlap, unintended_edits) == expected_output
 
 def test_design_sgrna_cbe():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
