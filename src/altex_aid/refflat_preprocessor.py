@@ -4,6 +4,42 @@ import re
 
 import pandas as pd
 
+def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+    """
+    Purpose:
+        refFlatのデータフレームから、興味のある遺伝子のみを選択する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+        interest_genes: list[str], 興味のある遺伝子名のリスト
+    Returns:
+        pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
+    """
+    return refFlat[refFlat["geneName"].isin(interest_genes)].reset_index(drop=True)
+
+def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
+    """
+    Purpose:
+        refFlatのデータフレームに、トランスクリプトのバリアントが存在するかを確認する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+    Returns:
+        bool, トランスクリプトのバリアントが存在する場合はTrue、存在しない場合はFalse
+    """
+    bool_list = []
+    for gene in interest_genes:
+        # 遺伝子ごとにトランスクリプトの数をカウント
+        transcripts = refFlat[refFlat["geneName"] == gene]
+        if transcripts.shape[0] > 1:
+            print(f"Gene {gene} has multiple transcripts")
+            bool_list.append(True)
+        else:
+            print(f"Gene {gene} has a single transcript")
+            bool_list.append(False)
+    if all([x is False for x in bool_list]):
+        print("All genes have a single transcript, stop further processing.")
+        return True
+    return False
+
 
 def parse_exon_coordinates(refFlat: pd.DataFrame) -> pd.DataFrame:
     """
