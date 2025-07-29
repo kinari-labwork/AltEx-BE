@@ -2,6 +2,7 @@ import argparse
 
 import pandas as pd
 import sys
+import os
 
 from . import (
     refflat_preprocessor,
@@ -29,9 +30,15 @@ def main():
     if not input_directory:
         print("No input directory provided. Exiting.")
         sys.exit(0)
+    if not os.path.isdir(input_directory):
+        print(f"The provided input directory '{input_directory}' does not exist. Exiting.")
+        sys.exit(0)
     output_directory = input("Please input the directory of the output files: ")
     if not output_directory:
         print("No output directory provided. Exiting.")
+        sys.exit(0)
+    if not os.path.isdir(output_directory):
+        print(f"The provided output directory '{output_directory}' does not exist. Exiting.")
         sys.exit(0)
     interest_gene_list = input("Please input the list of interest genes (space-separated): ")
     if not interest_gene_list:
