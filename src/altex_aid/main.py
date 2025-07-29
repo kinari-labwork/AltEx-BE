@@ -15,27 +15,7 @@ from . import (
 def main():
     parser = argparse.ArgumentParser(
         description="Altex AID: A CLI tool for processing refFlat files and extracting target exons.",
-    )
-    parser.add_argument(
-        "--input directory",
-        required=True,
-        help="please input the directory of the input files"
-        "This directory should contain the refFlat file and genome FASTA file of your interest species",
-    )
-    parser.add_argument(
-        "--output directory",
-        required=True,
-        help="please input the directory of the output files"
-        "This directory will contain the processed refFlat file and other output files",
-    )
-    # 興味のある遺伝子のリストを引数として受け取る
-    parser.add_argument(
-        "interest_genes",
-        required=True,
-        nargs="+",
-        help="List of gene names to check for transcript variants. example: gene1 gene2 gene3"    
-    )
-
+    )    
     # 明示的に -v/--version を追加
     parser.add_argument(
         "-v",
@@ -45,10 +25,18 @@ def main():
         help="バージョン情報を表示します",
     )
 
-    args = parser.parse_args()
-
-    input_directory = args.input_directory
-    output_directory = args.output_directory
+    input_directory = input("Please input the directory of the input files: ")
+    if not input_directory:
+        print("No input directory provided. Exiting.")
+        sys.exit(0)
+    output_directory = input("Please input the directory of the output files: ")
+    if not output_directory:
+        print("No output directory provided. Exiting.")
+        sys.exit(0)
+    interest_gene_list = input("Please input the list of interest genes (space-separated): ")
+    if not interest_gene_list:
+        print("No interest genes provided. Exiting.")
+        sys.exit(0)
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
@@ -72,8 +60,8 @@ def main():
 
     print("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-    refflat = refflat_preprocessor.select_interest_genes(refflat, args.interest_genes)
-    variant_check = refflat_preprocessor.check_transcript_variant(refflat, args.interest_genes)
+    refflat = refflat_preprocessor.select_interest_genes(refflat, interest_gene_list)
+    variant_check = refflat_preprocessor.check_transcript_variant(refflat, interest_gene_list)
     if variant_check:
         print("No transcript variants found for the specified genes. Exiting.")
         sys.exit(0)
