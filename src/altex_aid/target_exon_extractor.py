@@ -43,6 +43,17 @@ def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
     classified_refflat = classified_refflat[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
     return classified_refflat.reset_index(drop=True)
 
+def check_target_exon_existence(target_exon_df: pd.DataFrame) -> bool:
+    """
+    Purpose:
+        抽出したターゲットエキソンにデータが存在するかを確認する
+    Parameters:
+        target_exon_df: pd.DataFrame, extract_target_exon関数で抽出されたターゲットエキソンのデータフレーム
+    Returns:
+        bool: ターゲットエキソンが存在する場合はTrue、存在しない場合はFalse
+    """
+    return not target_exon_df.empty
+
 
 def extract_splice_acceptor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
     """
