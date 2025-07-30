@@ -585,8 +585,15 @@ def set_default_base_editors() -> list[BaseEditor]:
         BaseEditor(
             base_editor_name="be4max",
             pam_sequence="NGG",
-            editing_window_start_in_grna=4,
-            editing_window_end_in_grna=8,
+            editing_window_start_in_grna=12,
+            editing_window_end_in_grna=17,
             base_editor_type="cbe"
-        )
+        ),
+        BaseEditor(
+            base_editor_name="abe8e",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=12,
+            editing_window_end_in_grna=17,
+            base_editor_type="abe"
+        ),
     ]
