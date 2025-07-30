@@ -571,6 +571,7 @@ def design_sgrna_for_base_editors(
 
     # すべての結果を結合
     final_result = pd.concat(results, axis=1)
+    final_result = final_result.loc[:, ~final_result.columns.duplicated()]
     return final_result.reset_index(drop=True)
 
 def make_default_base_editors() -> list[BaseEditor]:
