@@ -1,19 +1,18 @@
 from altex_aid.sgrna_designer import BaseEditor
 
-def input_base_editors():
-    base_editors = []
-    print("BaseEditor情報を複数入力できます。終了したい場合は何も入力せずEnterしてください。")
+def input_base_editors(base_editors: list[BaseEditor]) -> list[BaseEditor]:
+    print("you can input multiple BaseEditor information. To finish, just press Enter without typing anything.")
     while True:
-        name = input("BaseEditor名（例: CBE, ABE）: ")
+        name = input("name of BaseEditor (or press Enter to finish): ")
         if not name:
             break
-        pam = input("PAM配列（例: NGG）: ")
-        window_start = input("編集ウィンドウ開始位置（例: 4）: ")
-        window_end = input("編集ウィンドウ終了位置（例: 8）: ")
-        editor_type = input("BaseEditorタイプ（CBE or ABE）: ")
+        pam = input("PAM sequence (e.g., NGG): ")
+        window_start = input("Editing window start position, count from PAM (e.g., 4): ")
+        window_end = input("Editing window end position count from PAM (e.g., 8): ")
+        editor_type = input("BaseEditor type (cbe or abe): ")
         # 必須項目が空ならスキップ
         if not (pam and window_start and window_end and editor_type):
-            print("必要な情報が不足しています。もう一度入力してください。")
+            print("All fields are required. Please try again.")
             continue
         base_editors.append(
             BaseEditor(
