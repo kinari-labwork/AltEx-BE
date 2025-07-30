@@ -3,12 +3,12 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "AltEx-Aid"
+name = "AltEx-BE"
 version = "0.1"
-description = "automatically design sgRNA for exon skipping with target-AID"
+description = "automatically design sgRNA for exon skipping with many base editors"
 authors = ["Kinari Matsumoto <matsumoto.kinari.qm@alumni.tsukuba.ac.jp>"]
 readme = "README.md"
-homepage = "https://github.com/kinari-labwork/AltEx-Aid"
+homepage = "https://github.com/kinari-labwork/AltEx-BE"
 license = "MIT"
 packages = [{ include = "altex_aid", from = "src"}]
 classifiers = [
