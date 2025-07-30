@@ -231,7 +231,7 @@ def design_sgrna_cbe(
 def design_sgrna_abe(
     editing_sequence: str,
     reversed_pam_regex: re.Pattern, # 正規表現パターン
-    pam_regrex: str, # PAM配列を正規表現パターンに変換したもの
+    pam_regex: str, # PAM配列を正規表現パターンに変換したもの
     editing_window_start_in_grna: int, # 1-indexed
     editing_window_end_in_grna: int, # 1-indexed
     target_a_pos_in_sequence: int,
@@ -274,7 +274,7 @@ def design_sgrna_abe(
     if splice_site != expected_site:
             return sgrna_list
     # acceptorの場合は、編集対象塩基が+鎖に存在するため、-鎖に結合するsgRNAを設計する。したがって、入力した5'-3' PAMがそのまま+鎖の3'側に存在することになる
-    for match in pam_regrex.finditer(editing_sequence) if site_type == "acceptor" else reversed_pam_regex.finditer(editing_sequence):
+    for match in pam_regex.finditer(editing_sequence) if site_type == "acceptor" else reversed_pam_regex.finditer(editing_sequence):
         if site_type == "acceptor": 
             grna_end = match.start(1)  # -鎖に結合するsgRNAのため、PAMのstart位置がsgRNAの終端位置となる
             grna_start = grna_end - 20
@@ -535,16 +535,17 @@ def design_sgrna_for_base_editors(
     """
     Purpose:
         各BaseEditorに対してsgRNAを設計し、結果をDataFrameにまとめる
-        これより上の関数の呼び出しをまとめて行う
     Parameters:
         target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
         base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
     Returns:
         pd.DataFrame, 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
     """
+    results = []  # 各BaseEditorの結果を格納するリスト
+
     for base_editor in base_editors:
         # 1. sgRNAを設計する
-        target_exon_df = design_sgrna_for_target_exon_df(
+        temp_df = design_sgrna_for_target_exon_df(
             target_exon_df=target_exon_df,
             pam_sequence=base_editor.pam_sequence,
             editing_window_start_in_grna=base_editor.editing_window_start_in_grna,
@@ -552,22 +553,27 @@ def design_sgrna_for_base_editors(
             base_editor_type=base_editor.base_editor_type
         )
         # 2. sgRNAの情報を展開する
-        target_exon_df_with_grna_sequence = organize_target_exon_df_with_grna_sequence(target_exon_df)
+        temp_df = organize_target_exon_df_with_grna_sequence(temp_df)
         # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
-        target_exon_df_with_grna_sequence = convert_sgrna_start_end_position_to_position_in_chromosome(target_exon_df_with_grna_sequence)
+        temp_df = convert_sgrna_start_end_position_to_position_in_chromosome(temp_df)
 
         # 4. 列名にbase_editorの名前を付ける
-        # これにより、2.や3.が１度処理した列をもう一度処理することを防ぐ
-        target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.rename(
+        temp_df = temp_df.rename(
             columns={
                 col: f"{base_editor.base_editor_name}_{col}" 
-                for col in target_exon_df_with_grna_sequence.columns
+                for col in temp_df.columns
                 if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
             }
         )
-    return target_exon_df_with_grna_sequence.reset_index(drop=True)
 
-def set_default_base_editors() -> list[BaseEditor]:
+        # 結果をリストに追加
+        results.append(temp_df)
+
+    # すべての結果を結合
+    final_result = pd.concat(results, axis=1)
+    return final_result.reset_index(drop=True)
+
+def make_default_base_editors() -> list[BaseEditor]:
     """
     Purpose:
         デフォルトのBaseEditorのリストを返す

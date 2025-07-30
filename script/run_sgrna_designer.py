@@ -6,11 +6,10 @@ from altex_aid.sgrna_designer import (
 
 target_exons_df_with_acceptor_and_donor_sequence = pd.read_pickle("data/target_exons_with_acceptor_and_donor_sequence.pkl")
 
-base_editors = []
-base_editors = make_default_base_editors(base_editors)
+base_editors = make_default_base_editors()
 target_exons_df_with_sgrna = design_sgrna_for_base_editors(
     target_exon_df=target_exons_df_with_acceptor_and_donor_sequence,
-    base_editor_list=base_editors
+    base_editors=base_editors
 )
 
 
