@@ -1,6 +1,6 @@
 import pandas as pd
 
-from altex_be.sequence_annotator import (
+from altex_aid.sequence_annotator import (
     annotate_sequence_to_bed,
     join_sequence_to_single_exon_df,
 )

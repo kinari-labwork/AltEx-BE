@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from altex_be.sgrna_designer import (
+from altex_aid.sgrna_designer import (
     SgrnaInfo,
     BaseEditor,
     convert_dna_to_reversed_complement_rna,
