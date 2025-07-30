@@ -192,7 +192,7 @@ def test_design_sgrna_abe_acceptor():
     editing_sequence = "NNNNNNNNNNNNNNNNNNNNNNNAGAANNNNNNNNNNNNNGGGGGNNNNN"
     pam_sequence = "NGG"
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
-    pam_regrex = convert_pam_as_regex(pam_sequence)
+    pam_regex = convert_pam_as_regex(pam_sequence)
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
     target_a_pos_in_sequence = 23
@@ -233,7 +233,7 @@ def test_design_sgrna_abe_acceptor():
     output_data = design_sgrna_abe(
         editing_sequence=editing_sequence,
         reversed_pam_regex=reversed_pam_regex,
-        pam_regrex=pam_regrex,
+        pam_regex=pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
         target_a_pos_in_sequence=target_a_pos_in_sequence,
@@ -248,7 +248,7 @@ def test_design_sgrna_abe_donor():
     # これは+ strandのエキソンで、SDの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
-    pam_regrex = convert_pam_as_regex(pam_sequence) 
+    pam_regex = convert_pam_as_regex(pam_sequence)
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
     target_a_pos_in_sequence = 26 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
@@ -287,7 +287,7 @@ def test_design_sgrna_abe_donor():
     output_data = design_sgrna_abe(
         editing_sequence=editing_sequence,
         reversed_pam_regex=reversed_pam_regex,
-        pam_regrex=pam_regrex,
+        pam_regex=pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
         target_a_pos_in_sequence=target_a_pos_in_sequence,
