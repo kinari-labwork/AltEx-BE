@@ -1,10 +1,10 @@
 import argparse
-
 import pandas as pd
 import sys
 import os
 
 from . import (
+    for_cli_setting,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
@@ -25,6 +25,14 @@ def main():
         version="0.1.0",
         help="バージョン情報を表示します",
     )
+    parser.add_argument(
+        "-optionalbaseeditors",
+        "--optional-base-editors",
+        action="store_true",
+        help="manually input BaseEditor information",
+    )
+
+    args = parser.parse_args()
 
     input_directory = input("Please input the directory of the input files: ")
     if not input_directory:
@@ -44,6 +52,15 @@ def main():
     if not interest_gene_list:
         print("No interest genes provided. Exiting.")
         sys.exit(0)
+
+    base_editors = sgrna_designer.make_default_base_editors()
+
+    if args.optional_base_editor:
+        base_editors = for_cli_setting.input_base_editors(base_editors)
+
+    print("designing sgRNAs with the following BaseEditors:")
+    for editor in base_editors:
+        print(editor)
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
@@ -114,19 +131,12 @@ def main():
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
     print("designing sgRNAs...")
-    target_exon_df_with_sgrna_info = sgrna_designer.design_sgrna_for_target_exon_df(
+    target_exon_df_with_sgrna = sgrna_designer.design_sgrna_for_base_editors(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
-        pam_sequence="NGG",
-        editing_window_start_in_grna=17,
-        editing_window_end_in_grna=19,
+        base_editor_list=base_editors
     )
-    target_exon_df_with_sgrna_info = sgrna_designer.organize_target_exon_df_with_grna_sequence(
-        target_exon_df_with_sgrna_info
-    )
-    target_exon_df_with_sgrna_info = sgrna_designer.convert_sgrna_start_end_position_to_position_in_chromosome(
-        target_exon_df_with_sgrna_info
-    )
-
+    
+    target_exon_df_with_sgrna.to_pickle(f"{output_directory}/target_exon_df_with_sgrna.pickle")
 
 if __name__ == "__main__":
     main()
