@@ -566,3 +566,27 @@ def design_sgrna_for_base_editors(
             }
         )
     return target_exon_df_with_grna_sequence.reset_index(drop=True)
+
+def set_default_base_editors() -> list[BaseEditor]:
+    """
+    Purpose:
+        デフォルトのBaseEditorのリストを返す
+    Returns:
+        list[BaseEditor], デフォルトのBaseEditorのリスト
+    """
+    return [
+        BaseEditor(
+            base_editor_name="target_aid",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=17,
+            editing_window_end_in_grna=19,
+            base_editor_type="cbe"
+        ),
+        BaseEditor(
+            base_editor_name="be4max",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=4,
+            editing_window_end_in_grna=8,
+            base_editor_type="cbe"
+        )
+    ]
