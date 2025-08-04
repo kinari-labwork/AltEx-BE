@@ -15,7 +15,7 @@ from . import (
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Altex AID: A CLI tool for processing refFlat files and extracting target exons.",
+        description="Altex BE: A CLI tool for processing refFlat files and extracting target exons.",
     )    
     # 明示的に -v/--version を追加
     parser.add_argument(
@@ -23,7 +23,7 @@ def main():
         "--version",
         action="version",
         version="0.1.0",
-        help="バージョン情報を表示します",
+        help="Show the version of Altex BE",
     )
     # コマンドライン引数を追加
     parser.add_argument(
