@@ -26,4 +26,4 @@ pandas = "^2.2.3"
 pybedtools = "^0.12.0"
 
 [tool.poetry.scripts]
-altex-aid = "altex_aid.main:main"
+altex-be = "altex_be.main:main"
