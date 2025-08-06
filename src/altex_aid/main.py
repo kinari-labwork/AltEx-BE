@@ -164,7 +164,7 @@ def main():
     print("designing sgRNAs...")
     target_exon_df_with_sgrna = sgrna_designer.design_sgrna_for_base_editors(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
-        base_editor_list=base_editors
+        base_editors=base_editors
     )
     
     target_exon_df_with_sgrna.to_pickle(f"{output_directory}/target_exon_df_with_sgrna.pickle")
