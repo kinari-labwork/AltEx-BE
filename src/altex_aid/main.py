@@ -1,8 +1,8 @@
 import argparse
 import pandas as pd
 import sys
-import os
-
+from pathlib import Path
+from logging import getLogger
 from . import (
     for_cli_setting,
     refflat_preprocessor,
@@ -11,6 +11,8 @@ from . import (
     target_exon_extractor,
     sgrna_designer,
 )
+logger = getLogger(__name__)
+logger.info('message')
 
 
 def main():
@@ -54,20 +56,17 @@ def main():
 
     args = parser.parse_args()
 
-    input_directory = args.input_directory
-    if not os.path.isdir(input_directory):
-        print(f"The provided input directory '{input_directory}' does not exist. Exiting.")
-        sys.exit(1)
+    input_directory = Path(args.input_directory)
+    if not input_directory.is_dir():
+        raise NotADirectoryError(f"The provided input directory '{input_directory}' does not exist.")
 
-    output_directory = args.output_directory
-    if not os.path.isdir(output_directory):
-        print(f"The provided output directory '{output_directory}' does not exist. Exiting.")
-        sys.exit(1)
+    output_directory = Path(args.output_directory)
+    if not output_directory.is_dir():
+        raise NotADirectoryError(f"The provided output directory '{output_directory}' does not exist.")
 
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
-        print("No interest genes provided. Exiting.")
-        sys.exit(1)
+        raise ValueError("No interest genes provided.")
 
     base_editors = sgrna_designer.make_default_base_editors()
 
@@ -81,21 +80,18 @@ def main():
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
 
-    if not os.path.isfile(f"{input_directory}/refFlat.txt"):
-        print(f"refFlat file not found at '{input_directory}/refFlat.txt'. Exiting.")
-        sys.exit(1)
+    if not (input_directory / "refFlat.txt").is_file():
+        raise FileNotFoundError(f"refFlat file not found at '{input_directory}/refFlat.txt'.")
 
     # FASTA ファイルの検出と確認
-    fasta_files = [f for f in os.listdir(input_directory) if f.endswith(".fa") or f.endswith(".fasta")]
+    fasta_files = [f for f in input_directory.glob("*.fa")] + [f for f in input_directory.glob("*.fasta")]
 
     if len(fasta_files) == 0:
-        print(f"No FASTA file found in '{input_directory}'. Exiting.")
-        sys.exit(1)
+        raise FileNotFoundError(f"No FASTA file found in '{input_directory}'.")
     elif len(fasta_files) > 1:
-        print(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Exiting.")
-        sys.exit(1)
+        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Exiting.")
     # 1 つだけ存在する場合、そのファイルを使用
-    fasta_path = os.path.join(input_directory, fasta_files[0])
+    fasta_path = input_directory / fasta_files[0]
     print(f"Using FASTA file: {fasta_path}")
 
     print("loading refFlat file...")
