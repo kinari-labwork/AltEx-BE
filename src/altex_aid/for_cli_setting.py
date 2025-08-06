@@ -1,6 +1,6 @@
 from altex_aid.sgrna_designer import BaseEditor
 
-def parse_base_editors(base_editor_args:list[str], base_editors: list) -> list: 
+def parse_base_editors(base_editor_args:list[str], base_editors: list) -> list[BaseEditor]: 
     for editor_arg in base_editor_args:
         try:
             name, pam, window_start, window_end, editor_type = editor_arg.split(",")
