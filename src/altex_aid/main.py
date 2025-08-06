@@ -57,17 +57,17 @@ def main():
     input_directory = args.input_directory
     if not os.path.isdir(input_directory):
         print(f"The provided input directory '{input_directory}' does not exist. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
 
     output_directory = args.output_directory
     if not os.path.isdir(output_directory):
         print(f"The provided output directory '{output_directory}' does not exist. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
 
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
         print("No interest genes provided. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
 
     base_editors = sgrna_designer.make_default_base_editors()
 
@@ -83,17 +83,17 @@ def main():
 
     if not os.path.isfile(f"{input_directory}/refFlat.txt"):
         print(f"refFlat file not found at '{input_directory}/refFlat.txt'. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
 
     # FASTA ファイルの検出と確認
     fasta_files = [f for f in os.listdir(input_directory) if f.endswith(".fa") or f.endswith(".fasta")]
 
     if len(fasta_files) == 0:
         print(f"No FASTA file found in '{input_directory}'. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
     elif len(fasta_files) > 1:
         print(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
     # 1 つだけ存在する場合、そのファイルを使用
     fasta_path = os.path.join(input_directory, fasta_files[0])
     print(f"Using FASTA file: {fasta_path}")
@@ -123,12 +123,12 @@ def main():
     refflat = refflat_preprocessor.select_interest_genes(refflat, interest_gene_list)
     if refflat.empty:
         print("No interest genes found in the refFlat file. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
 
     variant_check = refflat_preprocessor.check_transcript_variant(refflat, interest_gene_list)
     if not variant_check:
         print("No transcript variants found for your interest genes. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
     
     refflat = refflat_preprocessor.parse_exon_coordinates(refflat)
     refflat = refflat_preprocessor.calculate_exon_lengths(refflat)
@@ -148,7 +148,7 @@ def main():
     target_exon_df = target_exon_extractor.extract_target_exon(classified_refflat)
     if not target_exon_extractor.check_target_exon_existence(target_exon_df):
         print("No target exons found. Exiting.")
-        sys.exit(0)
+        sys.exit(1)
     splice_acceptor_single_exon_df = (
         target_exon_extractor.extract_splice_acceptor_regions(target_exon_df, 25)
     )
