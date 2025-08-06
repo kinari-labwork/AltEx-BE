@@ -64,7 +64,7 @@ def main():
         print(f"The provided output directory '{output_directory}' does not exist. Exiting.")
         sys.exit(0)
 
-    interest_gene_list = args.interest_genes.split()
+    interest_gene_list = args.interest_genes
     if not interest_gene_list:
         print("No interest genes provided. Exiting.")
         sys.exit(0)
