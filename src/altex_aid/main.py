@@ -111,8 +111,8 @@ def main():
         sys.exit(0)
 
     variant_check = refflat_preprocessor.check_transcript_variant(refflat, interest_gene_list)
-    if variant_check:
-        print("No transcript variants found for the specified genes. Exiting.")
+    if not variant_check:
+        print("No transcript variants found for your interest genes. Exiting.")
         sys.exit(0)
     
     refflat = refflat_preprocessor.parse_exon_coordinates(refflat)

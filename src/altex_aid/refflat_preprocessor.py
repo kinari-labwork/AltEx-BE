@@ -37,8 +37,8 @@ def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -
             bool_list.append(False)
     if all([x is False for x in bool_list]):
         print("All genes have a single transcript, stop further processing.")
-        return True
-    return False
+        return False
+    return True
 
 
 def parse_exon_coordinates(refFlat: pd.DataFrame) -> pd.DataFrame:
