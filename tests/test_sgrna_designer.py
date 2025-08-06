@@ -411,7 +411,7 @@ def test_design_sgrna_for_target_exon_df():
         pam_sequence="NGG",
         editing_window_start_in_grna=17,
         editing_window_end_in_grna=19,
-        base_editor_type="cbe"  
+        base_editor_type="cbe",
         )
     print(output_data["grna_acceptor"].tolist())
     print(output_data["grna_donor"].tolist())
