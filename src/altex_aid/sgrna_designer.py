@@ -231,7 +231,7 @@ def design_sgrna_cbe(
 def design_sgrna_abe(
     editing_sequence: str,
     reversed_pam_regex: re.Pattern, # 正規表現パターン
-    pam_regex: str, # PAM配列を正規表現パターンに変換したもの
+    pam_regex: re.Pattern, # PAM配列を正規表現パターンに変換したもの
     editing_window_start_in_grna: int, # 1-indexed
     editing_window_end_in_grna: int, # 1-indexed
     target_a_pos_in_sequence: int,
