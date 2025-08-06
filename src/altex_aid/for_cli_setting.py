@@ -14,6 +14,9 @@ def parse_base_editors(base_editor_args:list[str], base_editors: list) -> list[B
                 )
             )
         except ValueError:
-            print(f"Invalid BaseEditor format: {editor_arg}. Skipping.")
-        
+            print(
+                f"Invalid BaseEditor format: {editor_arg}. Skipping."
+                "Expected format: str[name],str[pam],int[window_start],int[window_end],str[editor_type]"
+            )
+
     return base_editors
