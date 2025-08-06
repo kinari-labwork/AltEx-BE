@@ -76,9 +76,19 @@ def main():
         base_editors = for_cli_setting.parse_base_editors(args.base_editors, base_editors)
     
     print("Designing sgRNAs for the following base editors:")
+
     for base_editor in base_editors:
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
+
+    if not os.path.isfile(f"{input_directory}/refFlat.txt"):
+        print(f"refFlat file not found at '{input_directory}/refFlat.txt'. Exiting.")
+        sys.exit(0)
+
+    fasta_path = f"{input_directory}/combined.fa"
+    if not os.path.isfile(fasta_path):
+        print(f"FASTA file not found at '{fasta_path}'. Exiting.")
+        sys.exit(0)
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
@@ -99,9 +109,6 @@ def main():
                 "exonEnds",
             ],
         )
-    if not os.path.isfile(f"{input_directory}/refFlat.txt"):
-        print(f"refFlat file not found at '{input_directory}/refFlat.txt'. Exiting.")
-        sys.exit(0)
 
     print("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
@@ -142,11 +149,6 @@ def main():
     )
 
     print("Annotating sequences to dataframe from genome FASTA...")
-    fasta_path = f"{input_directory}/combined.fa"
-
-    if not os.path.isfile(fasta_path):
-        print(f"FASTA file not found at '{fasta_path}'. Exiting.")
-        sys.exit(0)
 
     splice_acceptor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
     splice_acceptor_single_exon_df, fasta_path
