@@ -2,7 +2,6 @@ import argparse
 import pandas as pd
 import sys
 from pathlib import Path
-from logging import getLogger
 from . import (
     for_cli_setting,
     refflat_preprocessor,
@@ -11,8 +10,6 @@ from . import (
     target_exon_extractor,
     sgrna_designer,
 )
-logger = getLogger(__name__)
-logger.info('message')
 
 
 def main():
