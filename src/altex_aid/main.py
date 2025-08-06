@@ -85,10 +85,18 @@ def main():
         print(f"refFlat file not found at '{input_directory}/refFlat.txt'. Exiting.")
         sys.exit(0)
 
-    fasta_path = f"{input_directory}/combined.fa"
-    if not os.path.isfile(fasta_path):
-        print(f"FASTA file not found at '{fasta_path}'. Exiting.")
+    # FASTA ファイルの検出と確認
+    fasta_files = [f for f in os.listdir(input_directory) if f.endswith(".fa") or f.endswith(".fasta")]
+
+    if len(fasta_files) == 0:
+        print(f"No FASTA file found in '{input_directory}'. Exiting.")
         sys.exit(0)
+    elif len(fasta_files) > 1:
+        print(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Exiting.")
+        sys.exit(0)
+    # 1 つだけ存在する場合、そのファイルを使用
+    fasta_path = os.path.join(input_directory, fasta_files[0])
+    print(f"Using FASTA file: {fasta_path}")
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
