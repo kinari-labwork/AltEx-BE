@@ -267,9 +267,7 @@ def design_sgrna(
     if splice_site != expected_site:
         return sgrna_list
     for match in pam_iter:
-        print(f"match: {match.group(1)}")
         sgrna_start, sgrna_end = decide_sgrna_start_and_end(match, site_type, base_editor_type)
-        print(f"sgrna_start: {sgrna_start}, sgrna_end: {sgrna_end}")
         if sgrna_start < 0 or sgrna_end > len(editing_sequence):
             continue
 
