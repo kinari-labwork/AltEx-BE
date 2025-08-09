@@ -20,3 +20,8 @@ def parse_base_editors(base_editor_args:list[str], base_editors: list) -> list[B
             )
 
     return base_editors
+
+def show_base_editors_info(base_editors: list[BaseEditor]):
+    for base_editor in base_editors:
+        print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
+            f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
