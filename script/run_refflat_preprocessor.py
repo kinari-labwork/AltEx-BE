@@ -50,9 +50,6 @@ refflat = annotate_cording_information(refflat)
 # フレーム情報を追加
 refflat = annotate_flame_information(refflat)
 
-# 遺伝子ごとのバリアントの数を追加
-refflat = annotate_flame_information(refflat)
-
 # エキソンの位置を示す列を追加
 refflat = add_exon_position_flags(refflat)
 
