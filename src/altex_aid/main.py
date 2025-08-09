@@ -113,29 +113,12 @@ def main():
 
     print("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-    refflat = refflat_preprocessor.select_interest_genes(refflat, interest_gene_list)
-    if refflat.empty:
-        print("No interest genes found in the refFlat file. Exiting.")
-        sys.exit(1)
-
-    variant_check = refflat_preprocessor.check_transcript_variant(refflat, interest_gene_list)
-    if not variant_check:
-        print("No transcript variants found for your interest genes. Exiting.")
-        sys.exit(1)
-    
-    refflat = refflat_preprocessor.parse_exon_coordinates(refflat)
-    refflat = refflat_preprocessor.calculate_exon_lengths(refflat)
-    refflat = refflat_preprocessor.drop_abnormal_mapped_transcripts(refflat)
-    refflat = refflat_preprocessor.annotate_cording_information(refflat)
-    refflat = refflat_preprocessor.annotate_flame_information(refflat)
-    refflat = refflat_preprocessor.annotate_flame_information(refflat)
-    refflat = refflat_preprocessor.add_exon_position_flags(refflat)
+    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
 
     print("Classifying splicing events...")
-    classified_refflat = splicing_event_classifier.classify_splicing_events_per_gene(refflat)
-    classified_refflat = splicing_event_classifier.flip_a3ss_a5ss_on_minus_strand(classified_refflat)
+    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
     classified_refflat.to_pickle(f"{output_directory}/processed_refFlat.pickle")
-    del refflat, variant_check
+    del refflat
 
     print("Extracting target exons...")
     target_exon_df = target_exon_extractor.extract_target_exon(classified_refflat)
