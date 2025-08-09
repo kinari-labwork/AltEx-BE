@@ -1,6 +1,5 @@
 import argparse
 import pandas as pd
-import sys
 from pathlib import Path
 from . import (
     for_cli_setting,
@@ -73,9 +72,7 @@ def main():
     
     print("Designing sgRNAs for the following base editors:")
 
-    for base_editor in base_editors:
-        print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
-            f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
+    for_cli_setting.show_base_editors_info(base_editors)
 
     if not (input_directory / "refFlat.txt").is_file():
         raise FileNotFoundError(f"refFlat file not found at '{input_directory}/refFlat.txt'.")
@@ -86,10 +83,10 @@ def main():
     if len(fasta_files) == 0:
         raise FileNotFoundError(f"No FASTA file found in '{input_directory}'.")
     elif len(fasta_files) > 1:
-        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Exiting.")
+        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Only single FASTA file is allowed. Exiting.")
     # 1 つだけ存在する場合、そのファイルを使用
     fasta_path = input_directory / fasta_files[0]
-    print(f"Using FASTA file: {fasta_path}")
+    print(f"Using FASTA file as reference genome: {fasta_path}")
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
@@ -121,29 +118,11 @@ def main():
     del refflat
 
     print("Extracting target exons...")
-    target_exon_df = target_exon_extractor.extract_target_exon(classified_refflat)
-    if not target_exon_extractor.check_target_exon_existence(target_exon_df):
-        print("No target exons found. Exiting.")
-        sys.exit(1)
-    splice_acceptor_single_exon_df = (
-        target_exon_extractor.extract_splice_acceptor_regions(target_exon_df, 25)
-    )
-    splice_donor_single_exon_df = (
-        target_exon_extractor.extract_splice_donor_regions(target_exon_df, 25)
-    )
+    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
 
     print("Annotating sequences to dataframe from genome FASTA...")
-
-    splice_acceptor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
-    splice_acceptor_single_exon_df, fasta_path
-    )
-    splice_donor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
-        splice_donor_single_exon_df, fasta_path
-    )
-    target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.join_sequence_to_single_exon_df(
-        single_exon_df=target_exon_df,
-        acceptor_bed_with_sequences=splice_acceptor_single_exon_df,
-        donor_bed_with_sequences=splice_donor_single_exon_df,
+    target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
+        target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
