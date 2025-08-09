@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-
+import sys
 import uuid
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
@@ -97,3 +97,16 @@ def extract_splice_donor_regions(target_exon_df: pd.DataFrame, window: int) -> p
         axis=1,
     )
     return splice_donor_single_exon_df[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
+
+def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Purpose:
+    このモジュールの操作をまとめて実行するためのラッパー関数
+    """
+    target_exon_df = extract_target_exon(classified_refflat)
+    if not check_target_exon_existence(target_exon_df):
+        print("No target exons found. Exiting.")
+        sys.exit(1)
+    splice_acceptor_single_exon_df = extract_splice_acceptor_regions(target_exon_df, 25)
+    splice_donor_single_exon_df = extract_splice_donor_regions(target_exon_df, 25)
+    return target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df
