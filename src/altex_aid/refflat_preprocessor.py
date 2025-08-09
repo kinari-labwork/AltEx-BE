@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-
+import sys
 import pandas as pd
 
 def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
@@ -205,20 +205,6 @@ def add_exon_position_flags(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat = refflat.apply(flip_first_last_to_minus_strand, axis=1)
     return refflat
 
-def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
-    """
-    このモジュールの関数をwrapした関数
-    """
-    refflat = select_interest_genes(refflat, interest_genes)
-    refflat = parse_exon_coordinates(refflat)
-    refflat = calculate_exon_lengths(refflat)
-    refflat = drop_abnormal_mapped_transcripts(refflat)
-    refflat = annotate_cording_information(refflat)
-    refflat = annotate_flame_information(refflat)
-    refflat = add_exon_position_flags(refflat)
-
-    return refflat
-
 def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
     """
     Validate the processed refFlat DataFrame.
@@ -238,3 +224,18 @@ def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[st
         return False
 
     return True
+
+def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+    """
+    このモジュールの関数をwrapした関数
+    """
+    refflat = select_interest_genes(refflat, interest_genes)
+    refflat = parse_exon_coordinates(refflat)
+    refflat = calculate_exon_lengths(refflat)
+    refflat = drop_abnormal_mapped_transcripts(refflat)
+    refflat = annotate_cording_information(refflat)
+    refflat = annotate_flame_information(refflat)
+    refflat = add_exon_position_flags(refflat)
+    if not validate_filtered_refflat(refflat, interest_genes):
+        sys.exit(1)
+    return refflat
