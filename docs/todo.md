@@ -52,6 +52,10 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 - [x] Skipped exonが存在し得ないトランスクリプト（スプライシングバリアントが存在しない、またはエキソン数が1の遺伝子）を除いて各アノテーションを持つ遺伝子数を調べる
 - [x] Skipped or Uniqueが中間エキソンまたは端エキソンのどちらに存在するか調べてみる
 - [x] 取得したSA/SD周辺配列がどのくらいcanonical splice siteかを調べる
+- [ ] Skipped exon がどのくらい in-flame なのかを調べる
+  - skipped exonでも、cds startより前のエキソンは out-flameである場合がある (タンパクをコードしていないので)
+  - cds startの位置を参考に、タンパク質のコード情報をエキソンに追加する
+    - cds start/end を含むエキソンには cds edge exon, 完全にcdsの外にあるエキソンには UTR exon
 
 ## 塩基配列取得のための前処理
 - [x] Skipped or Unique or A5ss-long or A3ss-long にアノテーションされたエキソンを少なくとも一つ持つトランスクリプトだけをフィルターする
@@ -64,9 +68,8 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 - [x] 取得したカセットエキソンの位置情報をマウスゲノムにマッピングし、塩基配列を取得する(pybedtoolを利用)
 - [x] 塩基配列を付加したDFを作成する
 - [x] 任意のPAMと編集ウィンドウを持つCBEに対してsgRNAをデザインする
-- [ ] 任意のPAMと編集ウィンドウを持つABEに対してsgRNAをデザインする
-- [ ] よく使われているBE + target-AIDの条件で関数を実行して結果をdfに付加する
+- [x] 任意のPAMと編集ウィンドウを持つABEに対してsgRNAをデザインする
+- [x] よく使われているBE + target-AIDの条件で関数を実行して結果をdfに付加する
 
 ## デザインしたデータの可視化
-- [ ] -view モードで遺伝子名をクエリに、検索できるようにする
 - [ ] IGVやUCSC genome browser custom track に投げられるフォーマットに変更する 
