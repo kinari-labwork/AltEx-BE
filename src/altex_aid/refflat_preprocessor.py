@@ -210,11 +210,6 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     このモジュールの関数をwrapした関数
     """
     refflat = select_interest_genes(refflat, interest_genes)
-    if check_transcript_variant(refflat, interest_genes):
-        print("Multiple transcripts found, further processing will continue.")
-    else:
-        return refflat
-
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
@@ -223,3 +218,23 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = add_exon_position_flags(refflat)
 
     return refflat
+
+def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
+    """
+    Validate the processed refFlat DataFrame.
+    """
+    if refflat.empty:
+        print("All of your interest genes are not exist in refFlat file.")
+        return False
+
+    variant_check = check_transcript_variant(refflat, interest_gene_list)
+    if not variant_check:
+        print("No transcript variants found for your interest genes.")
+        return False
+    
+    multiple_exon_check = check_multiple_exon_existance(refflat)
+    if not multiple_exon_check:
+        print("your interest genes do not have multiple exons. These genes are out of scope.")
+        return False
+
+    return True
