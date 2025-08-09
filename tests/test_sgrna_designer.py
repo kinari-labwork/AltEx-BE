@@ -8,8 +8,7 @@ from altex_aid.sgrna_designer import (
     reverse_complement_pam_as_regex,
     convert_pam_as_regex,
     calculate_overlap_and_unintended_edits_to_cds,
-    design_sgrna_cbe,
-    design_sgrna_abe,
+    design_sgrna,
     decide_target_base_pos_in_sequence,
     is_valid_exon_position,
     design_sgrna_for_target_exon_df,
@@ -87,10 +86,11 @@ def test_design_sgrna_cbe_acceptor():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
+    pam_regex = convert_pam_as_regex(pam_sequence)
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    target_g_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    target_base_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
     cds_boundary = 25
     site_type = "acceptor"
 
@@ -123,13 +123,15 @@ def test_design_sgrna_cbe_acceptor():
             possible_unintended_edited_base_count= 2
         ),
 ]
-    output_data = design_sgrna_cbe(
+    output_data = design_sgrna(
         editing_sequence=editing_sequence,
+        pam_regex=pam_regex,
         reversed_pam_regex=reversed_pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        target_g_pos_in_sequence=target_g_pos_in_sequence,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
         cds_boundary=cds_boundary,
+        base_editor_type="cbe",
         site_type=site_type
     )
     print(output_data)
@@ -139,10 +141,11 @@ def test_design_sgrna_cbe_donor():
     editing_sequence = "NNNNCCCCCNNNNNNNNNNNNNNGGGTNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SDの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
+    pam_regex = convert_pam_as_regex(pam_sequence)
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    target_g_pos_in_sequence = 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    target_base_pos_in_sequence = 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
     cds_boundary = 24
     site_type = "donor"
 
@@ -175,13 +178,15 @@ def test_design_sgrna_cbe_donor():
             possible_unintended_edited_base_count= 0
         ),
 ]
-    output_data = design_sgrna_cbe(
+    output_data = design_sgrna(
         editing_sequence=editing_sequence,
+        pam_regex=pam_regex,
         reversed_pam_regex=reversed_pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        target_g_pos_in_sequence=target_g_pos_in_sequence,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
         cds_boundary=cds_boundary,
+        base_editor_type="cbe",
         site_type=site_type
     )
     print(output_data)
@@ -195,7 +200,7 @@ def test_design_sgrna_abe_acceptor():
     pam_regex = convert_pam_as_regex(pam_sequence)
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    target_a_pos_in_sequence = 23
+    target_base_pos_in_sequence = 23
     cds_boundary = 25
     site_type = "acceptor"
 
@@ -230,14 +235,15 @@ def test_design_sgrna_abe_acceptor():
         ),
 
     ]
-    output_data = design_sgrna_abe(
+    output_data = design_sgrna(
         editing_sequence=editing_sequence,
         reversed_pam_regex=reversed_pam_regex,
         pam_regex=pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        target_a_pos_in_sequence=target_a_pos_in_sequence,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
         cds_boundary=cds_boundary,
+        base_editor_type="abe",
         site_type=site_type
     )
     print(output_data)
@@ -251,7 +257,7 @@ def test_design_sgrna_abe_donor():
     pam_regex = convert_pam_as_regex(pam_sequence)
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    target_a_pos_in_sequence = 26 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    target_base_pos_in_sequence = 26 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
     cds_boundary = 24
     site_type = "donor"
 
@@ -284,13 +290,14 @@ def test_design_sgrna_abe_donor():
             possible_unintended_edited_base_count= 0
         ),
 ]
-    output_data = design_sgrna_abe(
+    output_data = design_sgrna(
         editing_sequence=editing_sequence,
         reversed_pam_regex=reversed_pam_regex,
         pam_regex=pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        target_a_pos_in_sequence=target_a_pos_in_sequence,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
+        base_editor_type="abe",
         cds_boundary=cds_boundary,
         site_type=site_type
     )

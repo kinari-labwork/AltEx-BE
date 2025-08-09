@@ -144,188 +144,6 @@ def calculate_overlap_and_unintended_edits_to_cds(
 
     return overlap, unintended_edits
 
-def design_sgrna_cbe(
-    editing_sequence: str,
-    reversed_pam_regex: re.Pattern, # 正規表現パターン
-    editing_window_start_in_grna: int, # 1-indexed
-    editing_window_end_in_grna: int, # 1-indexed
-    target_g_pos_in_sequence: int,
-    cds_boundary: int,
-    site_type: str,
-) -> list[SgrnaInfo]:
-    """
-    Purpose:
-        ゲノムから取り出したSA/SD周辺配列からsgRNAの条件に適合する配列を検索する
-    Parameters:
-        target_sequence: str, +鎖由来の50bpのSA/SD周辺の塩基配列
-        pam_sequence: str, PAM配列
-        editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
-        editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
-        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
-            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
-        cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
-        site_type: str, "acceptor"または"donor"のどちらかを指定
-    Returns:
-        sgrna_list: list[SgrnaInfo], 条件に適合するsgRNAの情報のリスト
-    Comments:
-        Acceptor splice siteの例:
-        5'---CCN---AG[---exon]-3'
-              3'---UC---5" 20bpのsgRNA(+鎖に結合する)
-        3'---GGN---TC[---exon]-5'
-
-        Donor splice siteの例:
-        5'-[---exon--CCN---]GT--3'
-                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
-        3'-[---exon--GGN---]CA--5'
-
-        この"C"をTに編集するために、+鎖に結合するsgRNAを設計する。
-        つまり、+鎖を逆相補にしたものがsgRNAとなる。
-        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
-    """
-    sgrna_list = []
-
-    splice_site = editing_sequence[target_g_pos_in_sequence - 1: target_g_pos_in_sequence + 1].upper() if site_type == "acceptor" else editing_sequence[target_g_pos_in_sequence : target_g_pos_in_sequence + 2].upper()
-    expected_site = "AG" if site_type == "acceptor" else "GT"
-    if splice_site != expected_site:
-        return sgrna_list
-
-    for match in reversed_pam_regex.finditer(editing_sequence):
-        grna_start = match.end(1)
-        grna_end = grna_start + 20
-        if grna_end > len(editing_sequence):
-            continue
-
-        if not (grna_start <= target_g_pos_in_sequence < grna_end):
-            continue
-
-        window_start_in_seq = grna_start + editing_window_start_in_grna -1 # 1-indexedから0-indexedに変換するため、余分に1を引く
-        window_end_in_seq = grna_start + editing_window_end_in_grna -1
-        if not (window_start_in_seq <= target_g_pos_in_sequence <= window_end_in_seq):
-            continue
-
-        target_sequence = editing_sequence[grna_start:grna_end]
-        actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
-        target_pos_in_sgrna = target_g_pos_in_sequence - grna_start + 1
-
-        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
-            editing_sequence=editing_sequence,
-            window_start_in_seq=window_start_in_seq,
-            window_end_in_seq=window_end_in_seq,
-            cds_boundary=cds_boundary,
-            site_type=site_type,
-            base_editor_type="cbe"
-        )
-        sgrna_list.append(
-            SgrnaInfo(
-                target_sequence=target_sequence,
-                actual_sequence=actual_sequence,
-                start_in_sequence=grna_start,
-                end_in_sequence=grna_end,
-                target_pos_in_sgrna=target_pos_in_sgrna,
-                overlap_between_cds_and_editing_window=overlap,
-                possible_unintended_edited_base_count=unintended_edits,
-            )
-        )
-    return sgrna_list
-
-def design_sgrna_abe(
-    editing_sequence: str,
-    reversed_pam_regex: re.Pattern, # 正規表現パターン
-    pam_regex: re.Pattern, # PAM配列を正規表現パターンに変換したもの
-    editing_window_start_in_grna: int, # 1-indexed
-    editing_window_end_in_grna: int, # 1-indexed
-    target_a_pos_in_sequence: int,
-    cds_boundary: int,
-    site_type: str,
-) -> list[SgrnaInfo]:
-    """
-    Purpose:
-        ゲノムから取り出したSA/SD周辺配列からsgRNAの条件に適合する配列を検索する
-    Parameters:
-        target_sequence: str, +鎖由来の50bpのSA/SD周辺の塩基配列
-        pam_sequence: str, PAM配列
-        editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
-        editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
-        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
-            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
-        cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
-        site_type: str, "acceptor"または"donor"のどちらかを指定
-    Returns:
-        sgrna_list: list[SgrnaInfo], 条件に適合するsgRNAの情報のリスト
-    Comments:
-        Acceptor splice siteの例:
-        5'--------AG[---NGG---exon]-3'
-             5'---AG----3" 20bpのsgRNA(-鎖に結合する)
-        3'--------TC[---NCC---exon]-5'
-
-        Donor splice siteの例:
-        5'-[---exon--CCN---]GT--3'
-                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
-        3'-[---exon--GGN---]CA--5'
-
-        この"C"をTに編集するために、+鎖に結合するsgRNAを設計する。
-        つまり、+鎖を逆相補にしたものがsgRNAとなる。
-        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
-    """
-    sgrna_list = []
-    
-    splice_site = editing_sequence[target_a_pos_in_sequence : target_a_pos_in_sequence + 2].upper() if site_type == "acceptor" else editing_sequence[target_a_pos_in_sequence - 1: target_a_pos_in_sequence + 1].upper()
-    expected_site = "AG" if site_type == "acceptor" else "GT"
-    if splice_site != expected_site:
-            return sgrna_list
-    # acceptorの場合は、編集対象塩基が+鎖に存在するため、-鎖に結合するsgRNAを設計する。したがって、入力した5'-3' PAMがそのまま+鎖の3'側に存在することになる
-    for match in pam_regex.finditer(editing_sequence) if site_type == "acceptor" else reversed_pam_regex.finditer(editing_sequence):
-        if site_type == "acceptor": 
-            grna_end = match.start(1)  # -鎖に結合するsgRNAのため、PAMのstart位置がsgRNAの終端位置となる
-            grna_start = grna_end - 20
-        else:  # donor
-            grna_start = match.end(1)
-            grna_end = grna_start + 20
-
-        if grna_start < 0 or grna_end > len(editing_sequence):
-            continue
-        if not (grna_start <= target_a_pos_in_sequence < grna_end):
-            continue
-
-        if site_type == "acceptor":
-            window_start_in_seq = grna_end - editing_window_end_in_grna  # 1-indexedから0-indexedに変換するため、余分に1を引く
-            window_end_in_seq = grna_end - editing_window_start_in_grna
-        else: # donor
-            window_start_in_seq = grna_start + editing_window_start_in_grna - 1  # 1-indexedから0-indexedに変換するため、余分に1を引く
-            window_end_in_seq = grna_start + editing_window_end_in_grna - 1
-        if not (window_start_in_seq <= target_a_pos_in_sequence <= window_end_in_seq):
-            continue
-        target_sequence = editing_sequence[grna_start:grna_end]
-        # acceptorの場合は、-鎖に結合するsgRNAを設計するため、逆相補化は必要ない
-        # donorの場合は、+鎖に結合するsgRNAを設計するため、逆相補化が必要
-        actual_sequence = convert_dna_to_rna(target_sequence)  if site_type == "acceptor" else convert_dna_to_reversed_complement_rna(target_sequence)
-        if site_type == "acceptor":
-            target_pos_in_sgrna = -(target_a_pos_in_sequence - grna_end) 
-            # acceptorの場合は、-鎖に結合するsgRNAのため、sgRNAの終端位置からの相対位置
-            # つまり、このパラメータの意味するところは、pamの位置からの相対位置となる
-        else:  # donor
-            target_pos_in_sgrna = target_a_pos_in_sequence - grna_start + 1
-        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
-            editing_sequence=editing_sequence,
-            window_start_in_seq=window_start_in_seq,
-            window_end_in_seq=window_end_in_seq,
-            cds_boundary=cds_boundary,
-            site_type=site_type,
-            base_editor_type="abe"  # ABEの場合は常にABEを指定
-        )
-        sgrna_list.append(
-            SgrnaInfo(
-                target_sequence=target_sequence,
-                actual_sequence=actual_sequence,
-                start_in_sequence=grna_start,
-                end_in_sequence=grna_end,
-                target_pos_in_sgrna=target_pos_in_sgrna,
-                overlap_between_cds_and_editing_window=overlap,
-                possible_unintended_edited_base_count=unintended_edits,
-            )
-        )
-    return sgrna_list
-
 def decide_target_base_pos_in_sequence(
     base_editor_type: str,
     site_type:str,
@@ -368,7 +186,138 @@ def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     valid_positions = ["internal", "last"] if site_type == "acceptor" else ["internal", "first"]
     return exon_position in valid_positions
 
+def decide_sgrna_start_and_end(
+        match: re.Match,
+        site_type: str,
+        base_editor_type: str
+        ) -> tuple[int, int]:
+    if site_type == "acceptor":
+        if base_editor_type.lower() == "cbe":
+            sgrna_start = match.end(1)   
+            sgrna_end = sgrna_start + 20  
+        elif base_editor_type.lower() == "abe":
+            sgrna_end = match.start(1)   
+            sgrna_start = sgrna_end - 20 
+    elif site_type == "donor":
+        sgrna_start = match.end(1)
+        sgrna_end = sgrna_start + 20
+    return sgrna_start, sgrna_end
 
+def design_sgrna(
+    editing_sequence: str,
+    pam_regex: re.Pattern,
+    reversed_pam_regex: re.Pattern,
+    editing_window_start_in_grna: int,
+    editing_window_end_in_grna: int,
+    target_base_pos_in_sequence: int,
+    cds_boundary: int,
+    base_editor_type: str,
+    site_type: str
+) -> list[SgrnaInfo]:
+    """
+    Purpose:
+        ゲノムから取り出したSA/SD周辺配列からsgRNAの条件に適合する配列を検索する
+    Parameters:
+        target_sequence: str, +鎖由来の50bpのSA/SD周辺の塩基配列
+        pam_sequence: str, PAM配列
+        editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
+        editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
+        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
+            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
+        cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
+        site_type: str, "acceptor"または"donor"のどちらかを指定
+    Returns:
+        sgrna_list: list[SgrnaInfo], 条件に適合するsgRNAの情報のリスト
+    If base_editor_type is "cbe":
+        Acceptor splice siteの例:
+        5'---CCN---AG[---exon]-3'
+              3'---UC---5" 20bpのsgRNA(+鎖に結合する)
+        3'---GGN---TC[---exon]-5'
+
+        Donor splice siteの例:
+        5'-[---exon--CCN---]GT--3'
+                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
+        3'-[---exon--GGN---]CA--5'
+
+        この"C"をTに編集するために、+鎖に結合するsgRNAを設計する。
+        つまり、+鎖を逆相補にしたものがsgRNAとなる。
+        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
+    If base_editor_type is "abe":
+        Acceptor splice siteの例:
+        5'--------AG[---NGG---exon]-3'
+             5'---AG----3" 20bpのsgRNA(-鎖に結合する)
+        3'--------TC[---NCC---exon]-5'
+
+        Donor splice siteの例:
+        5'-[---exon--CCN---]GT--3'
+                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
+        3'-[---exon--GGN---]CA--5'
+
+        この"A"をGに編集するために、+鎖に結合するsgRNAを設計する。
+        つまり、+鎖を逆相補にしたものがsgRNAとなる。
+        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
+    """
+    sgrna_list = []
+    base_editor_type = base_editor_type.lower()
+    if site_type == "acceptor":
+        splice_site = editing_sequence[cds_boundary - 2:cds_boundary].upper()
+        expected_site = "AG"
+        pam_iter = reversed_pam_regex.finditer(editing_sequence) if base_editor_type == "cbe" else pam_regex.finditer(editing_sequence)
+    else:
+        splice_site = editing_sequence[cds_boundary + 1:cds_boundary + 3].upper()
+        expected_site = "GT"
+        pam_iter = reversed_pam_regex.finditer(editing_sequence)
+    if splice_site != expected_site:
+        return sgrna_list
+    for match in pam_iter:
+        print(f"match: {match.group(1)}")
+        sgrna_start, sgrna_end = decide_sgrna_start_and_end(match, site_type, base_editor_type)
+        print(f"sgrna_start: {sgrna_start}, sgrna_end: {sgrna_end}")
+        if sgrna_start < 0 or sgrna_end > len(editing_sequence):
+            continue
+
+        # ABEかつ、acceptorの場合だけ、sgRNAが-鎖に結合するので、+鎖上では、3'端がPAMとなる
+        # そのため、編集ウィンドウの開始位置と終了位置をsgrnaの3'から数える必要がある
+        if site_type == "acceptor" and base_editor_type == "abe":
+            window_start_in_seq = sgrna_end - editing_window_end_in_grna
+            window_end_in_seq = sgrna_end - editing_window_start_in_grna
+        else:
+            window_start_in_seq = sgrna_start + editing_window_start_in_grna - 1
+            window_end_in_seq = sgrna_start + editing_window_end_in_grna - 1
+
+        if not (window_start_in_seq <= target_base_pos_in_sequence <= window_end_in_seq):
+            continue
+        target_sequence = editing_sequence[sgrna_start:sgrna_end]
+        if site_type == "acceptor" and base_editor_type == "cbe":
+            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+        elif site_type == "acceptor" and base_editor_type == "abe":
+            actual_sequence = convert_dna_to_rna(target_sequence)
+        else:
+            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+        if site_type == "acceptor" and base_editor_type == "abe":
+            target_pos_in_sgrna = -(target_base_pos_in_sequence - sgrna_end)
+        else:
+            target_pos_in_sgrna = target_base_pos_in_sequence - sgrna_start + 1
+        overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+            editing_sequence=editing_sequence,
+            window_start_in_seq=window_start_in_seq,
+            window_end_in_seq=window_end_in_seq,
+            cds_boundary=cds_boundary,
+            site_type=site_type,
+            base_editor_type=base_editor_type
+        )
+        sgrna_list.append(
+            SgrnaInfo(
+                target_sequence=target_sequence,
+                actual_sequence=actual_sequence,
+                start_in_sequence=sgrna_start,
+                end_in_sequence=sgrna_end,
+                target_pos_in_sgrna=target_pos_in_sgrna,
+                overlap_between_cds_and_editing_window=overlap,
+                possible_unintended_edited_base_count=unintended_edits,
+            )
+        )
+    return sgrna_list
 
 def design_sgrna_for_target_exon_df(
     target_exon_df: pd.DataFrame,
@@ -397,33 +346,17 @@ def design_sgrna_for_target_exon_df(
     def apply_design(row, site_type, base_editor_type):
         sequence_col = f"{site_type}_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
-            if base_editor_type == "cbe":
-                return design_sgrna_cbe(
-                    editing_sequence=row[sequence_col],
-                    reversed_pam_regex=reversed_pam_regex,
-                    editing_window_start_in_grna=editing_window_start_in_grna,
-                    editing_window_end_in_grna=editing_window_end_in_grna,
-                    target_g_pos_in_sequence=decide_target_base_pos_in_sequence(
-                        base_editor_type=base_editor_type,
-                        site_type=site_type
-                    ),
-                    cds_boundary= ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
-                    site_type=site_type
-                )
-            elif base_editor_type == "abe":
-                return design_sgrna_abe(
-                    editing_sequence=row[sequence_col],
-                    reversed_pam_regex=reversed_pam_regex,
-                    pam_regex=pam_regex,
-                    editing_window_start_in_grna=editing_window_start_in_grna,
-                    editing_window_end_in_grna=editing_window_end_in_grna,
-                    target_a_pos_in_sequence=decide_target_base_pos_in_sequence(
-                        base_editor_type=base_editor_type,
-                        site_type=site_type
-                    ),
-                    cds_boundary= ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
-                    site_type=site_type
-                )
+            return design_sgrna(
+                editing_sequence=row[sequence_col],
+                pam_regex=pam_regex,
+                reversed_pam_regex=reversed_pam_regex,
+                editing_window_start_in_grna=editing_window_start_in_grna,
+                editing_window_end_in_grna=editing_window_end_in_grna,
+                target_base_pos_in_sequence=decide_target_base_pos_in_sequence(base_editor_type, site_type),
+                cds_boundary=ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
+                base_editor_type=base_editor_type,
+                site_type=site_type
+            )
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
