@@ -16,6 +16,22 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
     """
     return refFlat[refFlat["geneName"].isin(interest_genes)].reset_index(drop=True)
 
+def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
+    """
+    Purpose:
+        refFlatのデータフレームに、複数のエキソンが存在するかを確認する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+    Returns:
+        bool, 複数のエキソンが存在する場合はTrue、存在しない場合はFalse
+    """
+    for gene in refFlat["geneName"].unique():
+        if refFlat[refFlat["exonCount"] == gene].shape[0] > 1:
+            print(f"Gene {gene} has multiple exons")
+            return True
+    print("No gene has multiple exons")
+    return False
+
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
     """
     Purpose:
@@ -187,4 +203,23 @@ def add_exon_position_flags(refflat: pd.DataFrame) -> pd.DataFrame:
         return row
 
     refflat = refflat.apply(flip_first_last_to_minus_strand, axis=1)
+    return refflat
+
+def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+    """
+    このモジュールの関数をwrapした関数
+    """
+    refflat = select_interest_genes(refflat, interest_genes)
+    if check_transcript_variant(refflat, interest_genes):
+        print("Multiple transcripts found, further processing will continue.")
+    else:
+        return refflat
+
+    refflat = parse_exon_coordinates(refflat)
+    refflat = calculate_exon_lengths(refflat)
+    refflat = drop_abnormal_mapped_transcripts(refflat)
+    refflat = annotate_cording_information(refflat)
+    refflat = annotate_flame_information(refflat)
+    refflat = add_exon_position_flags(refflat)
+
     return refflat
