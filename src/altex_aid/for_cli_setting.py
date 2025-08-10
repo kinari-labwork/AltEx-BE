@@ -36,25 +36,46 @@ def show_base_editors_info(base_editors: list[BaseEditor]):
         
 
 def get_base_editors_from_args(args) -> list[BaseEditor] | None:
-    # CSV/txtファイル優先
+    """
+    base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
+    csvまたはtxt, tsv形式のファイルをサポートする
+    """
+    expected_columns = [
+    "base_editor_name",
+    "pam_sequence",
+    "editing_window_start_in_grna",
+    "editing_window_end_in_grna",
+    "base_editor_type"
+    ]
     if args.be_f:
         ext = Path(args.be_f).suffix.lower()
-        if ext in [".csv"]:
-            be_df = pd.read_csv(args.be_f)
-        elif ext in [".tsv", ".txt"]:
-            be_df = pd.read_csv(args.be_f, sep=None, engine="python")
+    if ext in [".csv"]:
+        be_df = pd.read_csv(args.be_f)
+    elif ext in [".tsv", ".txt"]:
+        be_df = pd.read_csv(args.be_f, sep=None, engine="python")
+    else:
+        raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
+
+    # 列名が期待通りかチェック、なければ付与
+    if list(be_df.columns) != expected_columns:
+        # 列数が一致していれば、ヘッダーなしとみなしてカラム名を付与
+        if len(be_df.columns) == len(expected_columns):
+            be_df.columns = expected_columns
         else:
-            raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
-        return [
-            BaseEditor(
-                base_editor_name=row["base_editor_name"],
-                pam_sequence=row["pam_sequence"],
-                editing_window_start_in_grna=int(row["editing_window_start_in_grna"]),
-                editing_window_end_in_grna=int(row["editing_window_end_in_grna"]),
-                base_editor_type=row["base_editor_type"],
+            raise ValueError(
+                f"Base editor file columns are invalid. "
+                f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
             )
-            for _, row in be_df.iterrows()
-        ]
+    return [
+        BaseEditor(
+            base_editor_name=row["base_editor_name"],
+            pam_sequence=row["pam_sequence"],
+            editing_window_start_in_grna=int(row["editing_window_start_in_grna"]),
+            editing_window_end_in_grna=int(row["editing_window_end_in_grna"]),
+            base_editor_type=row["base_editor_type"],
+        )
+        for _, row in be_df.iterrows()
+    ]
 
 def check_input_output_directories(input_directory: Path, output_directory: Path):
     if not input_directory.is_dir():
