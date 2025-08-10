@@ -133,7 +133,7 @@ def main():
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
-            f"{input_directory}/refFlat.txt",
+            input_directory / "refFlat.txt",
             sep="\t",
             header=None,
             names=[
