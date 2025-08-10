@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 from pathlib import Path
+import sys
 from . import (
     for_cli_setting,
     refflat_preprocessor,
@@ -133,7 +134,11 @@ def main():
 
     print("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    try:
+        refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
 
     print("Classifying splicing events...")
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
@@ -141,7 +146,11 @@ def main():
     del refflat
 
     print("Extracting target exons...")
-    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    try:
+        target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
 
     print("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
