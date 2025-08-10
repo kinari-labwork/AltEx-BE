@@ -35,7 +35,7 @@ def show_base_editors_info(base_editors: list[BaseEditor]):
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
         
 
-def get_base_editors_from_args(args) -> list[BaseEditor] | None:
+def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | None:
     """
     base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
     csvまたはtxt, tsv形式のファイルをサポートする
