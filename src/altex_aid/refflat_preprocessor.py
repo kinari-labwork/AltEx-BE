@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-import sys
 import pandas as pd
 
 def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
@@ -237,5 +236,5 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     if not validate_filtered_refflat(refflat, interest_genes):
-        sys.exit(1)
+        raise ValueError("your interest genes is out of scope of AltEx-BE or invalid")
     return refflat
