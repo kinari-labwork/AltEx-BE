@@ -90,12 +90,16 @@ def main():
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
         raise ValueError("No interest genes provided.")
-
-    #　コマンドライン引数で BaseEditor 情報が提供されている場合は、解析し、base_editors に追加
+    
     base_editors = for_cli_setting.parse_base_editors(args)
+    preset_base_editors = sgrna_designer.make_preset_base_editors()
+
+    if args.be_pre in preset_base_editors:
+        base_editors = [preset_base_editors[args.be_pre]]
+
+    
 
     print("Designing sgRNAs for the following base editors:")
-
     for_cli_setting.show_base_editors_info(base_editors)
 
     if not (input_directory / "refFlat.txt").is_file():
