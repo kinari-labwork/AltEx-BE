@@ -25,96 +25,111 @@ def main():
         help="Show the version of Altex BE",
     )
     # コマンドライン引数を追加
-    parser.add_argument(
+    dir_group = parser.add_argument_group("Directory Options")
+    dir_group.add_argument(
         "-i", "--input-directory",
         required=True,
         help="Directory of the input files"
     )
-    parser.add_argument(
+    dir_group.add_argument(
         "-o", "--output-directory",
         required=True,
         help="Directory of the output files"
     )
-    parser.add_argument(
+    gene_group = parser.add_argument_group("Gene Options")
+    gene_group.add_argument(
         "-g", "--interest-genes",
+        nargs="+",
         required=True,
         help="List of interest genes (space-separated)"
     )
-    parser.add_argument(
+    base_editors = parser.add_argument_group("Base Editor Options")
+    base_editors.add_argument(
         "--be-n", "--base-editor-name",
         default=None,
         required=False,
         help="Name of the base editor to optional use",
     )
-    parser.add_argument(
+    base_editors.add_argument(
         "--be-p", "--base-editor-pam",
         default=None,
         required=False,
         help="PAM sequence for the base editor",
     )
-    parser.add_argument(
+    base_editors.add_argument(
         "--be-ws", "--base-editor-window-start",
         default=None,
         required=False,
         help="Window start for the base editor (Count from next to PAM)",
     )
-    parser.add_argument(
+    base_editors.add_argument(
         "--be-we", "--base-editor-window-end",
         default=None,
         required=False,
         help="Window end for the base editor (Count from next to PAM)",
     )
-    parser.add_argument(
+    base_editors.add_argument(
         "--be-t", "--base-editor-type",
         default=None,
         required=False,
         help="Choose the type of base editor, this tool supports ABE and CBE",
     )
-    parser.add_argument(
+    base_editors.add_argument(
         "--be-pre", "--base-editor-preset",
         default=None,
         required=False,
         help="Preset for the base editor",
     )
+    base_editors.add_argument(
+        "--be-f", "--base-editor-files",
+        default=None,
+        required=False,
+        help="input the path of csv file or txt file of base editor information",
+    )
 
     args = parser.parse_args()
 
     input_directory = Path(args.input_directory)
-    if not input_directory.is_dir():
-        raise NotADirectoryError(f"The provided input directory '{input_directory}' does not exist.")
-
     output_directory = Path(args.output_directory)
-    if not output_directory.is_dir():
-        raise NotADirectoryError(f"The provided output directory '{output_directory}' does not exist.")
+
+    try:
+        for_cli_setting.check_input_output_directories(input_directory, output_directory)
+    except (NotADirectoryError, FileNotFoundError) as e:
+        print(e)
+        sys.exit(1)
 
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
-        raise ValueError("No interest genes provided.")
-    
-    base_editors = for_cli_setting.parse_base_editors(args)
+        print("No interest genes provided.")
+        sys.exit(1)
+
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
-    if args.be_pre in preset_base_editors:
+    # BaseEditorの決定
+    if args.be_f:
+        base_editors = for_cli_setting.get_base_editors_from_args(args)
+    elif args.be_pre and args.be_pre in preset_base_editors:
         base_editors = [preset_base_editors[args.be_pre]]
-
-    
+    else:
+        base_editors = for_cli_setting.parse_base_editors(args)
+        if not base_editors:
+            print("No base editor specified.")
+            sys.exit(1)
 
     print("Designing sgRNAs for the following base editors:")
     for_cli_setting.show_base_editors_info(base_editors)
 
-    if not (input_directory / "refFlat.txt").is_file():
-        raise FileNotFoundError(f"refFlat file not found at '{input_directory}/refFlat.txt'.")
-
     # FASTA ファイルの検出と確認
     fasta_files = [f for f in input_directory.glob("*.fa")] + [f for f in input_directory.glob("*.fasta")]
-
-    if len(fasta_files) == 0:
-        raise FileNotFoundError(f"No FASTA file found in '{input_directory}'.")
-    elif len(fasta_files) > 1:
-        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Only single FASTA file is allowed. Exiting.")
     # 1 つだけ存在する場合、そのファイルを使用
+    try:
+        for_cli_setting.check_fasta_files(input_directory, fasta_files)
+    except (FileNotFoundError, FileExistsError) as e:
+        print(e)
+        sys.exit(1)
+
     fasta_path = input_directory / fasta_files[0]
-    print(f"Using FASTA file as reference genome: {fasta_path}")
+    print(f"Using this FASTA file as reference genome: {fasta_path}")
 
     print("loading refFlat file...")
     refflat = pd.read_csv(

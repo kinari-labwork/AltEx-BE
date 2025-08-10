@@ -1,5 +1,8 @@
 from altex_aid.sgrna_designer import BaseEditor
 import argparse
+import pandas as pd
+from pathlib import Path
+
 
 def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
     base_editors = []
@@ -30,3 +33,41 @@ def show_base_editors_info(base_editors: list[BaseEditor]):
     for base_editor in base_editors:
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
+        
+
+def get_base_editors_from_args(args) -> list[BaseEditor] | None:
+    # CSV/txtファイル優先
+    if args.be_f:
+        ext = Path(args.be_f).suffix.lower()
+        if ext in [".csv"]:
+            be_df = pd.read_csv(args.be_f)
+        elif ext in [".tsv", ".txt"]:
+            be_df = pd.read_csv(args.be_f, sep=None, engine="python")
+        else:
+            raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
+        return [
+            BaseEditor(
+                base_editor_name=row["base_editor_name"],
+                pam_sequence=row["pam_sequence"],
+                editing_window_start_in_grna=int(row["editing_window_start_in_grna"]),
+                editing_window_end_in_grna=int(row["editing_window_end_in_grna"]),
+                base_editor_type=row["base_editor_type"],
+            )
+            for _, row in be_df.iterrows()
+        ]
+
+def check_input_output_directories(input_directory: Path, output_directory: Path):
+    if not input_directory.is_dir():
+        raise NotADirectoryError(f"The provided input directory '{input_directory}' does not exist.")
+    if not output_directory.is_dir():
+        raise NotADirectoryError(f"The provided output directory '{output_directory}' does not exist.")
+
+def check_fasta_files(input_directory: Path, fasta_files: list[Path]) -> list[Path]:
+    if not (input_directory / "refFlat.txt").is_file():
+        raise FileNotFoundError(f"refFlat file not found at '{input_directory}/refFlat.txt'.")
+    if not fasta_files:
+        raise FileNotFoundError("No FASTA files found in the input directory.")
+    if len(fasta_files) == 0:
+        raise FileNotFoundError(f"No FASTA file found in '{input_directory}'.")
+    elif len(fasta_files) > 1:
+        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Only single FASTA file is allowed. Exiting.")
