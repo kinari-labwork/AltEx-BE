@@ -161,7 +161,7 @@ def main():
 
     print("Classifying splicing events...")
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
-    classified_refflat.to_pickle(f"{output_directory}/processed_refFlat.pickle")
+    classified_refflat.to_pickle(output_directory / "processed_refFlat.pickle")
     del refflat
 
     print("Extracting target exons...")
@@ -182,8 +182,8 @@ def main():
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
         base_editors=base_editors
     )
-    
-    target_exon_df_with_sgrna.to_pickle(f"{output_directory}/target_exon_df_with_sgrna.pickle")
+
+    target_exon_df_with_sgrna.to_pickle(output_directory / "target_exon_df_with_sgrna.pickle")
 
 if __name__ == "__main__":
     main()
