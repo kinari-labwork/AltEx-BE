@@ -141,6 +141,13 @@ def calculate_overlap_and_unintended_edits_to_cds(
 
     return overlap, unintended_edits
 
+TARGET_BASE_POS = {
+    ("acceptor", "cbe"): 24,
+    ("donor", "cbe"): 25,
+    ("acceptor", "abe"): 23,
+    ("donor", "abe"): 26,
+}
+
 def decide_target_base_pos_in_sequence(
     base_editor_type: str,
     site_type:str,
@@ -165,10 +172,12 @@ def decide_target_base_pos_in_sequence(
         5'--[---exon---] G  T --3'
         3'--[---exon---] C  A --5'
     """
-    if base_editor_type == "cbe":
-        return 24 if site_type == "acceptor" else 25
-    if base_editor_type == "abe":
-        return 23 if site_type == "acceptor" else 26
+    return TARGET_BASE_POS[(site_type, base_editor_type.lower())]
+
+VALID_EXON_POSITIONS = {
+    "acceptor": ["internal", "last"],
+    "donor": ["internal", "first"],
+}
 
 def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     """
@@ -180,25 +189,17 @@ def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     Returns:
         bool, 有効なら True, 無効なら False
     """
-    valid_positions = ["internal", "last"] if site_type == "acceptor" else ["internal", "first"]
-    return exon_position in valid_positions
+    return exon_position in VALID_EXON_POSITIONS[site_type]
 
-def decide_sgrna_start_and_end(
-        match: re.Match,
-        site_type: str,
-        base_editor_type: str
-        ) -> tuple[int, int]:
-    if site_type == "acceptor":
-        if base_editor_type.lower() == "cbe":
-            sgrna_start = match.end(1)   
-            sgrna_end = sgrna_start + 20  
-        elif base_editor_type.lower() == "abe":
-            sgrna_end = match.start(1)   
-            sgrna_start = sgrna_end - 20 
-    elif site_type == "donor":
-        sgrna_start = match.end(1)
-        sgrna_end = sgrna_start + 20
-    return sgrna_start, sgrna_end
+SGRNA_START_END_RULES = {
+    ("acceptor", "cbe"): lambda match: (match.end(1), match.end(1) + 20),
+    ("acceptor", "abe"): lambda match: (match.start(1) - 20, match.start(1)),
+    ("donor", "cbe"): lambda match: (match.end(1), match.end(1) + 20),
+    ("donor", "abe"): lambda match: (match.end(1), match.end(1) + 20),
+}
+
+def decide_sgrna_start_and_end(match: re.Match, site_type: str, base_editor_type: str) -> tuple[int, int]:
+    return SGRNA_START_END_RULES[(site_type, base_editor_type.lower())](match)
 
 def design_sgrna(
     editing_sequence: str,
