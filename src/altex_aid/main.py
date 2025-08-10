@@ -40,14 +40,40 @@ def main():
         help="List of interest genes (space-separated)"
     )
     parser.add_argument(
-        "-be", "--base-editors",
-        nargs='*',
-        help=(
-            "BaseEditor information in the format: "
-            "'name,pam,window_start,window_end,base_editor_type'. "
-            "Caution: window_start and window_end are 1-based indices, starting from next to the PAM. "
-            "Example: 'ABE8e,NGG,12,17,ABE'"
-        ),
+        "--be-n", "--base-editor-name",
+        default=None,
+        required=False,
+        help="Name of the base editor to optional use",
+    )
+    parser.add_argument(
+        "--be-p", "--base-editor-pam",
+        default=None,
+        required=False,
+        help="PAM sequence for the base editor",
+    )
+    parser.add_argument(
+        "--be-ws", "--base-editor-window-start",
+        default=None,
+        required=False,
+        help="Window start for the base editor (Count from next to PAM)",
+    )
+    parser.add_argument(
+        "--be-we", "--base-editor-window-end",
+        default=None,
+        required=False,
+        help="Window end for the base editor (Count from next to PAM)",
+    )
+    parser.add_argument(
+        "--be-t", "--base-editor-type",
+        default=None,
+        required=False,
+        help="Choose the type of base editor, this tool supports ABE and CBE",
+    )
+    parser.add_argument(
+        "--be-pre", "--base-editor-preset",
+        default=None,
+        required=False,
+        help="Preset for the base editor",
     )
 
     args = parser.parse_args()
@@ -64,12 +90,9 @@ def main():
     if not interest_gene_list:
         raise ValueError("No interest genes provided.")
 
-    base_editors = sgrna_designer.make_default_base_editors()
-
     #　コマンドライン引数で BaseEditor 情報が提供されている場合は、解析し、base_editors に追加
-    if args.base_editors:
-        base_editors = for_cli_setting.parse_base_editors(args.base_editors, base_editors)
-    
+    base_editors = for_cli_setting.parse_base_editors(args)
+
     print("Designing sgRNAs for the following base editors:")
 
     for_cli_setting.show_base_editors_info(base_editors)

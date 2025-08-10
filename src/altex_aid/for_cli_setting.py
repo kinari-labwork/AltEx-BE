@@ -1,27 +1,32 @@
 from altex_aid.sgrna_designer import BaseEditor
+import argparse
 
-def parse_base_editors(base_editor_args:list[str], base_editors: list) -> list[BaseEditor]: 
-    for editor_arg in base_editor_args:
+def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
+    base_editors = []
+    if all([args.be_n, args.be_p, args.be_ws, args.be_we, args.be_t]):
         try:
-            name, pam, window_start, window_end, editor_type = editor_arg.split(",")
             base_editors.append(
                 BaseEditor(
-                    base_editor_name=name,
-                    pam_sequence=pam,
-                    editing_window_start_in_grna=int(window_start),
-                    editing_window_end_in_grna=int(window_end),
-                    base_editor_type=editor_type.lower()
-                )
+                    base_editor_name=args.be_n,
+                    pam_sequence=args.be_p.upper(),
+                    editing_window_start_in_grna=int(args.be_ws),
+                    editing_window_end_in_grna=int(args.be_we),
+                    base_editor_type=args.be_t.lower(),
             )
-        except ValueError:
-            print(
-                f"Invalid BaseEditor format: {editor_arg}. Skipping."
-                "Expected format: str[name],str[pam],int[window_start],int[window_end],str[editor_type]"
-            )
-
-    return base_editors
+        )
+            return base_editors
+        except ValueError as e:
+            print(f"Error parsing base editor information: {e}")
+            return None
+    else:
+        print("Base editor information is incomplete. Please provide all required parameters.")
+        return None
 
 def show_base_editors_info(base_editors: list[BaseEditor]):
+    if base_editors is None:
+        print("No base editors available to display.")
+        return
+
     for base_editor in base_editors:
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
