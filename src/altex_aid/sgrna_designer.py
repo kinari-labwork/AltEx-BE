@@ -502,33 +502,33 @@ def design_sgrna_for_base_editors(
     final_result = final_result.loc[:, ~final_result.columns.duplicated()]
     return final_result.reset_index(drop=True)
 
-def make_default_base_editors() -> list[BaseEditor]:
+def make_preset_base_editors() -> dict[str, BaseEditor]:
     """
     Purpose:
         デフォルトのBaseEditorのリストを返す
     Returns:
-        list[BaseEditor], デフォルトのBaseEditorのリスト
+        dict[str, BaseEditor], デフォルトのBaseEditorのリスト
     """
-    return [
-        BaseEditor(
+    return {
+        "target_aid": BaseEditor(
             base_editor_name="target_aid",
             pam_sequence="NGG",
             editing_window_start_in_grna=17,
             editing_window_end_in_grna=19,
             base_editor_type="cbe"
         ),
-        BaseEditor(
+        "be4max": BaseEditor(
             base_editor_name="be4max",
             pam_sequence="NGG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
             base_editor_type="cbe"
         ),
-        BaseEditor(
+        "abe8e": BaseEditor(
             base_editor_name="abe8e",
             pam_sequence="NGG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
             base_editor_type="abe"
         ),
-    ]
+    }
