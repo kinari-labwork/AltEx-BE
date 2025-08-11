@@ -7,6 +7,8 @@ from plotnine import*
 
 # %%
 pd.set_option('display.width', 200) 
+pd.set_option('display.max_columns', 20)
+pd.set_option('display.max_rows', 1000)
 
 # %%
 data = pd.read_pickle('../data/classified_exon_refflat.pkl')
@@ -163,6 +165,255 @@ print(f"intron_retentionを持つ遺伝子の割合: {len(genes_have_intron_rete
 
 
 # %%
+# CDS start, end を加味して、exonにutr_exon, cds_edge_exonを追加する
+def annotate_utr_and_cds_exons(data):
+    """
+    各エキソンごとに 'cds_exon', 'cds_edge_exon', 'utr_exon' のラベルを付与し、cds_infoカラムに格納する。
+    """
+    def label_exons(row):
+        # non-coding遺伝子はすべてutr_exon
+        if row["coding"] == "non-coding":
+            return ["utr_exon" for _ in row["exons"]]
+        cds_start = row["cdsStart"]
+        cds_end = row["cdsEnd"]
+        exon_starts = row["exonStarts"]
+        exon_ends = row["exonEnds"]
+        labels = []
+        for start, end in zip(exon_starts, exon_ends):
+            if end <= cds_start or start >= cds_end:
+                label = "utr_exon"
+            elif (start < cds_start < end) and (start < cds_end < end):
+                label = "cds_edge_exon_start_end"
+            elif start < cds_start < end:
+                label = "cds_edge_exon_start"
+            elif start < cds_end < end:
+                label = "cds_edge_exon_end"
+            else:
+                label = "cds_exon"
+            labels.append(label)
+        return labels
+
+    data["cds_info"] = data.apply(label_exons, axis=1)
+    return data
+
+
+# %%
+data = annotate_utr_and_cds_exons(data)
+print(data.head(2))
+
+# %%
+data2 = data[["geneName","exontype", "chrom", "exons", "coding","exonlengths", "flame", "exon_position", "cds_info"]]
+exon_df = data2.explode(["exontype", "exons", "flame", "exonlengths", "exon_position", "cds_info"])
+exon_df = exon_df.drop_duplicates(subset=["chrom","exons"])
+print(exon_df.head())
+
+# %%
+print(exon_df["coding"].value_counts())
+
+# %%
+print(exon_df["cds_info"].value_counts())
+
+# %%
+target_exon = exon_df[exon_df["exontype"].isin(["skipped", "unique", "a5ss-long", "a3ss-long", "a5ss-short", "a3ss-short"])]
+internal_target_exon = target_exon[target_exon["exon_position"] == "internal"]
+first_target_exon = target_exon[target_exon["exon_position"] == "first"]
+last_target_exon = target_exon[target_exon["exon_position"] == "last"]
+
+internal_unique_exon = internal_target_exon[internal_target_exon["exontype"] == "unique"]
+first_unique_exon = first_target_exon[first_target_exon["exontype"] == "unique"]
+last_unique_exon = last_target_exon[last_target_exon["exontype"] == "unique"]
+
+internal_skipped_exon = internal_target_exon[internal_target_exon["exontype"] == "skipped"]
+first_skipped_exon = first_target_exon[first_target_exon["exontype"] == "skipped"]
+last_skipped_exon = last_target_exon[last_target_exon["exontype"] == "skipped"]
+
+internal_a5ss_long_exon = internal_target_exon[internal_target_exon["exontype"] == "a5ss-long"]
+first_a5ss_long_exon = first_target_exon[first_target_exon["exontype"] == "a5ss-long"]
+last_a5ss_long_exon = last_target_exon[last_target_exon["exontype"] == "a5ss-long"]
+
+internal_a3ss_long_exon = internal_target_exon[internal_target_exon["exontype"] == "a3ss-long"]
+first_a3ss_long_exon = first_target_exon[first_target_exon["exontype"] == "a3ss-long"]
+last_a3ss_long_exon = last_target_exon[last_target_exon["exontype"] == "a3ss-long"] 
+
+internal_a5ss_short_exon = internal_target_exon[internal_target_exon["exontype"] == "a5ss-short"]
+first_a5ss_short_exon = first_target_exon[first_target_exon["exontype"] == "a5ss-short"]
+last_a5ss_short_exon = last_target_exon[last_target_exon["exontype"] == "a5ss-short"]
+
+internal_a3ss_short_exon = internal_target_exon[internal_target_exon["exontype"] == "a3ss-short"]
+first_a3ss_short_exon = first_target_exon[first_target_exon["exontype"] == "a3ss-short"]
+last_a3ss_short_exon = last_target_exon[last_target_exon["exontype"] == "a3ss-short"]
+
+print(internal_skipped_exon["cds_info"].value_counts())
+
+# %%
+# cds_info のvalueごとに in-flame 割合を計算し棒グラフ化
+def calc_in_flame_ratio(df):
+    if len(df) == 0:
+        return 0.0
+    return (df["flame"] == "in-flame").sum() / len(df)
+
+# 対象リスト
+exon_sets = [
+    ("internal_unique_exon", internal_unique_exon),
+    ("first_unique_exon", first_unique_exon),
+    ("last_unique_exon", last_unique_exon),
+    ("internal_skipped_exon", internal_skipped_exon),
+    ("first_skipped_exon", first_skipped_exon),
+    ("last_skipped_exon", last_skipped_exon),
+    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
+    ("first_a5ss_long_exon", first_a5ss_long_exon),
+    ("last_a5ss_long_exon", last_a5ss_long_exon),
+    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
+    ("first_a3ss_long_exon", first_a3ss_long_exon),
+    ("last_a3ss_long_exon", last_a3ss_long_exon),
+    ("internal_a5ss_short_exon", internal_a5ss_short_exon),
+    ("first_a5ss_short_exon", first_a5ss_short_exon),
+    ("last_a5ss_short_exon", last_a5ss_short_exon),
+    ("internal_a3ss_short_exon", internal_a3ss_short_exon),
+    ("first_a3ss_short_exon", first_a3ss_short_exon),
+    ("last_a3ss_short_exon", last_a3ss_short_exon)
+]
+
+# 結果格納用
+results = []
+for name, df in exon_sets:
+    # "cds_edge_exon_start_end", "cds_edge_exon_start", "cds_edge_exon_end" をまとめて "cds_edge_exon" に
+    df = df.copy()
+    df["cds_info_grouped"] = df["cds_info"].replace({
+        "cds_edge_exon_start_end": "cds_edge_exon",
+        "cds_edge_exon_start": "cds_edge_exon",
+        "cds_edge_exon_end": "cds_edge_exon"
+    })
+    for cds_status in ["cds_exon", "utr_exon", "cds_edge_exon"]:
+        sub = df[df["cds_info_grouped"] == cds_status]
+        total_count = sub.shape[0]
+        in_flame_count = (sub["flame"] == "in-flame").sum()
+        out_flame_count = (sub["flame"] == "out-flame").sum()
+        ratio = calc_in_flame_ratio(sub)
+        exon_count = sub.shape[0]
+        results.append({
+            "Category": name,
+            "cording_status": cds_status,
+            "total_exon_count": total_count,
+            "in_flame_count": in_flame_count,
+            "out_flame_count": out_flame_count,
+            "InFlameRatio": ratio * 100,
+            "ExonCount": exon_count
+        })
+
+
+df_in_flame = pd.DataFrame(results)
+df_in_flame["label"] = df_in_flame.apply(
+    lambda row: f"{row['InFlameRatio']:.1f}%\n(n={int(row['ExonCount'])})", axis=1
+)
+exon_counts_df = df_in_flame[df_in_flame["cording_status"].isin(["cds_exon","utr_exon","cds_edge_exon"])]
+internal_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("internal")]
+first_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("first")]
+last_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("last")]
+
+for df in [internal_exon_df, first_exon_df, last_exon_df]:
+    plot = (
+        ggplot(df, aes(x="Category", y="InFlameRatio", fill="cording_status")) +
+        geom_bar(stat="identity", position="dodge") +
+        geom_text(
+            aes(label="label"),
+        position=position_dodge(width=0.9),
+        va="bottom",
+        size=9,
+        color="black"
+    ) +
+    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
+    coord_cartesian(ylim=(0, 100)) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(17,10))
+    )
+    display(plot)
+
+# %%
+# coding列が "coding" または "non-coding" の場合の in-flame割合を計算し棒グラフ化
+
+def calc_in_flame_ratio(df):
+    if len(df) == 0:
+        return 0.0
+    return (df["flame"] == "in-flame").sum() / len(df)
+
+# 対象リスト
+exon_sets = [
+    ("internal_unique_exon", internal_unique_exon),
+    ("first_unique_exon", first_unique_exon),
+    ("last_unique_exon", last_unique_exon),
+    ("internal_skipped_exon", internal_skipped_exon),
+    ("first_skipped_exon", first_skipped_exon),
+    ("last_skipped_exon", last_skipped_exon),
+    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
+    ("first_a5ss_long_exon", first_a5ss_long_exon),
+    ("last_a5ss_long_exon", last_a5ss_long_exon),
+    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
+    ("first_a3ss_long_exon", first_a3ss_long_exon),
+    ("last_a3ss_long_exon", last_a3ss_long_exon),
+]
+
+# 結果格納用
+results = []
+for name, df in exon_sets:
+    for coding_status in ["coding", "non-coding"]:
+        sub = df[df["coding"] == coding_status]
+        ratio = calc_in_flame_ratio(sub)
+        results.append({"Category": name, "Coding": coding_status, "InFlameRatio": ratio * 100})
+
+df_in_flame = pd.DataFrame(results)
+
+# 棒グラフ
+plot = (
+    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio", fill="Coding")) +
+    geom_bar(stat="identity", position="dodge") +
+    geom_text(
+        aes(label="InFlameRatio.round(1).astype(str) + '%'"),
+        position=position_dodge(width=0.9),
+        va="bottom",
+        size=9,
+        color="black"
+    ) +
+    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
+    coord_cartesian(ylim=(0, 100)) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(12,5))
+)
+display(plot)
+
+# %%
+# 各項目のin-flame割合をまとめる
+in_flame_ratios = {
+    "internal_unique_exon": calc_in_flame_ratio(internal_unique_exon),
+    "first_unique_exon": calc_in_flame_ratio(first_unique_exon),
+    "last_unique_exon": calc_in_flame_ratio(last_unique_exon),
+    "internal_skipped_exon": calc_in_flame_ratio(internal_skipped_exon),
+    "first_skipped_exon": calc_in_flame_ratio(first_skipped_exon),
+    "last_skipped_exon": calc_in_flame_ratio(last_skipped_exon),
+    "internal_a5ss_long_exon": calc_in_flame_ratio(internal_a5ss_long_exon),
+    "first_a5ss_long_exon": calc_in_flame_ratio(first_a5ss_long_exon),
+    "last_a5ss_long_exon": calc_in_flame_ratio(last_a5ss_long_exon),
+    "internal_a3ss_long_exon": calc_in_flame_ratio(internal_a3ss_long_exon),
+    "first_a3ss_long_exon": calc_in_flame_ratio(first_a3ss_long_exon),
+    "last_a3ss_long_exon": calc_in_flame_ratio(last_a3ss_long_exon),
+}
+
+# データフレーム化
+df_in_flame = pd.DataFrame({
+    "Category": list(in_flame_ratios.keys()),
+    "InFlameRatio": [v * 100 for v in in_flame_ratios.values()]
+})
+
+# 棒グラフ
+plot = (
+    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio")) +
+    geom_bar(stat="identity", fill="#56B4E9") +
+    geom_text(aes(label="InFlameRatio.round(2).astype(str) + '%'"), va="bottom", size=9, color="black") +
+    labs(title="Percentage of in-flame Exons", x="Exon Category", y="Percentage of in-flame exons (%)") +
+    coord_cartesian(ylim=(0, 100)) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(10,5))
+)
+display(plot)
+
+# %%
 def count_genes_by_exon_type(data, exon_conditions):
     """
     各エキソンタイプごとに遺伝子数をカウントし、結果を出力する関数。
@@ -253,6 +504,9 @@ plot_df["Category"] = pd.Categorical(
 
 # Percentage列を数値型に変換
 plot_df["Percentage"] = plot_df["Percentage"].str.rstrip('%').astype(float)
+print(plot_df)
+
+
 
 # プロット
 plot = (
