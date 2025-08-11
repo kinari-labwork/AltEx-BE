@@ -57,7 +57,7 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
         be_df = pd.read_csv(args.be_f, sep=None, engine="python", header=0)
 
     # 列名が期待通りかチェック、違うならエラーを投げる
-    if list(be_df.columns) != expected_columns:
+    if set(be_df.columns) != set(expected_columns):
         raise ValueError(
             f"Base editor file columns are invalid. "
             f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
