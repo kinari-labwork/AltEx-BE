@@ -77,18 +77,10 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
         for _, row in be_df.iterrows()
     ]
 
-def check_input_output_directories(input_directory: Path, output_directory: Path):
-    if not input_directory.is_dir():
-        raise NotADirectoryError(f"The provided input directory '{input_directory}' does not exist.")
+def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
+    if not refflat_path.is_file():
+        raise FileNotFoundError(f"The provided refFlat file '{refflat_path}' does not exist.")
+    if not fasta_path.is_file():
+        raise FileNotFoundError(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():
         raise NotADirectoryError(f"The provided output directory '{output_directory}' does not exist.")
-
-def check_fasta_files(input_directory: Path, fasta_files: list[Path]) -> list[Path]:
-    if not (input_directory / "refFlat.txt").is_file():
-        raise FileNotFoundError(f"refFlat file not found at '{input_directory}/refFlat.txt'.")
-    if not fasta_files:
-        raise FileNotFoundError("No FASTA files found in the input directory.")
-    if len(fasta_files) == 0:
-        raise FileNotFoundError(f"No FASTA file found in '{input_directory}'.")
-    elif len(fasta_files) > 1:
-        raise FileExistsError(f"Multiple FASTA files found in '{input_directory}': {', '.join(fasta_files)}. Only single FASTA file is allowed. Exiting.")

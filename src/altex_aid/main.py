@@ -25,20 +25,25 @@ def main():
         help="Show the version of Altex BE",
     )
     # コマンドライン引数を追加
-    dir_group = parser.add_argument_group("Directory Options")
+    dir_group = parser.add_argument_group("Input/Output Options")
     dir_group.add_argument(
-        "-i", "--input-directory",
+        "--r", "--refflat-path",
         required=True,
-        help="Directory of the input files"
+        help="Path of refflat file"
     )
     dir_group.add_argument(
-        "-o", "--output-directory",
+        "--f", "--fasta-path",
+        required=True,
+        help="Path of FASTA file"
+    )
+    dir_group.add_argument(
+        "--o", "--output-directory",
         required=True,
         help="Directory of the output files"
     )
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
-        "-g", "--interest-genes",
+        "--g", "--interest-genes",
         nargs="+",
         required=True,
         help="List of interest genes (space-separated)"
@@ -89,19 +94,19 @@ def main():
 
     args = parser.parse_args()
 
-    input_directory = Path(args.input_directory)
+    refflat_path = Path(args.refflat_path)
+    fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_directory)
 
     try:
-        for_cli_setting.check_input_output_directories(input_directory, output_directory)
+        for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
     except (NotADirectoryError, FileNotFoundError) as e:
         print(e)
         sys.exit(1)
 
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
-        print("No interest genes provided.")
-        sys.exit(1)
+        raise ValueError("No interest genes provided.")
 
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
@@ -113,27 +118,16 @@ def main():
     else:
         base_editors = for_cli_setting.parse_base_editors(args)
         if not base_editors:
-            print("No base editor specified.")
-            sys.exit(1)
+            raise ValueError("No base editor specified.")
 
     print("Designing sgRNAs for the following base editors:")
     for_cli_setting.show_base_editors_info(base_editors)
 
-    # FASTA ファイルの検出と確認
-    fasta_files = [f for f in input_directory.glob("*.fa")] + [f for f in input_directory.glob("*.fasta")]
-    # 1 つだけ存在する場合、そのファイルを使用
-    try:
-        for_cli_setting.check_fasta_files(input_directory, fasta_files)
-    except (FileNotFoundError, FileExistsError) as e:
-        print(e)
-        sys.exit(1)
-
-    fasta_path = input_directory / fasta_files[0]
     print(f"Using this FASTA file as reference genome: {fasta_path}")
 
     print("loading refFlat file...")
     refflat = pd.read_csv(
-            input_directory / "refFlat.txt",
+            refflat_path,
             sep="\t",
             header=None,
             names=[
