@@ -209,20 +209,15 @@ def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[st
     Validate the processed refFlat DataFrame.
     """
     if refflat.empty:
-        print("All of your interest genes are not exist in refFlat file.")
-        return False
+        raise ValueError("The processed refFlat DataFrame is empty. Please check your input data.")
 
     variant_check = check_transcript_variant(refflat, interest_gene_list)
     if not variant_check:
-        print("No transcript variants found for your interest genes.")
-        return False
+        raise ValueError("No transcript variants found for your interest genes.")
     
     multiple_exon_check = check_multiple_exon_existance(refflat)
     if not multiple_exon_check:
-        print("your interest genes do not have multiple exons. These genes are out of scope.")
-        return False
-
-    return True
+        raise ValueError("Your interest genes do not have multiple exons. These genes are out of scope.")
 
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
@@ -235,6 +230,10 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = annotate_cording_information(refflat)
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
-    if not validate_filtered_refflat(refflat, interest_genes):
-        raise ValueError("your interest genes is out of scope of AltEx-BE or invalid")
+    
+    try:
+        validate_filtered_refflat(refflat, interest_genes)
+    except ValueError as e:
+        raise ValueError(f"Error validating filtered refFlat: {e}")
+    
     return refflat

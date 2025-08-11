@@ -20,8 +20,7 @@ def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
             )
         ]
     except ValueError as e:
-        print(f"Error parsing base editor information: {e}")
-        return None
+        raise ValueError(f"Error parsing base editor information: {e}")
 
 def show_base_editors_info(base_editors: list[BaseEditor]):
     if base_editors is None:

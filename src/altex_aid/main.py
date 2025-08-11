@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import sys
+import logging
 from . import (
     for_cli_setting,
     refflat_preprocessor,
@@ -9,6 +10,11 @@ from . import (
     splicing_event_classifier,
     target_exon_extractor,
     sgrna_designer,
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
@@ -101,31 +107,44 @@ def main():
     try:
         for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
     except (NotADirectoryError, FileNotFoundError) as e:
-        print(e)
+        logging.error(f"Error with input/output directories: {e}")
         sys.exit(1)
 
     interest_gene_list = args.interest_genes
     if not interest_gene_list:
-        raise ValueError("No interest genes provided.")
+        logging.error("No interest genes provided.")
+        sys.exit(1)
 
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
     # BaseEditorの決定
+    base_editors = []
     if args.be_f:
-        base_editors = for_cli_setting.get_base_editors_from_args(args)
-    elif args.be_pre and args.be_pre in preset_base_editors:
-        base_editors = [preset_base_editors[args.be_pre]]
-    else:
-        base_editors = for_cli_setting.parse_base_editors(args)
-        if not base_editors:
-            raise ValueError("No base editor specified.")
+        try:
+            base_editors.extend(for_cli_setting.get_base_editors_from_args(args))
+        except ValueError as e:
+            logging.error(f"Error getting base editors from args: {e} - please check the file format and content.")
+            sys.exit(1)
 
-    print("Designing sgRNAs for the following base editors:")
+    if args.be_pre and args.be_pre not in preset_base_editors:
+        logging.error(f"Unknown base editor preset: {args.be_pre} - available presets are {list(preset_base_editors.keys())}.")
+        sys.exit(1)
+    else:
+        base_editors.extend(preset_base_editors[args.be_pre])
+
+    if args.be_n or args.be_p or args.be_ws or args.be_we or args.be_t:
+        base_editors.extend(for_cli_setting.parse_base_editors(args))
+
+    if not base_editors:
+        logging.error("No base editor specified. Please provide at least one base editor. Exiting.")
+        sys.exit(1)
+
+    logging.info("Designing sgRNAs for the following base editors:")
     for_cli_setting.show_base_editors_info(base_editors)
 
-    print(f"Using this FASTA file as reference genome: {fasta_path}")
+    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
 
-    print("loading refFlat file...")
+    logging.info("loading refFlat file...")
     refflat = pd.read_csv(
             refflat_path,
             sep="\t",
@@ -150,10 +169,10 @@ def main():
     try:
         refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
     except ValueError as e:
-        print(e)
+        logging.error(f"Error preprocessing refFlat file: {e}")
         sys.exit(1)
 
-    print("Classifying splicing events...")
+    logging.info("Classifying splicing events...")
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
     classified_refflat.to_pickle(output_directory / "processed_refFlat.pickle")
     del refflat
@@ -162,10 +181,10 @@ def main():
     try:
         target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
     except ValueError as e:
-        print(e)
+        logging.error(f"Error extracting target exons: {e}")
         sys.exit(1)
 
-    print("Annotating sequences to dataframe from genome FASTA...")
+    logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
         target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
