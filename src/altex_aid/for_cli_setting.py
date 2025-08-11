@@ -5,24 +5,22 @@ from pathlib import Path
 
 
 def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
-    base_editors = []
-    if all([args.be_n, args.be_p, args.be_ws, args.be_we, args.be_t]):
-        try:
-            base_editors.append(
-                BaseEditor(
-                    base_editor_name=args.be_n,
-                    pam_sequence=args.be_p.upper(),
-                    editing_window_start_in_grna=int(args.be_ws),
-                    editing_window_end_in_grna=int(args.be_we),
-                    base_editor_type=args.be_t.lower(),
-            )
+    if not all([args.be_n, args.be_p, args.be_ws, args.be_we, args.be_t]):
+        raise ValueError(
+            "Base editor information is incomplete. Please provide all required parameters."
         )
-            return base_editors
-        except ValueError as e:
-            print(f"Error parsing base editor information: {e}")
-            return None
-    else:
-        print("Base editor information is incomplete. Please provide all required parameters.")
+    try:
+        return [
+            BaseEditor(
+                base_editor_name=args.be_n,
+                pam_sequence=args.be_p.upper(),
+                editing_window_start_in_grna=int(args.be_ws),
+                editing_window_end_in_grna=int(args.be_we),
+                base_editor_type=args.be_t.lower(),
+            )
+        ]
+    except ValueError as e:
+        print(f"Error parsing base editor information: {e}")
         return None
 
 def show_base_editors_info(base_editors: list[BaseEditor]):
@@ -47,35 +45,35 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
     "editing_window_end_in_grna",
     "base_editor_type"
     ]
-    if args.be_f:
-        ext = Path(args.be_f).suffix.lower()
-    if ext in [".csv"]:
-        be_df = pd.read_csv(args.be_f)
-    elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.be_f, sep=None, engine="python")
+    if not args.be_f:
+        return None
     else:
-        raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
+        ext = Path(args.be_f).suffix.lower()
 
-    # 列名が期待通りかチェック、なければ付与
+    if ext not in [".csv", ".tsv", ".txt"]:
+        raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
+    if ext in [".csv"]:
+        be_df = pd.read_csv(args.be_f, header=0)
+    elif ext in [".tsv", ".txt"]:
+        be_df = pd.read_csv(args.be_f, sep=None, engine="python", header=0)
+
+    # 列名が期待通りかチェック、違うならエラーを投げる
     if list(be_df.columns) != expected_columns:
-        # 列数が一致していれば、ヘッダーなしとみなしてカラム名を付与
-        if len(be_df.columns) == len(expected_columns):
-            be_df.columns = expected_columns
-        else:
-            raise ValueError(
-                f"Base editor file columns are invalid. "
-                f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
-            )
-    return [
-        BaseEditor(
-            base_editor_name=row["base_editor_name"],
-            pam_sequence=row["pam_sequence"],
-            editing_window_start_in_grna=int(row["editing_window_start_in_grna"]),
-            editing_window_end_in_grna=int(row["editing_window_end_in_grna"]),
-            base_editor_type=row["base_editor_type"],
+        raise ValueError(
+            f"Base editor file columns are invalid. "
+            f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
         )
-        for _, row in be_df.iterrows()
-    ]
+    else:
+        return [
+            BaseEditor(
+                base_editor_name=row["base_editor_name"],
+                pam_sequence=row["pam_sequence"],
+                editing_window_start_in_grna=int(row["editing_window_start_in_grna"]),
+                editing_window_end_in_grna=int(row["editing_window_end_in_grna"]),
+                base_editor_type=row["base_editor_type"],
+            )
+            for _, row in be_df.iterrows()
+        ]
 
 def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
     if not refflat_path.is_file():
