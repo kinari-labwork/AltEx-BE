@@ -49,10 +49,14 @@ def main():
     )
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
-        "--g", "--interest-genes",
+        "--gs", "--interest-gene-symbols",
         nargs="+",
-        required=True,
-        help="List of interest genes (space-separated)"
+        help="List of interest gene symbols (space-separated)"
+    )
+    gene_group.add_argument(
+        "--gi", "--interest-gene-Refseq-ids",
+        nargs="+",
+        help="List of interest gene Refseq IDs (space-separated)"
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
@@ -110,7 +114,7 @@ def main():
         logging.error(f"Error with input/output directories: {e}")
         sys.exit(1)
 
-    interest_gene_list = args.interest_genes
+    interest_gene_list = args.interest_gene_symbols + args.interest_gene_Refseq_ids
     if not interest_gene_list:
         logging.error("No interest genes provided.")
         sys.exit(1)
