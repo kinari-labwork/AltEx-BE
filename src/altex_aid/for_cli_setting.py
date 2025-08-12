@@ -5,18 +5,18 @@ from pathlib import Path
 
 
 def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
-    if not all([args.be_n, args.be_p, args.be_ws, args.be_we, args.be_t]):
+    if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
         raise ValueError(
             "Base editor information is incomplete. Please provide all required parameters."
         )
     try:
         return [
             BaseEditor(
-                base_editor_name=args.be_n,
-                pam_sequence=args.be_p.upper(),
-                editing_window_start_in_grna=int(args.be_ws),
-                editing_window_end_in_grna=int(args.be_we),
-                base_editor_type=args.be_t.lower(),
+                base_editor_name=args.base_editor_name,
+                pam_sequence=args.base_editor_pam.upper(),
+                editing_window_start_in_grna=int(args.base_editor_window_start),
+                editing_window_end_in_grna=int(args.base_editor_window_end),
+                base_editor_type=args.base_editor_type.lower(),
             )
         ]
     except ValueError as e:
@@ -44,17 +44,17 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
     "editing_window_end",
     "base_editor_type"
     ]
-    if not args.be_f:
+    if not args.base_editor_files:
         return None
     else:
-        ext = Path(args.be_f).suffix.lower()
+        ext = Path(args.base_editor_files).suffix.lower()
 
     if ext not in [".csv", ".tsv", ".txt"]:
         raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
     if ext in [".csv"]:
-        be_df = pd.read_csv(args.be_f, header=0)
+        be_df = pd.read_csv(args.base_editor_files, header=0)
     elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.be_f, sep=None, engine="python", header=0)
+        be_df = pd.read_csv(args.base_editor_files, sep=None, engine="python", header=0)
 
     # 列名が期待通りかチェック、違うならエラーを投げる
     if set(be_df.columns) != set(expected_columns):

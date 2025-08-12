@@ -33,70 +33,70 @@ def main():
     # コマンドライン引数を追加
     dir_group = parser.add_argument_group("Input/Output Options")
     dir_group.add_argument(
-        "--r", "--refflat-path",
+        "-r", "--refflat-path",
         required=True,
         help="Path of refflat file"
     )
     dir_group.add_argument(
-        "--f", "--fasta-path",
+        "-f", "--fasta-path",
         required=True,
         help="Path of FASTA file"
     )
     dir_group.add_argument(
-        "--o", "--output-directory",
+        "-o", "--output-directory",
         required=True,
         help="Directory of the output files"
     )
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
-        "--gs", "--interest-gene-symbols",
+        "--interest-gene-symbols",
         nargs="+",
         help="List of interest gene symbols (space-separated)"
     )
     gene_group.add_argument(
-        "--gi", "--interest-gene-Refseq-ids",
+        "--interest-gene-refseq-ids",
         nargs="+",
         help="List of interest gene Refseq IDs (space-separated)"
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
-        "--be-n", "--base-editor-name",
+        "-n", "--base-editor-name",
         default=None,
         required=False,
         help="Name of the base editor to optional use",
     )
     base_editors.add_argument(
-        "--be-p", "--base-editor-pam",
+        "-p", "--base-editor-pam",
         default=None,
         required=False,
         help="PAM sequence for the base editor",
     )
     base_editors.add_argument(
-        "--be-ws", "--base-editor-window-start",
+        "-s", "--base-editor-window-start",
         default=None,
         required=False,
         help="Window start for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "--be-we", "--base-editor-window-end",
+        "-e", "--base-editor-window-end",
         default=None,
         required=False,
         help="Window end for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "--be-t", "--base-editor-type",
+        "-t", "--base-editor-type",
         default=None,
         required=False,
         help="Choose the type of base editor, this tool supports ABE and CBE",
     )
     base_editors.add_argument(
-        "--be-pre", "--base-editor-preset",
+        "--base-editor-preset",
         default=None,
         required=False,
         help="Preset for the base editor",
     )
     base_editors.add_argument(
-        "--be-f", "--base-editor-files",
+        "--base-editor-files",
         default=None,
         required=False,
         help="input the path of csv file or txt file of base editor information",
