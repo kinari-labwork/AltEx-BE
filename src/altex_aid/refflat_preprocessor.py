@@ -238,10 +238,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     """
     このモジュールの関数をwrapした関数
     """
-    try:
-        refflat = select_interest_genes(refflat, interest_genes)
-    except ValueError as e:
-        raise ValueError(f"Error selecting interest genes: {e}")
+    refflat = select_interest_genes(refflat, interest_genes)
 
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
@@ -250,9 +247,6 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     
-    try:
-        validate_filtered_refflat(refflat, interest_genes)
-    except ValueError as e:
-        raise ValueError(f"Error validating filtered refFlat: {e}")
+    validate_filtered_refflat(refflat, interest_genes)
     
     return refflat
