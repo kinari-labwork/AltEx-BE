@@ -24,8 +24,7 @@ def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
 
 def show_base_editors_info(base_editors: list[BaseEditor]):
     if base_editors is None:
-        print("No base editors available to display.")
-        return
+        raise ValueError("No base editors available to display.")
 
     for base_editor in base_editors:
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
