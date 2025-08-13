@@ -503,6 +503,51 @@ def design_sgrna_for_base_editors(
     final_result = final_result.loc[:, ~final_result.columns.duplicated()]
     return final_result.reset_index(drop=True)
 
+# 論文用には、各BEのsgRNAを1行にまとめたほうが便利ではあるが、ユーザーにはそれは必要ない。のちのexplodeを考えて、main.pyではdictで返すようにする
+def design_sgrna_for_base_editors_dict(
+    target_exon_df: pd.DataFrame,
+    base_editors: list[BaseEditor],
+) -> dict[str, pd.DataFrame]:
+    """
+    Purpose:
+        各BaseEditorに対してsgRNAを設計し、結果をdictにまとめる
+    Parameters:
+        target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
+        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+    Returns:
+        dict[str, pd.DataFrame], 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
+    """
+    results = {}  # 各BaseEditorの結果を格納する辞書
+
+    for base_editor in base_editors:
+        # 1. sgRNAを設計する
+        temp_df = design_sgrna_for_target_exon_df(
+            target_exon_df=target_exon_df,
+            pam_sequence=base_editor.pam_sequence,
+            editing_window_start_in_grna=base_editor.editing_window_start_in_grna,
+            editing_window_end_in_grna=base_editor.editing_window_end_in_grna,
+            base_editor_type=base_editor.base_editor_type
+        )
+        # 2. sgRNAの情報を展開する
+        temp_df = organize_target_exon_df_with_grna_sequence(temp_df)
+        # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
+        temp_df = convert_sgrna_start_end_position_to_position_in_chromosome(temp_df)
+
+        # 4. 列名にbase_editorの名前を付ける
+        temp_df = temp_df.rename(
+            columns={
+                col: f"{base_editor.base_editor_name}_{col}" 
+                for col in temp_df.columns
+                if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
+            }
+        )
+
+        # 結果を辞書に追加
+        results[base_editor.base_editor_name] = temp_df
+
+    return results
+
+
 def make_preset_base_editors() -> dict[str, BaseEditor]:
     """
     Purpose:
