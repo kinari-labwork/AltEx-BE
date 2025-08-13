@@ -1,67 +1,144 @@
 import argparse
-
 import pandas as pd
-
+from pathlib import Path
+import logging
 from . import (
+    for_cli_setting,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
     target_exon_extractor,
+    sgrna_designer,
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Altex AID: A CLI tool for processing refFlat files and extracting target exons.",
-    )
-
-    subparsers = parser.add_subparsers(
-        dest="mode", required=True, help="Choose a mode: 'run' or 'view'"
-    )
-    # "run" サブコマンドの定義
-    run_parser = subparsers.add_parser("run", help="Run the Altex-AID pipeline.")
-    run_parser.add_argument(
-        "--input directory",
-        required=True,
-        help="please input the directory of the input files"
-        "This directory should contain the refFlat file and genome FASTA file of your interest species",
-    )
-    run_parser.add_argument(
-        "--output directory",
-        required=True,
-        help="please input the directory of the output files"
-        "This directory will contain the processed refFlat file and other output files",
-    )
-
-    # "view" サブコマンドの定義
-    view_parser = subparsers.add_parser(
-        "view", help="view and search sgRNAs for your interest gene."
-    )
-    view_parser.add_argument(
-        "--output_directory",
-        required=True,
-        help="please input the directory of the output files"
-        "This directory will contain the processed refFlat file and other output files",
-    )
-
+        description="Altex BE: A CLI tool for processing refFlat files and extracting target exons.",
+    )    
     # 明示的に -v/--version を追加
     parser.add_argument(
         "-v",
         "--version",
         action="version",
         version="0.1.0",
-        help="バージョン情報を表示します",
+        help="Show the version of Altex BE",
+    )
+    # コマンドライン引数を追加
+    dir_group = parser.add_argument_group("Input/Output Options")
+    dir_group.add_argument(
+        "-r", "--refflat-path",
+        required=True,
+        help="Path of refflat file"
+    )
+    dir_group.add_argument(
+        "-f", "--fasta-path",
+        required=True,
+        help="Path of FASTA file"
+    )
+    dir_group.add_argument(
+        "-o", "--output-directory",
+        required=True,
+        help="Directory of the output files"
+    )
+    gene_group = parser.add_argument_group("Gene Options")
+    gene_group.add_argument(
+        "--interest-gene-symbols",
+        nargs="+",
+        help="List of interest gene symbols (space-separated)"
+    )
+    gene_group.add_argument(
+        "--interest-gene-refseq-ids",
+        nargs="+",
+        help="List of interest gene Refseq IDs (space-separated)"
+    )
+    base_editors = parser.add_argument_group("Base Editor Options")
+    base_editors.add_argument(
+        "-n", "--base-editor-name",
+        default=None,
+        required=False,
+        help="Name of the base editor to optional use",
+    )
+    base_editors.add_argument(
+        "-p", "--base-editor-pam",
+        default=None,
+        required=False,
+        help="PAM sequence for the base editor",
+    )
+    base_editors.add_argument(
+        "-s", "--base-editor-window-start",
+        default=None,
+        required=False,
+        help="Window start for the base editor (Count from next to PAM)",
+    )
+    base_editors.add_argument(
+        "-e", "--base-editor-window-end",
+        default=None,
+        required=False,
+        help="Window end for the base editor (Count from next to PAM)",
+    )
+    base_editors.add_argument(
+        "-t", "--base-editor-type",
+        default=None,
+        required=False,
+        help="Choose the type of base editor, this tool supports ABE and CBE",
+    )
+    base_editors.add_argument(
+        "--base-editor-preset",
+        default=None,
+        required=False,
+        help="Preset for the base editor",
+    )
+    base_editors.add_argument(
+        "--base-editor-files",
+        default=None,
+        required=False,
+        help="input the path of csv file or txt file of base editor information",
     )
 
     args = parser.parse_args()
 
-    if args.mode == "run":
-        input_directory = args.input_directory
-        output_directory = args.output_directory
+    refflat_path = Path(args.refflat_path)
+    fasta_path = Path(args.fasta_path)
+    output_directory = Path(args.output_directory)
 
-        print("loading refFlat file...")
-        refflat = pd.read_csv(
-            f"{input_directory}/refFlat.txt",
+    for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
+
+    interest_gene_list = args.interest_gene_symbols + args.interest_gene_refseq_ids
+    if not interest_gene_list:
+        raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
+
+    preset_base_editors = sgrna_designer.make_preset_base_editors()
+
+    # BaseEditorの決定
+    base_editors = []
+    if args.base_editor_files:
+        base_editors.extend(for_cli_setting.get_base_editors_from_args(args))
+
+    if args.base_editor_preset and args.base_editor_preset not in preset_base_editors:
+        raise ValueError(f"Invalid base editor preset: {args.base_editor_preset}. Available presets are: {list(preset_base_editors.keys())}")
+    else:
+        base_editors.extend(preset_base_editors[args.base_editor_preset])
+
+    if args.base_editor_name or args.base_editor_pam or args.base_editor_window_start or args.base_editor_window_end or args.base_editor_type:
+        base_editors.extend(for_cli_setting.parse_base_editors(args))
+
+    if not base_editors:
+        raise ValueError("No base editors specified. Please provide at least one base editor.")
+
+    logging.info("Designing sgRNAs for the following base editors:")
+    for_cli_setting.show_base_editors_info(base_editors)
+
+    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
+
+    logging.info("loading refFlat file...")
+    refflat = pd.read_csv(
+            refflat_path,
             sep="\t",
             header=None,
             names=[
@@ -79,48 +156,31 @@ def main():
             ],
         )
 
-        print("running processing of refFlat file...")
-        refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-        refflat = refflat_preprocessor.parse_exon_coordinates(refflat)
-        refflat = refflat_preprocessor.calculate_exon_lengths(refflat)
-        refflat = refflat_preprocessor.drop_abnormal_mapped_transcripts(refflat)
-        refflat = refflat_preprocessor.annotate_cording_information(refflat)
-        refflat = refflat_preprocessor.annotate_flame_information(refflat)
-        refflat = refflat_preprocessor.annotate_flame_information(refflat)
-        refflat = refflat_preprocessor.add_exon_position_flags(refflat)
+    print("running processing of refFlat file...")
+    refflat = refflat.drop_duplicates(subset=["name"], keep=False)
+    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
 
-        print("Classifying splicing events...")
-        classified_refflat = splicing_event_classifier.classify_splicing_events_per_gene(refflat)
-        classified_refflat = splicing_event_classifier.flip_a3ss_a5ss_on_minus_strand(classified_refflat)
-        classified_refflat.to_pickle(f"{output_directory}/processed_refFlat.pickle")
-        del classified_refflat
+    logging.info("Classifying splicing events...")
+    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
+    classified_refflat.to_pickle(output_directory / "processed_refFlat.pickle")
+    del refflat
 
-        print("Extracting target exons...")
-        target_exon_df = target_exon_extractor.extract_target_exon(refflat)
-        splice_acceptor_single_exon_df = (
-            target_exon_extractor.extract_splice_acceptor_regions(target_exon_df, 25)
-        )
-        splice_donor_single_exon_df = (
-            target_exon_extractor.extract_splice_donor_regions(target_exon_df, 25)
-        )
+    print("Extracting target exons...")
+    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
 
-        print("Annotating sequences to dataframe from genome FASTA...")
-        fasta_path = f"{input_directory}/combined.fa"
-        splice_acceptor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
-            splice_acceptor_single_exon_df, fasta_path
-        )
-        splice_donor_single_exon_df = sequence_annotator.annotate_sequence_to_bed(
-            splice_donor_single_exon_df, fasta_path
-        )
-        target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.join_sequence_to_single_exon_df(
-            single_exon_df=target_exon_df,
-            acceptor_bed_with_sequences=splice_acceptor_single_exon_df,
-            donor_bed_with_sequences=splice_donor_single_exon_df,
-        )
-        del splice_acceptor_single_exon_df, splice_donor_single_exon_df
+    logging.info("Annotating sequences to dataframe from genome FASTA...")
+    target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
+        target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
+    )
+    del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
-        print("designing sgRNAs...")
+    print("designing sgRNAs...")
+    target_exon_df_with_sgrna = sgrna_designer.design_sgrna_for_base_editors(
+        target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
+        base_editors=base_editors
+    )
 
+    target_exon_df_with_sgrna.to_pickle(output_directory / "target_exon_df_with_sgrna.pickle")
 
 if __name__ == "__main__":
     main()

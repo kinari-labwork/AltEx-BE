@@ -18,6 +18,16 @@ class SgrnaInfo:
     overlap_between_cds_and_editing_window: int # 編集ウィンドウとCDSの重なりの長さ
     possible_unintended_edited_base_count: int # 意図しないcdsでの変異が起こる可能性のある塩基の数
 
+@dataclass(frozen=True)
+class BaseEditor:
+    """
+    BaseEditorの情報を保持するためのdataclass
+    """
+    base_editor_name: str # BaseEditorの名前
+    pam_sequence: str # PAM配列
+    editing_window_start_in_grna: int # 編集ウィンドウの開始位置 (1-indexed)
+    editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
+    base_editor_type: str # "CBE" or "ABE"
 
 def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
     """
@@ -34,8 +44,20 @@ def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
         }
     return "".join([complement_map[base] for base in reversed(sequence)])
 
+def convert_dna_to_rna(sequence: str) -> str:
+    """
+    Purpose:
+        塩基配列をRNAに変換する
+    Parameters:
+        sequence: 変換したいDNA配列
+    Returns:
+        rna_sequence: 入力したDNA配列のRNA配列
+    """
+    sequence = sequence.replace("T", "U")
+    sequence = sequence.replace("t", "u")
+    return sequence
 
-def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
+def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
     Purpose:
         PAM配列を逆相補鎖に変換し、Nをワイルドカードに変換
@@ -44,8 +66,31 @@ def reverse_complement_pam_as_regex(pam_sequence: str) -> str:
     Returns:
         reversed_pam_sequence: str, 反転されたPAM配列を探すための正規表現パターン
     """
-    complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]"}
-    return "".join([complement_dict[base] for base in reversed(pam_sequence)])
+    pam_sequence = pam_sequence.upper()  # 大文字に変換
+    complement_dict = {"N": "[ATGCatgc]", "A": "[Tt]", "T": "[Aa]", "G": "[Cc]", "C": "[Gg]",
+                        "M": "[TtGg]", "R": "[TtCc]", "W": "[TtAa]", "S": "[CcGg]",
+                        "Y": "[AaGg]", "K": "[AaCc]", "V": "[TtCcGg]", "H": "[AaTtGg]",
+                        "D": "[AaTtCc]", "B": "[CcGgAa]"}
+    reversed_complement_pam_regex = "".join([complement_dict[base] for base in reversed(pam_sequence)])
+    return re.compile(f"(?=({reversed_complement_pam_regex}))")
+
+def convert_pam_as_regex(pam_sequence: str) -> re.Pattern:
+    """
+    Purpose:
+        PAM配列を正規表現パターンに変換
+    Parameters:
+        pam_sequence: str, PAM配列
+    Returns:
+        pam_regex: str, PAM配列を表す正規表現パターン
+    """
+    pam_sequence = pam_sequence.upper()  # 大文字に変換
+    complement_dict = {"N": "[ATGCatgc]", "A": "[Aa]", "T": "[Tt]", "G": "[Gg]", "C": "[Cc]",
+                        "M": "[AaCc]", "R": "[AaGg]", "W": "[AaTt]", "S": "[CcGg]",
+                        "Y": "[CcTt]", "K": "[GgTt]", "V": "[AaCcGg]", "H": "[AaTtCc]",
+                        "D": "[GgAaTt]", "B": "[TtGgCc]"}
+    pam_regex = "".join([complement_dict[base] for base in pam_sequence])
+    return re.compile(f"(?=({pam_regex}))")  
+
 
 def calculate_overlap_and_unintended_edits_to_cds(
     editing_sequence: str,
@@ -53,6 +98,7 @@ def calculate_overlap_and_unintended_edits_to_cds(
     window_end_in_seq: int,
     cds_boundary: int,
     site_type: str,
+    base_editor_type: str
 ) -> tuple[int, int]:
     """
     Purpose:
@@ -73,26 +119,98 @@ def calculate_overlap_and_unintended_edits_to_cds(
     if site_type == "acceptor":
         if window_end_in_seq >= cds_boundary:
             overlap = window_end_in_seq - cds_boundary + 1
-            unintended_edits = editing_sequence[
-                cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
-            ].count("G")
+            if base_editor_type == "cbe":
+                unintended_edits = editing_sequence[
+                    cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
+                    ].count("G") 
+            elif base_editor_type == "abe":
+                unintended_edits = editing_sequence[
+                    cds_boundary: window_end_in_seq + 1  # +1はinclusiveにするため
+                    ].count("A")
     else:  # donor
         if window_start_in_seq <= cds_boundary:
             overlap = cds_boundary - window_start_in_seq + 1
-            unintended_edits = editing_sequence[
-                window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
-            ].count("G")
+            if base_editor_type == "cbe":
+                unintended_edits = editing_sequence[
+                    window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
+                ].count("G")
+            elif base_editor_type == "abe":
+                unintended_edits = editing_sequence[
+                    window_start_in_seq: cds_boundary + 1  # +1はinclusiveにするため
+                ].count("T")
 
     return overlap, unintended_edits
 
+TARGET_BASE_POS = {
+    ("acceptor", "cbe"): 24,
+    ("donor", "cbe"): 25,
+    ("acceptor", "abe"): 23,
+    ("donor", "abe"): 26,
+}
+
+def decide_target_base_pos_in_sequence(
+    base_editor_type: str,
+    site_type:str,
+) ->int:
+    """
+    purpose:
+        base_editorの種類とサイトタイプに応じてターゲットとなる塩基の取得塩基中での位置を決定する
+    Parameters:
+        base_editor_type: str, "abe" または "cbe"
+        site_type: str, "acceptor" または "donor"
+    Returns:
+        target_base_pos_in_sequence: int, 
+            ターゲットとなる塩基の取得塩基中での位置 (0-indexed)
+    Comments:
+        取得した50塩基の配列の99%は、以下のルールに従う。
+        acceptorの場合:
+            23 24
+        5'-- A  G  [---exon---]
+        3'-- T  C  [---exon---]
+        donorの場合:
+                        25 26
+        5'--[---exon---] G  T --3'
+        3'--[---exon---] C  A --5'
+    """
+    return TARGET_BASE_POS[(site_type, base_editor_type.lower())]
+
+VALID_EXON_POSITIONS = {
+    "acceptor": ["internal", "last"],
+    "donor": ["internal", "first"],
+}
+
+def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
+    """
+    Purpose:
+        exon_position が site_type に応じて有効かどうかを判定する
+    Parameters:
+        exon_position: str, エキソンの位置 ("internal", "first", "last" のいずれか)
+        site_type: str, "acceptor" または "donor"
+    Returns:
+        bool, 有効なら True, 無効なら False
+    """
+    return exon_position in VALID_EXON_POSITIONS[site_type]
+
+SGRNA_START_END_RULES = {
+    ("acceptor", "cbe"): lambda match: (match.end(1), match.end(1) + 20),
+    ("acceptor", "abe"): lambda match: (match.start(1) - 20, match.start(1)),
+    ("donor", "cbe"): lambda match: (match.end(1), match.end(1) + 20),
+    ("donor", "abe"): lambda match: (match.end(1), match.end(1) + 20),
+}
+
+def decide_sgrna_start_and_end(match: re.Match, site_type: str, base_editor_type: str) -> tuple[int, int]:
+    return SGRNA_START_END_RULES[(site_type, base_editor_type.lower())](match)
+
 def design_sgrna(
     editing_sequence: str,
-    reversed_pam_regex: re.Pattern, # 正規表現パターン
-    editing_window_start_in_grna: int, # 1-indexed
-    editing_window_end_in_grna: int, # 1-indexed
-    target_g_pos_in_sequence: int,
+    pam_regex: re.Pattern,
+    reversed_pam_regex: re.Pattern,
+    editing_window_start_in_grna: int,
+    editing_window_end_in_grna: int,
+    target_base_pos_in_sequence: int,
     cds_boundary: int,
-    site_type: str,
+    base_editor_type: str,
+    site_type: str
 ) -> list[SgrnaInfo]:
     """
     Purpose:
@@ -102,12 +220,13 @@ def design_sgrna(
         pam_sequence: str, PAM配列
         editing_window_start: int, 編集ウィンドウの開始位置(1-indexed)
         editing_window_end: int, 編集ウィンドウの終了位置(1-indexed)
-        splice_site_pos: int, 5'から数えたときのSA/SDの開始位置(0-indexed) つまり、SAなら23番目のA, SDなら25番目のG
+        target_g_pos_in_sequence: int, 編集ターゲットとなるGの位置, 
+            acceptorなら24番目のG, donorなら25番目のG (0-indexed)
         cds_boundary: int, CDSの境界位置(0-indexed) つまり、SAなら25番目の塩基、SDなら24番目の塩基
         site_type: str, "acceptor"または"donor"のどちらかを指定
     Returns:
         sgrna_list: list[SgrnaInfo], 条件に適合するsgRNAの情報のリスト
-    Comments:
+    If base_editor_type is "cbe":
         Acceptor splice siteの例:
         5'---CCN---AG[---exon]-3'
               3'---UC---5" 20bpのsgRNA(+鎖に結合する)
@@ -121,74 +240,87 @@ def design_sgrna(
         この"C"をTに編集するために、+鎖に結合するsgRNAを設計する。
         つまり、+鎖を逆相補にしたものがsgRNAとなる。
         しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
+    If base_editor_type is "abe":
+        Acceptor splice siteの例:
+        5'--------AG[---NGG---exon]-3'
+             5'---AG----3" 20bpのsgRNA(-鎖に結合する)
+        3'--------TC[---NCC---exon]-5'
+
+        Donor splice siteの例:
+        5'-[---exon--CCN---]GT--3'
+                       3'---CU---5' 20bpのsgRNA(+鎖に結合する)
+        3'-[---exon--GGN---]CA--5'
+
+        この"A"をGに編集するために、+鎖に結合するsgRNAを設計する。
+        つまり、+鎖を逆相補にしたものがsgRNAとなる。
+        しかし、マッピング時のことを考えて、sgRNA編集ターゲット, 実際の逆相補化されたgRNA配列の両方を出力する
     """
     sgrna_list = []
-
-    splice_site = editing_sequence[target_g_pos_in_sequence - 1: target_g_pos_in_sequence + 1].upper() if site_type == "acceptor" else editing_sequence[target_g_pos_in_sequence : target_g_pos_in_sequence + 2].upper()
-    expected_site = "AG" if site_type == "acceptor" else "GT"
+    base_editor_type = base_editor_type.lower()
+    if site_type == "acceptor":
+        splice_site = editing_sequence[cds_boundary - 2:cds_boundary].upper()
+        expected_site = "AG"
+        pam_iter = reversed_pam_regex.finditer(editing_sequence) if base_editor_type == "cbe" else pam_regex.finditer(editing_sequence)
+    else:
+        splice_site = editing_sequence[cds_boundary + 1:cds_boundary + 3].upper()
+        expected_site = "GT"
+        pam_iter = reversed_pam_regex.finditer(editing_sequence)
     if splice_site != expected_site:
         return sgrna_list
-
-    for match in reversed_pam_regex.finditer(editing_sequence):
-        grna_start = match.end(1)
-        grna_end = grna_start + 20
-        if grna_end > len(editing_sequence):
+    for match in pam_iter:
+        sgrna_start, sgrna_end = decide_sgrna_start_and_end(match, site_type, base_editor_type)
+        if sgrna_start < 0 or sgrna_end > len(editing_sequence):
             continue
 
-        if not (grna_start <= target_g_pos_in_sequence < grna_end):
+        # ABEかつ、acceptorの場合だけ、sgRNAが-鎖に結合するので、+鎖上では、3'端がPAMとなる
+        # そのため、編集ウィンドウの開始位置と終了位置をsgrnaの3'から数える必要がある
+        if site_type == "acceptor" and base_editor_type == "abe":
+            window_start_in_seq = sgrna_end - editing_window_end_in_grna
+            window_end_in_seq = sgrna_end - editing_window_start_in_grna
+        else:
+            window_start_in_seq = sgrna_start + editing_window_start_in_grna - 1
+            window_end_in_seq = sgrna_start + editing_window_end_in_grna - 1
+
+        if not (window_start_in_seq <= target_base_pos_in_sequence <= window_end_in_seq):
             continue
-
-        window_start_in_seq = grna_start + editing_window_start_in_grna -1 # 1-indexedから0-indexedに変換するため、余分に1を引く
-        window_end_in_seq = grna_start + editing_window_end_in_grna -1
-        if not (window_start_in_seq <= target_g_pos_in_sequence <= window_end_in_seq):
-            continue
-
-        target_sequence = editing_sequence[grna_start:grna_end]
-        actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
-        target_pos_in_sgrna = target_g_pos_in_sequence - grna_start + 1
-
+        target_sequence = editing_sequence[sgrna_start:sgrna_end]
+        if site_type == "acceptor" and base_editor_type == "cbe":
+            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+        elif site_type == "acceptor" and base_editor_type == "abe":
+            actual_sequence = convert_dna_to_rna(target_sequence)
+        else:
+            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+        if site_type == "acceptor" and base_editor_type == "abe":
+            target_pos_in_sgrna = -(target_base_pos_in_sequence - sgrna_end)
+        else:
+            target_pos_in_sgrna = target_base_pos_in_sequence - sgrna_start + 1
         overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
             editing_sequence=editing_sequence,
             window_start_in_seq=window_start_in_seq,
             window_end_in_seq=window_end_in_seq,
             cds_boundary=cds_boundary,
             site_type=site_type,
+            base_editor_type=base_editor_type
         )
         sgrna_list.append(
             SgrnaInfo(
                 target_sequence=target_sequence,
                 actual_sequence=actual_sequence,
-                start_in_sequence=grna_start,
-                end_in_sequence=grna_end,
+                start_in_sequence=sgrna_start,
+                end_in_sequence=sgrna_end,
                 target_pos_in_sgrna=target_pos_in_sgrna,
                 overlap_between_cds_and_editing_window=overlap,
                 possible_unintended_edited_base_count=unintended_edits,
             )
         )
-        
     return sgrna_list
-
-
-def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
-    """
-    Purpose:
-        exon_position が site_type に応じて有効かどうかを判定する
-    Parameters:
-        exon_position: str, エキソンの位置 ("internal", "first", "last" のいずれか)
-        site_type: str, "acceptor" または "donor"
-    Returns:
-        bool, 有効なら True, 無効なら False
-    """
-    valid_positions = ["internal", "last"] if site_type == "acceptor" else ["internal", "first"]
-    return exon_position in valid_positions
-
-
 
 def design_sgrna_for_target_exon_df(
     target_exon_df: pd.DataFrame,
     pam_sequence: str,
     editing_window_start_in_grna: int,
     editing_window_end_in_grna: int,
+    base_editor_type: str 
 ) -> pd.DataFrame:
     """
     Purpose:
@@ -204,39 +336,34 @@ def design_sgrna_for_target_exon_df(
     ACCEPTOR_CDS_BOUNDARY = 25 # 25番目以後の塩基がCDSに含まれる
     DONOR_CDS_BOUNDARY = 24 # 24番目以前の塩基がCDSに含まれる
 
-    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  
+    pam_regex = convert_pam_as_regex(pam_sequence)
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
 
-    def apply_design(row, site_type):
+    def apply_design(row, site_type, base_editor_type):
         sequence_col = f"{site_type}_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
             return design_sgrna(
                 editing_sequence=row[sequence_col],
+                pam_regex=pam_regex,
                 reversed_pam_regex=reversed_pam_regex,
                 editing_window_start_in_grna=editing_window_start_in_grna,
                 editing_window_end_in_grna=editing_window_end_in_grna,
-                target_g_pos_in_sequence=(
-                    24 if site_type == "acceptor" else 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
-                ),
-                cds_boundary=(
-                    ACCEPTOR_CDS_BOUNDARY
-                    if site_type == "acceptor"
-                    else DONOR_CDS_BOUNDARY
-                ),
-                site_type=site_type,
+                target_base_pos_in_sequence=decide_target_base_pos_in_sequence(base_editor_type, site_type),
+                cds_boundary=ACCEPTOR_CDS_BOUNDARY if site_type == "acceptor" else DONOR_CDS_BOUNDARY,
+                base_editor_type=base_editor_type,
+                site_type=site_type
             )
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
     # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor"), axis=1
+        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor", base_editor_type), axis=1
     )
     target_exon_df["grna_donor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor"), axis=1
+        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor", base_editor_type), axis=1
     )
     return target_exon_df
-
-
 
 
 def extract_sgrna_features(sgrna_list: list[SgrnaInfo]) -> tuple[list,list,list,list,list,list,list]:
@@ -327,3 +454,82 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
     )
 
     return target_exon_df_with_grna_sequence.reset_index(drop=True)
+
+# 今までの動作をまとめて、sgrnaを設計する関数
+# 実際に実行するのはこの関数だけでよい
+def design_sgrna_for_base_editors(
+    target_exon_df: pd.DataFrame,
+    base_editors: list[BaseEditor],
+) -> pd.DataFrame:
+    """
+    Purpose:
+        各BaseEditorに対してsgRNAを設計し、結果をDataFrameにまとめる
+    Parameters:
+        target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
+        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+    Returns:
+        pd.DataFrame, 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
+    """
+    results = []  # 各BaseEditorの結果を格納するリスト
+
+    for base_editor in base_editors:
+        # 1. sgRNAを設計する
+        temp_df = design_sgrna_for_target_exon_df(
+            target_exon_df=target_exon_df,
+            pam_sequence=base_editor.pam_sequence,
+            editing_window_start_in_grna=base_editor.editing_window_start_in_grna,
+            editing_window_end_in_grna=base_editor.editing_window_end_in_grna,
+            base_editor_type=base_editor.base_editor_type
+        )
+        # 2. sgRNAの情報を展開する
+        temp_df = organize_target_exon_df_with_grna_sequence(temp_df)
+        # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
+        temp_df = convert_sgrna_start_end_position_to_position_in_chromosome(temp_df)
+
+        # 4. 列名にbase_editorの名前を付ける
+        temp_df = temp_df.rename(
+            columns={
+                col: f"{base_editor.base_editor_name}_{col}" 
+                for col in temp_df.columns
+                if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
+            }
+        )
+
+        # 結果をリストに追加
+        results.append(temp_df)
+
+    # すべての結果を結合
+    final_result = pd.concat(results, axis=1)
+    final_result = final_result.loc[:, ~final_result.columns.duplicated()]
+    return final_result.reset_index(drop=True)
+
+def make_preset_base_editors() -> dict[str, BaseEditor]:
+    """
+    Purpose:
+        デフォルトのBaseEditorのリストを返す
+    Returns:
+        dict[str, BaseEditor], デフォルトのBaseEditorのリスト
+    """
+    return {
+        "target_aid": BaseEditor(
+            base_editor_name="target_aid",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=17,
+            editing_window_end_in_grna=19,
+            base_editor_type="cbe"
+        ),
+        "be4max": BaseEditor(
+            base_editor_name="be4max",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=12,
+            editing_window_end_in_grna=17,
+            base_editor_type="cbe"
+        ),
+        "abe8e": BaseEditor(
+            base_editor_name="abe8e",
+            pam_sequence="NGG",
+            editing_window_start_in_grna=12,
+            editing_window_end_in_grna=17,
+            base_editor_type="abe"
+        ),
+    }

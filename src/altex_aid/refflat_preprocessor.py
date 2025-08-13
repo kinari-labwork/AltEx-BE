@@ -1,8 +1,74 @@
 from __future__ import annotations
 
 import re
-
 import pandas as pd
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+    """
+    Purpose:
+        refFlatのデータフレームから、興味のある遺伝子のみを選択する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+        interest_genes: list[str], 興味のある遺伝子名のリスト(gene symbol または Refseq ID)
+    Returns:
+        pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
+    """
+    for gene in interest_genes:
+        if gene not in refFlat["geneName"].values | refFlat["name"].values:
+            logging.warning(f"Gene {gene} is not found in refFlat.")
+            continue
+        else :
+            logging.info(f"Gene {gene} is found in refFlat.")
+    
+    refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
+    if refFlat.empty:
+        raise ValueError("No interest genes found in refFlat. Please check the format of interest_genes. Allowed formats are gene symbols or Refseq IDs.")
+    return refFlat
+
+def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
+    """
+    Purpose:
+        refFlatのデータフレームに、複数のエキソンが存在するかを確認する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+    Returns:
+        bool, 複数のエキソンが存在する場合はTrue、存在しない場合はFalse
+    """
+    for gene in refFlat["geneName"].unique():
+        if refFlat[refFlat["exonCount"] == gene].shape[0] > 1:
+            print(f"Gene {gene} has multiple exons")
+            return True
+    print("No gene has multiple exons")
+    return False
+
+def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
+    """
+    Purpose:
+        refFlatのデータフレームに、トランスクリプトのバリアントが存在するかを確認する。
+    Parameters:
+        refFlat: pd.DataFrame, refFlatのデータフレーム
+    Returns:
+        bool, トランスクリプトのバリアントが存在する場合はTrue、存在しない場合はFalse
+    """
+    bool_list = []
+    for gene in interest_genes:
+        # 遺伝子ごとにトランスクリプトの数をカウント
+        transcripts = refFlat[refFlat["geneName"] == gene]
+        if transcripts.shape[0] > 1:
+            print(f"Gene {gene} has multiple transcripts")
+            bool_list.append(True)
+        else:
+            print(f"Gene {gene} has a single transcript")
+            bool_list.append(False)
+    if all([x is False for x in bool_list]):
+        print("All genes have a single transcript, stop further processing.")
+        return False
+    return True
 
 
 def parse_exon_coordinates(refFlat: pd.DataFrame) -> pd.DataFrame:
@@ -151,4 +217,36 @@ def add_exon_position_flags(refflat: pd.DataFrame) -> pd.DataFrame:
         return row
 
     refflat = refflat.apply(flip_first_last_to_minus_strand, axis=1)
+    return refflat
+
+def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
+    """
+    Validate the processed refFlat DataFrame.
+    """
+    if refflat.empty:
+        raise ValueError("The processed refFlat DataFrame is empty. Please check your input data.")
+
+    variant_check = check_transcript_variant(refflat, interest_gene_list)
+    if not variant_check:
+        raise ValueError("No transcript variants found for your interest genes.")
+    
+    multiple_exon_check = check_multiple_exon_existance(refflat)
+    if not multiple_exon_check:
+        raise ValueError("Your interest genes do not have multiple exons. These genes are out of scope.")
+
+def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+    """
+    このモジュールの関数をwrapした関数
+    """
+    refflat = select_interest_genes(refflat, interest_genes)
+
+    refflat = parse_exon_coordinates(refflat)
+    refflat = calculate_exon_lengths(refflat)
+    refflat = drop_abnormal_mapped_transcripts(refflat)
+    refflat = annotate_cording_information(refflat)
+    refflat = annotate_flame_information(refflat)
+    refflat = add_exon_position_flags(refflat)
+    
+    validate_filtered_refflat(refflat, interest_genes)
+    
     return refflat

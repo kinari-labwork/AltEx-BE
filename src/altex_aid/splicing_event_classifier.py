@@ -128,3 +128,11 @@ def flip_a3ss_a5ss_on_minus_strand(classified_refflat: pd.DataFrame) -> pd.DataF
     ].apply(lambda types: [flip_dict.get(t, t) for t in types])
 
     return classified_refflat
+
+def classify_splicing_events(refflat: pd.DataFrame) -> pd.DataFrame:
+    """
+    このモジュールのwrap関数
+    """
+    classified_refflat = classify_splicing_events_per_gene(refflat)
+    classified_refflat = flip_a3ss_a5ss_on_minus_strand(classified_refflat)
+    return classified_refflat

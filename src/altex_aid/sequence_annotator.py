@@ -73,3 +73,21 @@ def join_sequence_to_single_exon_df(
             bed[["name", f"chromStart_{label}", f"chromEnd_{label}", "sequence"]], on="name", how="left"
         ).rename(columns={"sequence": f"{label}_sequence"})
     return single_exon_df
+
+def annotate_sequence_to_splice_sites(
+    single_exon_df: pd.DataFrame,
+    splice_acceptor_single_exon_df: pd.DataFrame,
+    splice_donor_single_exon_df: pd.DataFrame,
+    fasta_path: str
+) -> pd.DataFrame:
+    """
+    このモジュールの操作をまとめて実行するためのラッパー関数
+    """
+    acceptor_bed_with_sequences = annotate_sequence_to_bed(
+        splice_acceptor_single_exon_df, fasta_path
+    )
+    donor_bed_with_sequences = annotate_sequence_to_bed(
+        splice_donor_single_exon_df, fasta_path
+    )
+    single_exon_df = join_sequence_to_single_exon_df(single_exon_df, acceptor_bed_with_sequences, donor_bed_with_sequences)
+    return single_exon_df

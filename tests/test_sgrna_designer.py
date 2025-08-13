@@ -2,14 +2,20 @@ import pandas as pd
 import re
 from altex_aid.sgrna_designer import (
     SgrnaInfo,
+    BaseEditor,
     convert_dna_to_reversed_complement_rna,
+    convert_dna_to_rna,
     reverse_complement_pam_as_regex,
+    convert_pam_as_regex,
+    calculate_overlap_and_unintended_edits_to_cds,
     design_sgrna,
+    decide_target_base_pos_in_sequence,
     is_valid_exon_position,
     design_sgrna_for_target_exon_df,
     extract_sgrna_features,
     organize_target_exon_df_with_grna_sequence,
-    convert_sgrna_start_end_position_to_position_in_chromosome
+    convert_sgrna_start_end_position_to_position_in_chromosome,
+    design_sgrna_for_base_editors
 )   
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
@@ -20,20 +26,71 @@ def test_convert_dna_to_reversed_complement_rna():
     output_sequence = convert_dna_to_reversed_complement_rna(input_sequence)
     assert output_sequence == expected_output
 
+def test_convert_dna_to_rna():
+    input_sequence = "ATGCATGC"
+    expected_output = "AUGCAUGC"  # RNAに変換した結果
+    output_sequence = convert_dna_to_rna(input_sequence)
+    assert output_sequence == expected_output
+
 def test_reverse_complement_pam_as_regex():
     input_sequence = "NGG"
-    expected_output = "[Cc][Cc][ATGCatgc]" 
+    expected_output = re.compile("(?=([Cc][Cc][ATGCatgc]))")
     output_sequence = reverse_complement_pam_as_regex(input_sequence)
     assert output_sequence == expected_output
 
-def test_design_sgrna():
+def test_convert_pam_as_regex():
+    input_sequence = "NGG"
+    expected_output = re.compile("(?=([ATGCatgc][Gg][Gg]))")  # PAM配列を正規表現に変換した結果
+    output_sequence = convert_pam_as_regex(input_sequence)
+    assert output_sequence == expected_output
+
+def test_calculate_overlap_and_unintended_edits_to_cds_cbe():
+    editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
+    window_start_in_seq = 24
+    window_end_in_seq = 26 # このendはinclusiveなので、24,25,26の3塩基が編集される
+    cds_boundary = 25
+    site_type = "acceptor"
+    base_editor_type = "cbe"  # base editorのタイプを指定
+
+    expected_output = (2,2)
+    overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+        editing_sequence=editing_sequence,
+        window_start_in_seq=window_start_in_seq,
+        window_end_in_seq=window_end_in_seq,
+        cds_boundary=cds_boundary,
+        site_type=site_type,
+        base_editor_type=base_editor_type
+    )
+    assert (overlap, unintended_edits) == expected_output
+
+def test_calculate_overlap_and_unintended_edits_to_cds_abe():
+    editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGAAANNNNNNNNNNNNNNNNNNNNNNNN"
+    window_start_in_seq = 23
+    window_end_in_seq = 25
+    cds_boundary = 25
+    site_type = "acceptor"
+    base_editor_type = "abe"  # base editorのタイプを指定
+
+    expected_output = (1,1)
+    overlap, unintended_edits = calculate_overlap_and_unintended_edits_to_cds(
+        editing_sequence=editing_sequence,
+        window_start_in_seq=window_start_in_seq,
+        window_end_in_seq=window_end_in_seq,
+        cds_boundary=cds_boundary,
+        site_type=site_type,
+        base_editor_type=base_editor_type
+    )
+    assert (overlap, unintended_edits) == expected_output
+
+def test_design_sgrna_cbe_acceptor():
     editing_sequence = "NNNCCCCCNNNNNNNNNNNNNNNAGGGNNNNNNNNNNNNNNNNNNNNNNN"
     # これは+ strandのエキソンで、SAの配列。
     pam_sequence = "NGG"  # 例としてNGGを使用
-    reversed_pam_regex = re.compile(f"(?=({reverse_complement_pam_as_regex(pam_sequence)}))")  # PAMはNGGなので、逆相補化してCCNとする
+    pam_regex = convert_pam_as_regex(pam_sequence)
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
     editing_window_start_in_grna = 17
     editing_window_end_in_grna = 19
-    target_g_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    target_base_pos_in_sequence = 24 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
     cds_boundary = 25
     site_type = "acceptor"
 
@@ -68,15 +125,210 @@ def test_design_sgrna():
 ]
     output_data = design_sgrna(
         editing_sequence=editing_sequence,
+        pam_regex=pam_regex,
         reversed_pam_regex=reversed_pam_regex,
         editing_window_start_in_grna=editing_window_start_in_grna,
         editing_window_end_in_grna=editing_window_end_in_grna,
-        target_g_pos_in_sequence=target_g_pos_in_sequence,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        base_editor_type="cbe",
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
+
+def test_design_sgrna_cbe_donor():
+    editing_sequence = "NNNNCCCCCNNNNNNNNNNNNNNGGGTNNNNNNNNNNNNNNNNNNNNN"
+    # これは+ strandのエキソンで、SDの配列。
+    pam_sequence = "NGG"  # 例としてNGGを使用
+    pam_regex = convert_pam_as_regex(pam_sequence)
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_base_pos_in_sequence = 25 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    cds_boundary = 24
+    site_type = "donor"
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="CCNNNNNNNNNNNNNNGGGT",
+            actual_sequence="ACCCNNNNNNNNNNNNNNGG",
+            start_in_sequence = 7,
+            end_in_sequence=27,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=2,
+            possible_unintended_edited_base_count=2
+        ),
+        SgrnaInfo(
+            target_sequence="CNNNNNNNNNNNNNNGGGTN",
+            actual_sequence="NACCCNNNNNNNNNNNNNNG",
+            start_in_sequence = 8,
+            end_in_sequence=28,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count= 1
+        ),
+        SgrnaInfo(
+            target_sequence="NNNNNNNNNNNNNNGGGTNN",
+            actual_sequence="NNACCCNNNNNNNNNNNNNN",
+            start_in_sequence = 9,
+            end_in_sequence=29,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
+        ),
+]
+    output_data = design_sgrna(
+        editing_sequence=editing_sequence,
+        pam_regex=pam_regex,
+        reversed_pam_regex=reversed_pam_regex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        base_editor_type="cbe",
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
+
+def test_design_sgrna_abe_acceptor():
+    # acceptorの場合のテスト
+    editing_sequence = "NNNNNNNNNNNNNNNNNNNNNNNAGAANNNNNNNNNNNNNGGGGGNNNNN"
+    pam_sequence = "NGG"
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
+    pam_regex = convert_pam_as_regex(pam_sequence)
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_base_pos_in_sequence = 23
+    cds_boundary = 25
+    site_type = "acceptor"
+
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="NNNAGAANNNNNNNNNNNNN",
+            actual_sequence="NNNAGAANNNNNNNNNNNNN",
+            start_in_sequence= 20,
+            end_in_sequence= 40,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count=0
+        ),
+        SgrnaInfo(
+            target_sequence="NNAGAANNNNNNNNNNNNNG",
+            actual_sequence="NNAGAANNNNNNNNNNNNNG",
+            start_in_sequence= 21,
+            end_in_sequence= 41,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count=0
+        ),
+        SgrnaInfo(
+            target_sequence="NAGAANNNNNNNNNNNNNGG",
+            actual_sequence="NAGAANNNNNNNNNNNNNGG",
+            start_in_sequence= 22,
+            end_in_sequence= 42,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count=1
+        ),
+
+    ]
+    output_data = design_sgrna(
+        editing_sequence=editing_sequence,
+        reversed_pam_regex=reversed_pam_regex,
+        pam_regex=pam_regex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
+        cds_boundary=cds_boundary,
+        base_editor_type="abe",
+        site_type=site_type
+    )
+    print(output_data)
+    assert output_data == expected_output
+
+def test_design_sgrna_abe_donor():
+    editing_sequence = "NNNNNCCCCCNNNNNNNNNNNNNTTGTNNNNNNNNNNNNNNNNNNNNN"
+    # これは+ strandのエキソンで、SDの配列。
+    pam_sequence = "NGG"  # 例としてNGGを使用
+    reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)  # PAMはNGGなので、逆相補化してCCNとする
+    pam_regex = convert_pam_as_regex(pam_sequence)
+    editing_window_start_in_grna = 17
+    editing_window_end_in_grna = 19
+    target_base_pos_in_sequence = 26 # acceptorなら24番目のG, donorなら25番目のGが編集ターゲット
+    cds_boundary = 24
+    site_type = "donor"
+
+    expected_output = [
+        SgrnaInfo(
+            target_sequence="CCNNNNNNNNNNNNNTTGTN",
+            actual_sequence="NACAANNNNNNNNNNNNNGG",
+            start_in_sequence = 8,
+            end_in_sequence=28,
+            target_pos_in_sgrna=19,
+            overlap_between_cds_and_editing_window=1,
+            possible_unintended_edited_base_count=1
+        ),
+        SgrnaInfo(
+            target_sequence="CNNNNNNNNNNNNNTTGTNN",
+            actual_sequence="NNACAANNNNNNNNNNNNNG",
+            start_in_sequence = 9,
+            end_in_sequence=29,
+            target_pos_in_sgrna=18,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
+        ),
+        SgrnaInfo(
+            target_sequence="NNNNNNNNNNNNNTTGTNNN",
+            actual_sequence="NNNACAANNNNNNNNNNNNN",
+            start_in_sequence = 10,
+            end_in_sequence=30,
+            target_pos_in_sgrna=17,
+            overlap_between_cds_and_editing_window=0,
+            possible_unintended_edited_base_count= 0
+        ),
+]
+    output_data = design_sgrna(
+        editing_sequence=editing_sequence,
+        reversed_pam_regex=reversed_pam_regex,
+        pam_regex=pam_regex,
+        editing_window_start_in_grna=editing_window_start_in_grna,
+        editing_window_end_in_grna=editing_window_end_in_grna,
+        target_base_pos_in_sequence=target_base_pos_in_sequence,
+        base_editor_type="abe",
         cds_boundary=cds_boundary,
         site_type=site_type
     )
     print(output_data)
     assert output_data == expected_output
+
+def test_decide_target_base_pos_in_sequence():
+    # テストケース: CBE + acceptor
+    base_editor_type = "cbe"
+    site_type = "acceptor"
+    expected_output = 24
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: CBE + donor
+    base_editor_type = "cbe"
+    site_type = "donor"
+    expected_output = 25
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: ABE + acceptor
+    base_editor_type = "abe"
+    site_type = "acceptor"
+    expected_output = 23
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
+    # テストケース: ABE + donor
+    base_editor_type = "abe"
+    site_type = "donor"
+    expected_output = 26
+    assert decide_target_base_pos_in_sequence(base_editor_type, site_type) == expected_output
+
 
 def test_is_valid_exon_position_acceptor():
     # acceptor の場合のテスト
@@ -166,6 +418,7 @@ def test_design_sgrna_for_target_exon_df():
         pam_sequence="NGG",
         editing_window_start_in_grna=17,
         editing_window_end_in_grna=19,
+        base_editor_type="cbe",
         )
     print(output_data["grna_acceptor"].tolist())
     print(output_data["grna_donor"].tolist())
