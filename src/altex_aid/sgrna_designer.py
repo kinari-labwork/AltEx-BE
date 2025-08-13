@@ -533,15 +533,6 @@ def design_sgrna_for_base_editors_dict(
         # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
         temp_df = convert_sgrna_start_end_position_to_position_in_chromosome(temp_df)
 
-        # 4. 列名にbase_editorの名前を付ける
-        temp_df = temp_df.rename(
-            columns={
-                col: f"{base_editor.base_editor_name}_{col}" 
-                for col in temp_df.columns
-                if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
-            }
-        )
-
         # 結果を辞書に追加
         results[base_editor.base_editor_name] = temp_df
 
