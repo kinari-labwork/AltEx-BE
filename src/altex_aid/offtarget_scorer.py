@@ -1,4 +1,6 @@
 import pandas as pd
+from altex_aid.sgrna_designer import BaseEditor
+
 
 def convert_empty_list_into_na(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
@@ -52,4 +54,26 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
         exploded_dfs.append(df)
     # すべてのBEのdfを結合
     exploded_sgrna_df = pd.concat(exploded_dfs, ignore_index=True)
+    return exploded_sgrna_df
+
+def add_base_editor_info_to_row(row: pd.Series, base_editors: list[BaseEditor]) -> pd.Series:
+    """
+    Purpose: Add base editor information to the exploded sgRNA DataFrame.
+    """
+    for be in base_editors:
+        if row["base_editor_name"] == be.base_editor_name:
+            row["base_editor_pam"] = be.pam_sequence
+            row["base_editor_editing_window_start"] = be.editing_window_start_in_grna
+            row["base_editor_editing_window_end"] = be.editing_window_end_in_grna
+            row["base_editor_type"] = be.base_editor_type
+            break
+    return row
+
+def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
+    """
+    Purpose: Add base editor information to the exploded sgRNA DataFrame.
+    """
+    base_editor_name_col_index = exploded_sgrna_df.get_loc("base_editor_name") + 1
+    exploded_sgrna_df.insert(base_editor_name_col_index, ["base_editor_pam", "base_editor_editing_window_start", "base_editor_editing_window_end", "base_editor_type"], pd.NA)
+    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_base_editor_info_to_row(row, base_editors), axis=1)
     return exploded_sgrna_df
