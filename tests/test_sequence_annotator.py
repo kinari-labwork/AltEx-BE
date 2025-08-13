@@ -80,10 +80,10 @@ def test_join_sequence_to_single_exon_df():
             "strand": ["+", "-"],
             "chromStart_acceptor": [0, 5],
             "chromEnd_acceptor": [4, 12],
-            "acceptor_sequence": ["ATGC", "GTCTAAT"],
+            "acceptor_exon_intron_boundary_±25bp_sequence": ["ATGC", "GTCTAAT"],
             "chromStart_donor": [0, 5],
             "chromEnd_donor": [4, 12],
-            "donor_sequence": ["TACG", "TAGATTA"],
+            "donor_exon_intron_boundary_±25bp_sequence": ["TACG", "TAGATTA"],
         }
     )
 

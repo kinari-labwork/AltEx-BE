@@ -340,7 +340,7 @@ def design_sgrna_for_target_exon_df(
     reversed_pam_regex = reverse_complement_pam_as_regex(pam_sequence)
 
     def apply_design(row, site_type, base_editor_type):
-        sequence_col = f"{site_type}_sequence"
+        sequence_col = f"{site_type}_exon_intron_boundary_±25bp_sequence"
         if is_valid_exon_position(row["exon_position"], site_type):
             return design_sgrna(
                 editing_sequence=row[sequence_col],

@@ -354,10 +354,10 @@ def test_design_sgrna_for_target_exon_df():
         "exon_position": ["internal", "internal"],
         "chromStart_acceptor":[75, 275],
         "chromEnd_acceptor":[125, 325],
-        "acceptor_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
+        "acceptor_exon_intron_boundary_±25bp_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
         "chromStart_donor":[175, 375],
         "chromEnd_donor":[225, 425],
-        "donor_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"]
+        "donor_exon_intron_boundary_±25bp_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"]
     })
     expected_output = pd.DataFrame({
         "chrom": ["chr1", "chr2"],
@@ -370,10 +370,10 @@ def test_design_sgrna_for_target_exon_df():
         "exon_position": ["internal", "internal"],
         "chromStart_acceptor": [75, 275],
         "chromEnd_acceptor": [125, 325],
-        "acceptor_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
+        "acceptor_exon_intron_boundary_±25bp_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
         "chromStart_donor": [175, 375],
         "chromEnd_donor": [225, 425],
-        "donor_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"],
+        "donor_exon_intron_boundary_±25bp_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"],
         "grna_acceptor": [
             [
             SgrnaInfo(

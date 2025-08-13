@@ -71,7 +71,7 @@ def join_sequence_to_single_exon_df(
     ]:
         single_exon_df = single_exon_df.merge(
             bed[["name", f"chromStart_{label}", f"chromEnd_{label}", "sequence"]], on="name", how="left"
-        ).rename(columns={"sequence": f"{label}_sequence"})
+        ).rename(columns={"sequence": f"{label}_exon_intron_boundary_±25bp_sequence"})
     return single_exon_df
 
 def annotate_sequence_to_splice_sites(
