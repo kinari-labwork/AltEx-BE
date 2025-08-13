@@ -1,4 +1,6 @@
 import pandas as pd
+import mappy as mp
+import pathlib as Path
 from altex_aid.sgrna_designer import BaseEditor
 
 
@@ -93,3 +95,22 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     """
     exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_crisprdirect_url_to_row(row, assembly_name), axis=1)
     return exploded_sgrna_df
+
+def calculate_offtarget_site_count(row:pd.Series, aligner:mp.Aligner, fasta_path:Path) -> pd.Series:
+    """
+    Purpose: CRISPR direct に飛ぶ前に簡易的にPAM+20bpの完全一致のオフターゲット数を計算する
+    """
+    aligner = mp.Aligner(str(fasta_path))
+    pam_plus_target_seq = row["pam_plus_target_sequence"].replace('+', '').lower()
+
+    exact_match_count = 0
+    for name, seq in mp.fastx_read(fasta_path):
+        for hit in aligner.map(pam_plus_target_seq):
+            if hit.mlen == len(pam_plus_target_seq):
+                exact_match_count += 1
+            if exact_match_count > 10: # 検索時間を抑えるため10個以上のマッチが見つかったら、計算を中止
+                break
+
+    row["exact_match_count_of_20bp_plus_pam"] = exact_match_count
+
+    return row
