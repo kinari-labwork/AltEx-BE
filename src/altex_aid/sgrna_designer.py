@@ -284,6 +284,7 @@ def design_sgrna(
         if not (window_start_in_seq <= target_base_pos_in_sequence <= window_end_in_seq):
             continue
         target_sequence = editing_sequence[sgrna_start:sgrna_end]
+        pam_plus_target_sequence = f"{target_sequence}+{match.group(1)}" if site_type == "acceptor" and base_editor_type == "abe" else f"{match.group(1)}+{target_sequence}"
         if site_type == "acceptor" and base_editor_type == "cbe":
             actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
         elif site_type == "acceptor" and base_editor_type == "abe":
@@ -304,7 +305,7 @@ def design_sgrna(
         )
         sgrna_list.append(
             SgrnaInfo(
-                target_sequence=target_sequence,
+                target_sequence=pam_plus_target_sequence,
                 actual_sequence=actual_sequence,
                 start_in_sequence=sgrna_start,
                 end_in_sequence=sgrna_end,
