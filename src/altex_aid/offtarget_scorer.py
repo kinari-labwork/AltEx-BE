@@ -96,11 +96,10 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_crisprdirect_url_to_row(row, assembly_name), axis=1)
     return exploded_sgrna_df
 
-def calculate_offtarget_site_count(row:pd.Series, aligner:mp.Aligner, fasta_path:Path) -> pd.Series:
+def calculate_offtarget_site_count_to_row(row:pd.Series, aligner:mp.Aligner ,fasta_path:Path) -> pd.Series:
     """
     Purpose: CRISPR direct に飛ぶ前に簡易的にPAM+20bpの完全一致のオフターゲット数を計算する
     """
-    aligner = mp.Aligner(str(fasta_path))
     pam_plus_target_seq = row["pam_plus_target_sequence"].replace('+', '').lower()
 
     exact_match_count = 0
@@ -114,3 +113,11 @@ def calculate_offtarget_site_count(row:pd.Series, aligner:mp.Aligner, fasta_path
     row["exact_match_count_of_20bp_plus_pam"] = exact_match_count
 
     return row
+
+def calculate_offtarget_site_count_to_df(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
+    """
+    Purpose: DataFrameの各行にオフターゲット数を追加する
+    """
+    aligner = mp.Aligner(str(fasta_path))
+    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: calculate_offtarget_site_count_to_row(row, aligner, fasta_path), axis=1)
+    return exploded_sgrna_df
