@@ -57,6 +57,12 @@ def main():
         nargs="+",
         help="List of interest gene Refseq IDs (space-separated)"
     )
+    gene_group.add_argument(
+        "-a", "--assembly-name",
+        default=None,
+        required=True,
+        help="Name of the genome assembly to use"
+    )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
         "-n", "--base-editor-name",
