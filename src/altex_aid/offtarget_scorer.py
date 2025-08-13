@@ -78,10 +78,18 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: li
     exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_base_editor_info_to_row(row, base_editors), axis=1)
     return exploded_sgrna_df
 
-def add_crisprdirect_url(row: pd.Series, assembly_name:str) -> pd.Series:
+def add_crisprdirect_url_to_row(row: pd.Series, assembly_name:str) -> pd.Series:
     """
     Purpose : 列ごとにCRISPRdirectのURLを追加する
     """
+    target_sequence = row["sgrna_target_sequence"].replace('+', '').lower()
     base_url = "https://crispr.dbcls.jp/?userseq="
-    row["crisprdirect_url"] = base_url + row["sgrna_actual_sequence"] + "&pam=" + row["base_editor_pam"] + "&db=" + assembly_name
+    row["crisprdirect_url"] = base_url + target_sequence + "&pam=" + row["base_editor_pam"] + "&db=" + assembly_name
     return row
+
+def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
+    """
+    Purpose : DataFrameの各行にCRISPRdirectのURLを追加する
+    """
+    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_crisprdirect_url_to_row(row, assembly_name), axis=1)
+    return exploded_sgrna_df
