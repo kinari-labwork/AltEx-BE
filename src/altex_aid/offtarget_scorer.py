@@ -58,7 +58,7 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
     exploded_sgrna_df = pd.concat(exploded_dfs, ignore_index=True)
     return exploded_sgrna_df
 
-def add_base_editor_info_to_df_revised(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
+def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
     """
     Puropose: exploded_sgrna_dfにBaseEditorの情報を追加する
     """
@@ -79,7 +79,7 @@ def add_base_editor_info_to_df_revised(exploded_sgrna_df: pd.DataFrame, base_edi
     exploded_sgrna_df = pd.merge(exploded_sgrna_df, be_df, on="base_editor_name", how="left")
     return exploded_sgrna_df
 
-def add_crisprdirect_url_to_df_revised(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
+def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
     Purpose: exploded_sgrna_dfにCRISPRdirectのURLを追加する
     """
@@ -93,7 +93,7 @@ def add_crisprdirect_url_to_df_revised(exploded_sgrna_df: pd.DataFrame, assembly
     return exploded_sgrna_df
 
 
-def calculate_offtarget_site_count_to_df_revised(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
+def calculate_offtarget_site_count_to_df(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
     Purpose: exploded_sgrna_dfにオフターゲットの数を追加する
     """
