@@ -4,14 +4,14 @@ import pathlib as Path
 from altex_aid.sgrna_designer import BaseEditor
 
 
-def convert_empty_list_into_na(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd.DataFrame:
+def convert_empty_list_into_na(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     """
     Convert empty lists in the DataFrame to NaN.
     """
     for df in target_exon_with_sgrna_dict.values():
         for col in df.columns:
             df[col] = df[col].apply(lambda x: pd.NA if isinstance(x, list) and not x else x)
-    return df
+    return target_exon_with_sgrna_dict
 
 def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -60,7 +60,7 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
 
 def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
     """
-    Puropose: exploded_sgrna_dfにBaseEditorの情報を追加する
+    Purpose: exploded_sgrna_dfにBaseEditorの情報を追加する
     """
     # BaseEditorのリストをDataFrameに変換
     be_info = [
