@@ -50,74 +50,67 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
     exploded_dfs = []
     for be, df in target_exon_with_sgrna_dict.items():
         df["base_editor_name"] = be
-        df = prepare_melted_df(df)
-        sgrna_cols = [col for col in df.columns if col.startswith("sgrna_")]
-        df = df.explode(column=sgrna_cols)
-        exploded_dfs.append(df)
+        melted_df = prepare_melted_df(df)
+        sgrna_cols = [col for col in melted_df.columns if col.startswith("sgrna_")]
+        melted_df = melted_df.explode(column=sgrna_cols)
+        exploded_dfs.append(melted_df)
     # すべてのBEのdfを結合
     exploded_sgrna_df = pd.concat(exploded_dfs, ignore_index=True)
     return exploded_sgrna_df
 
-def add_base_editor_info_to_row(row: pd.Series, base_editors: list[BaseEditor]) -> pd.Series:
+def add_base_editor_info_to_df_revised(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
     """
-    Purpose: Add base editor information to the exploded sgRNA DataFrame.
+    Puropose: exploded_sgrna_dfにBaseEditorの情報を追加する
     """
-    for be in base_editors:
-        if row["base_editor_name"] == be.base_editor_name:
-            row["base_editor_pam"] = be.pam_sequence
-            row["base_editor_editing_window_start"] = be.editing_window_start_in_grna
-            row["base_editor_editing_window_end"] = be.editing_window_end_in_grna
-            row["base_editor_type"] = be.base_editor_type
-            break
-    return row
+    # BaseEditorのリストをDataFrameに変換
+    be_info = [
+        {
+            "base_editor_name": be.base_editor_name,
+            "base_editor_pam": be.pam_sequence,
+            "base_editor_editing_window_start": be.editing_window_start_in_grna,
+            "base_editor_editing_window_end": be.editing_window_end_in_grna,
+            "base_editor_type": be.base_editor_type,
+        }
+        for be in base_editors
+    ]
+    be_df = pd.DataFrame(be_info)
 
-def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
-    """
-    Purpose: Add base editor information to the exploded sgRNA DataFrame.
-    """
-    base_editor_name_col_index = exploded_sgrna_df.get_loc("base_editor_name") + 1
-    exploded_sgrna_df.insert(base_editor_name_col_index, ["base_editor_pam", "base_editor_editing_window_start", "base_editor_editing_window_end", "base_editor_type"], pd.NA)
-    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_base_editor_info_to_row(row, base_editors), axis=1)
+    # 'base_editor_name'をキーとしてマージ（結合）
+    exploded_sgrna_df = pd.merge(exploded_sgrna_df, be_df, on="base_editor_name", how="left")
     return exploded_sgrna_df
 
-def add_crisprdirect_url_to_row(row: pd.Series, assembly_name:str) -> pd.Series:
+def add_crisprdirect_url_to_df_revised(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
-    Purpose : 列ごとにCRISPRdirectのURLを追加する
+    Purpose: exploded_sgrna_dfにCRISPRdirectのURLを追加する
     """
-    target_sequence = row["sgrna_target_sequence"].replace('+', '').lower()
     base_url = "https://crispr.dbcls.jp/?userseq="
-    row["crisprdirect_url"] = base_url + target_sequence + "&pam=" + row["base_editor_pam"] + "&db=" + assembly_name
-    return row
-
-def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
-    """
-    Purpose : DataFrameの各行にCRISPRdirectのURLを追加する
-    """
-    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: add_crisprdirect_url_to_row(row, assembly_name), axis=1)
+    
+    # 列全体に対して一度に文字列操作を行う
+    target_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.lower()
+    pams = exploded_sgrna_df["base_editor_pam"] # 事前にマージしておく必要がある
+    
+    exploded_sgrna_df["crisprdirect_url"] = base_url + target_sequences + "&pam=" + pams + "&db=" + assembly_name
     return exploded_sgrna_df
 
-def calculate_offtarget_site_count_to_row(row:pd.Series, aligner:mp.Aligner ,fasta_path:Path) -> pd.Series:
+
+def calculate_offtarget_site_count_to_df_revised(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
-    Purpose: CRISPR direct に飛ぶ前に簡易的にPAM+20bpの完全一致のオフターゲット数を計算する
-    """
-    pam_plus_target_seq = row["pam_plus_target_sequence"].replace('+', '').lower()
-
-    exact_match_count = 0
-    for name, seq in mp.fastx_read(fasta_path):
-        for hit in aligner.map(pam_plus_target_seq):
-            if hit.mlen == len(pam_plus_target_seq):
-                exact_match_count += 1
-            if exact_match_count > 10: # 検索時間を抑えるため10個以上のマッチが見つかったら、計算を中止
-                break
-
-    row["exact_match_count_of_20bp_plus_pam"] = exact_match_count
-
-    return row
-
-def calculate_offtarget_site_count_to_df(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
-    """
-    Purpose: DataFrameの各行にオフターゲット数を追加する
+    Purpose: exploded_sgrna_dfにオフターゲットの数を追加する
     """
     aligner = mp.Aligner(str(fasta_path))
-    exploded_sgrna_df = exploded_sgrna_df.apply(lambda row: calculate_offtarget_site_count_to_row(row, aligner, fasta_path), axis=1)
+    
+    # 計算対象のユニークな配列を取得
+    unique_sequences = exploded_sgrna_df["sgrna_target_sequence"].dropna().unique()
+
+    # ユニークな配列に対してオフターゲット数を計算し、辞書に保存
+    offtarget_counts = {}
+    for seq in unique_sequences:
+        # mappyの正しい使い方。内部でインデックスが使われるため、FASTAを再読み込みする必要はない。
+        # また、"+"は塩基ではないため、シーケンスから除外すべき
+        clean_seq = seq.replace('+', '', 1).lower()
+        count = sum(1 for hit in aligner.map(clean_seq) if hit.mlen == len(clean_seq))
+        offtarget_counts[seq] = count
+
+    # 計算結果を元のDataFrameにマップする
+    exploded_sgrna_df["exact_match_count_of_20bp_plus_pam"] = exploded_sgrna_df["pam_plus_target_sequence"].map(offtarget_counts)
     return exploded_sgrna_df
