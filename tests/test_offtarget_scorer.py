@@ -2,21 +2,12 @@ import pandas as pd
 from altex_aid.offtarget_scorer import (
     convert_empty_list_into_na,
     prepare_melted_df,
-    validate_exploded_df,
     explode_sgrna_df,
     add_base_editor_info_to_df,
     add_crisprdirect_url_to_df,
     calculate_offtarget_site_count_to_df
 )
 from altex_aid.sgrna_designer import BaseEditor
-
-mock_base_editor = BaseEditor(
-    base_editor_name="MockBE",
-    pam_sequence="NGG",
-    editing_window_start_in_grna=10,
-    editing_window_end_in_grna=15,
-    base_editor_type="cbe"
-)
 
 def test_convert_empty_list_into_na():
     input_df = pd.DataFrame({
@@ -105,3 +96,47 @@ def test_explode_sgrna_df():
         output_df.sort_values(by=list(output_df.columns)).reset_index(drop=True),
         expected_df.sort_values(by=list(expected_df.columns)).reset_index(drop=True)
     )
+
+def test_add_base_editor_info_to_df():
+    input_df = pd.DataFrame({
+        "chrom": ["chr1", "chr1", "chr1", "chr1"],
+        "exonStarts": [100, 100, 100, 100],
+        "exonEnds": [150, 150, 150, 150],
+        "strand": ["+", "+", "+", "+"],
+        "exontype": ["skipped", "skipped", "skipped", "skipped"],
+        "exon_position": ["first", "first", "first", "first"],
+        "base_editor_name": ["MockBE1", "MockBE1", "MockBE2", "MockBE2"],
+        "sgrna_target_sequence": ["CCC+ATCG", "CCC+TAGC", "CCC+GCTA", "CCC+TACG"],
+        "site_type": ["acceptor", "acceptor", "donor", "donor"]
+    })
+
+    mock_base_editors = [
+    BaseEditor(
+        base_editor_name="MockBE1",
+        pam_sequence="NGG",
+        editing_window_start_in_grna=10,
+        editing_window_end_in_grna=15,
+        base_editor_type="cbe"
+    ),
+    BaseEditor(
+        base_editor_name="MockBE2",
+        pam_sequence="NGG",
+        editing_window_start_in_grna=15,
+        editing_window_end_in_grna=20,
+        base_editor_type="abe"
+    )]
+    expected_df = pd.DataFrame({
+        "chrom": ["chr1", "chr1", "chr1", "chr1"],
+        "exonStarts": [100, 100, 100, 100],
+        "exonEnds": [150, 150, 150, 150],
+        "strand": ["+", "+", "+", "+"],
+        "exontype": ["skipped", "skipped", "skipped", "skipped"],
+        "exon_position": ["first", "first", "first", "first"],
+        "base_editor_name": ["MockBE1", "MockBE1", "MockBE2", "MockBE2"],
+        "base_editor_pam": ["NGG", "NGG", "NGG", "NGG"],
+        "base_editor_editing_window_start": [10, 10, 15, 15],
+        "base_editor_editing_window_end": [15, 15, 20, 20],
+        "base_editor_type": ["cbe", "cbe", "abe", "abe"]
+        "sgrna_target_sequence": ["CCC+ATCG", "CCC+TAGC", "CCC+GCTA", "CCC+TACG"],
+        "site_type": ["acceptor", "acceptor", "donor", "donor"],
+    })
