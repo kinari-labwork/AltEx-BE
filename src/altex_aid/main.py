@@ -48,12 +48,12 @@ def main():
     )
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
-        "--interest-gene-symbols",
+        "--gene-symbols",
         nargs="+",
         help="List of interest gene symbols (space-separated)"
     )
     gene_group.add_argument(
-        "--interest-gene-refseq-ids",
+        "--refseq-ids",
         nargs="+",
         help="List of interest gene Refseq IDs (space-separated)"
     )
@@ -65,43 +65,43 @@ def main():
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
-        "-n", "--base-editor-name",
+        "-n", "--be-name",
         default=None,
         required=False,
         help="Name of the base editor to optional use",
     )
     base_editors.add_argument(
-        "-p", "--base-editor-pam",
+        "-p", "--be-pam",
         default=None,
         required=False,
         help="PAM sequence for the base editor",
     )
     base_editors.add_argument(
-        "-s", "--base-editor-window-start",
+        "-s", "--be-start",
         default=None,
         required=False,
         help="Window start for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "-e", "--base-editor-window-end",
+        "-e", "--be-end",
         default=None,
         required=False,
         help="Window end for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "-t", "--base-editor-type",
+        "-t", "--be-type",
         default=None,
         required=False,
         help="Choose the type of base editor, this tool supports ABE and CBE",
     )
     base_editors.add_argument(
-        "--base-editor-preset",
+        "--be-preset",
         default=None,
         required=False,
         help="Preset for the base editor",
     )
     base_editors.add_argument(
-        "--base-editor-files",
+        "--be-files",
         default=None,
         required=False,
         help="input the path of csv file or txt file of base editor information",
@@ -115,7 +115,7 @@ def main():
 
     for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    interest_gene_list = args.interest_gene_symbols + args.interest_gene_refseq_ids
+    interest_gene_list = args.gene_symbols + args.refseq_ids
     if not interest_gene_list:
         raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
 
@@ -123,15 +123,15 @@ def main():
 
     # BaseEditorの決定
     base_editors = []
-    if args.base_editor_files:
+    if args.be_files:
         base_editors.extend(for_cli_setting.get_base_editors_from_args(args))
 
-    if args.base_editor_preset and args.base_editor_preset not in preset_base_editors:
-        raise ValueError(f"Invalid base editor preset: {args.base_editor_preset}. Available presets are: {list(preset_base_editors.keys())}")
+    if args.be_preset and args.be_preset not in preset_base_editors:
+        raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
     else:
-        base_editors.extend(preset_base_editors[args.base_editor_preset])
+        base_editors.extend(preset_base_editors[args.be_preset])
 
-    if args.base_editor_name or args.base_editor_pam or args.base_editor_window_start or args.base_editor_window_end or args.base_editor_type:
+    if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
         base_editors.extend(for_cli_setting.parse_base_editors(args))
 
     if not base_editors:
