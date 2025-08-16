@@ -79,15 +79,35 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: li
 
 def add_gene_info_to_df(exploded_sgrna_df: pd.DataFrame, exploded_classified_refflat: pd.DataFrame) -> pd.DataFrame:
     """
-    Purpose: exploded_sgrna_df に bed化の際に欠落した遺伝子情報を追加する
+    Purpose: exploded_sgrna_df に bed 化の際に欠落した遺伝子情報を追加する
     """
-    # exploded_classified_refflatの必要な列を抽出
-    gene_info = exploded_classified_refflat[["name", "uuid","coding", "exon_length" ]]
+    # exploded_classified_refflatの列名を修正
+    gene_info = exploded_classified_refflat[
+        [
+            "geneName",
+            "exonlengths",
+            "flame",
+            "cds_info",
+            "uuid"
+        ]
+    ]
 
-    # 'chrom'と'strand'をキーとしてマージ（結合）
-    exploded_sgrna_df = pd.merge(exploded_sgrna_df, gene_info, on=["chrom", "strand"], how="left")
+    gene_info = gene_info.rename(
+        columns={
+            "geneName": "gene_name",
+            "exonlengths": "exon_length",
+        }
+    )
+    exploded_sgrna_df = exploded_sgrna_df.rename(
+        columns={
+            "exonStarts": "exon_start",
+            "exonEnds": "exon_end",
+            "name": "uuid",
+            "exontype": "exon_type"
+        }
+    )
 
-    # 'gene_name'と'gene_id'の列名を変更
-    exploded_sgrna_df = exploded_sgrna_df.rename(columns={"gene_name": "target_gene_name", "gene_id": "target_gene_id"})
-    
+    # uuidをキーとしてマージ
+    exploded_sgrna_df = pd.merge(exploded_sgrna_df, gene_info, on="uuid", how="left")
+
     return exploded_sgrna_df
