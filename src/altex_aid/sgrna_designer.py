@@ -473,6 +473,19 @@ def design_sgrna_for_base_editors(
     """
     results = []  # 各BaseEditorの結果を格納するリスト
 
+    foundation_cols = [
+        "chrom",
+        "exonStarts",
+        "exonEnds",
+        "strand",
+        "exontype",
+        "exon_position",
+        "name",
+        "acceptor_exon_intron_boundary_±25bp_sequence",
+        "donor_exon_intron_boundary_±25bp_sequence",
+    ]
+    foundation_cols_df = target_exon_df[foundation_cols].copy()
+
     for base_editor in base_editors:
         # 1. sgRNAを設計する
         temp_df = design_sgrna_for_target_exon_df(
@@ -508,6 +521,8 @@ def design_sgrna_for_base_editors(
 
     # すべての結果を結合
     final_result = pd.concat(results, axis=1)
+    # 基礎となる列を結合
+    final_result = pd.concat([foundation_cols_df, final_result], axis=1)
     return final_result.reset_index(drop=True)
 
 # 論文用には、各BEのsgRNAを1行にまとめたほうが便利ではあるが、ユーザーにはそれは必要ない。のちのexplodeを考えて、main.pyではdictで返すようにする
