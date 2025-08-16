@@ -1,7 +1,6 @@
 import pandas as pd
 import mappy as mp
 from pathlib import Path
-import io 
 
 def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
