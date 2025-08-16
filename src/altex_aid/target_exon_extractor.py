@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import pandas as pd
 import uuid
 
@@ -16,7 +15,7 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame) -> pd.DataFrame
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     return classified_refflat.reset_index(drop=True)
 
-def format_classified_refflat_to_bed(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+def format_classified_refflat_to_bed(exploded_classified_refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         スプライシングイベントに応じてアノテーションしたrefFlatのデータフレームから
@@ -26,7 +25,7 @@ def format_classified_refflat_to_bed(classified_refflat: pd.DataFrame) -> pd.Dat
     Returns:
         pd.DataFrame
     """
-    classified_refflat = classified_refflat[
+    exploded_classified_refflat = exploded_classified_refflat[
         [
             "chrom",
             "strand",
@@ -37,10 +36,10 @@ def format_classified_refflat_to_bed(classified_refflat: pd.DataFrame) -> pd.Dat
         ]
     ]
     # 編集のために、リストになっている列を展開する
-    classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
-    classified_refflat['score'] = 0  # BED形式のスコア列を追加
+    exploded_classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(exploded_classified_refflat))]  # 一意のIDを生成
+    exploded_classified_refflat['score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
-    classified_refflat = classified_refflat[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
+    classified_refflat = exploded_classified_refflat[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
     return classified_refflat.reset_index(drop=True)
 
 def extract_splice_acceptor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
@@ -86,15 +85,15 @@ def extract_splice_donor_regions(target_exon_df: pd.DataFrame, window: int) -> p
     )
     return splice_donor_single_exon_df[["chrom","chromStart","chromEnd","name","score","strand"]].reset_index(drop=True)
 
-def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Purpose:
     このモジュールの操作をまとめて実行するためのラッパー関数
     """
-    classified_refflat = explode_classified_refflat(classified_refflat)
-    target_exon_df = format_classified_refflat_to_bed(classified_refflat)
+    exploded_classified_refflat = explode_classified_refflat(classified_refflat)
+    target_exon_df = format_classified_refflat_to_bed(exploded_classified_refflat)
     if target_exon_df is None:
         raise ValueError("there are no exons in your interested genes which have targetable splicing events")
     splice_acceptor_single_exon_df = extract_splice_acceptor_regions(target_exon_df, 25)
     splice_donor_single_exon_df = extract_splice_donor_regions(target_exon_df, 25)
-    return target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df
+    return target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat
