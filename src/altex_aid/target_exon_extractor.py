@@ -5,8 +5,18 @@ import uuid
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
+def explode_classified_refflat(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
+    classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
+        int
+    )  # int型に変換
+    # exontypeがskippedまたはuniqueのエキソンだけを抽出
+    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
+    # 重複を削除し一方だけ残す
+    classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
+    return classified_refflat.reset_index(drop=True)
 
-def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+def format_classified_refflat_to_bed(classified_refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         スプライシングイベントに応じてアノテーションしたrefFlatのデータフレームから
@@ -16,7 +26,6 @@ def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame
     """
-    # explodeで増加する行数を抑えるために、先に少なくともskipped exonまたはunique exonを1つ以上持つトランスクリプトを抽出
     classified_refflat = classified_refflat[
         [
             "chrom",
@@ -28,14 +37,6 @@ def extract_target_exon(classified_refflat: pd.DataFrame) -> pd.DataFrame:
         ]
     ]
     # 編集のために、リストになっている列を展開する
-    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position"])
-    classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
-        int
-    )  # int型に変換
-    # exontypeがskippedまたはuniqueのエキソンだけを抽出
-    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
-    # 重複を削除し一方だけ残す
-    classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
     classified_refflat['score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
@@ -90,7 +91,8 @@ def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataF
     Purpose:
     このモジュールの操作をまとめて実行するためのラッパー関数
     """
-    target_exon_df = extract_target_exon(classified_refflat)
+    classified_refflat = explode_classified_refflat(classified_refflat)
+    target_exon_df = format_classified_refflat_to_bed(classified_refflat)
     if target_exon_df is None:
         raise ValueError("there are no exons in your interested genes which have targetable splicing events")
     splice_acceptor_single_exon_df = extract_splice_acceptor_regions(target_exon_df, 25)

@@ -136,7 +136,7 @@ def test_add_base_editor_info_to_df():
         "base_editor_pam": ["NGG", "NGG", "NGG", "NGG"],
         "base_editor_editing_window_start": [10, 10, 15, 15],
         "base_editor_editing_window_end": [15, 15, 20, 20],
-        "base_editor_type": ["cbe", "cbe", "abe", "abe"]
+        "base_editor_type": ["cbe", "cbe", "abe", "abe"],
         "sgrna_target_sequence": ["CCC+ATCG", "CCC+TAGC", "CCC+GCTA", "CCC+TACG"],
         "site_type": ["acceptor", "acceptor", "donor", "donor"],
     })

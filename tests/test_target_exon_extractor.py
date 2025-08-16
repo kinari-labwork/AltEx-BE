@@ -3,7 +3,8 @@ import pandas as pd
 from altex_aid.target_exon_extractor import (
     extract_splice_acceptor_regions,
     extract_splice_donor_regions,
-    extract_target_exon,
+    explode_classified_refflat,
+    format_classified_refflat_to_bed,
 )
 
 
@@ -31,7 +32,8 @@ def test_extract_target_exon():
         }
     )
 
-    output_data = extract_target_exon(input_data)
+    output_data = explode_classified_refflat(input_data)
+    output_data = format_classified_refflat_to_bed(output_data)
     expected_output = pd.DataFrame(
         {
             "chrom": ["chr1", "chr1", "chr2", "chr2"],
