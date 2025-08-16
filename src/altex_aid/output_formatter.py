@@ -1,5 +1,6 @@
 from altex_aid.sgrna_designer import BaseEditor
 import pandas as pd
+import uuid
 
 
 def convert_empty_list_into_na(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
@@ -110,4 +111,11 @@ def add_gene_info_to_df(exploded_sgrna_df: pd.DataFrame, exploded_classified_ref
     # uuidをキーとしてマージ
     exploded_sgrna_df = pd.merge(exploded_sgrna_df, gene_info, on="uuid", how="left")
 
+    return exploded_sgrna_df
+
+def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Purpose: ここまでの処理は、情報のマージのために各エキソンに対してユニークなUUIDを設定していたが、ここからはsgRNAごとにユニークなUUIDを設定する
+    """
+    exploded_sgrna_df['uuid'] = [uuid.uuid4().hex for _ in range(len(exploded_sgrna_df))]
     return exploded_sgrna_df
