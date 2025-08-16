@@ -36,8 +36,8 @@ def format_classified_refflat_to_bed(exploded_classified_refflat: pd.DataFrame) 
             "exontype",
             "exon_position",
             "uuid"
-        ].copy()
-    ]
+        ]
+    ].copy()
     # 編集のために、リストになっている列を展開する
     exploded_classified_refflat.loc[:, 'score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
