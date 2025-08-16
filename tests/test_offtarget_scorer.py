@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from altex_aid.offtarget_scorer import (
     add_crisprdirect_url_to_df,
     calculate_offtarget_site_count
@@ -30,28 +31,37 @@ def test_add_crisprdirect_url_to_df_robust_success():
 
 def test_calculate_offtarget_site_count():
     """
-    ダミーのtest.fastaの中身
-    >chr1
-    AGCTAGCTAGCTAGCTAGCT
-    >chr2
-    GATTACAGATTACAGATTACA
+    テスト用のFastaファイル
+    >chr1_test
+    CCCCCGATTACAGATTACAGATTACAGGGGGGATTACAGATTACAGATTACACCCCC
+    >chr2_test
+    AAAAAGCTAGCTAGCTAGCTAGCTATTTTTGATTACAGATTACAGATTACA
     """
+
+    fasta_path = Path("tests/data/test2.fa")
+
     input_df = pd.DataFrame({
-        "uuid": ["id_01", "id_02", "id_03", "id_04", "id_05"],
+        "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GAT+TACA",      # test.fa に3回出現
-            "A+GCT",         # test.fa に5回出現
-            "TTT+TTTT",      # test.fa には出現しない (0回)
-            "GAT+TACA",      # 重複ケース
-            pd.NA           # 欠損値ケース
+            "GATTACAGATTACAGATTACA",      # 21-mer, 3回出現
+            "AAAAAAAAAAAAAAAAAAAAA",      # 21-mer, 0回出現
+            "GATTACAGATTACAGATTACA",      # 重複ケース
+            pd.NA
         ]
     })
+    
     expected_df = pd.DataFrame({
-    "uuid": ["id_01", "id_02", "id_03", "id_04", "id_05"],
-    "sgrna_target_sequence": [
-        "GAT+TACA", "A+GCT", "TTT+TTTT", "GAT+TACA", pd.NA
-    ],
-    "pam+20bp_exact_match_count": [3.0, 5.0, 0.0, 3.0, np.nan]
+        "uuid": ["id_A", "id_B", "id_C", "id_D"],
+        "sgrna_target_sequence": [
+            "GATTACAGATTACAGATTACA",
+            "AAAAAAAAAAAAAAAAAAAAA",
+            "GATTACAGATTACAGATTACA",
+            pd.NA
+        ],
+        "pam+20bp_exact_match_count": [3.0, 0.0, 3.0, np.nan]
     })
-    output_df = calculate_offtarget_site_count(input_df, "tests/data/test.fasta")
+
+    output_df = calculate_offtarget_site_count(input_df, fasta_path)
+
+    # Assert: 結果を検証
     pd.testing.assert_frame_equal(output_df, expected_df)

@@ -19,7 +19,8 @@ def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: 
     """
     Purpose: とりあえず 20bp + PAMの完全一致のマッチ数を計算する
     """
-    aligner = mp.Aligner(str(fasta_path), preset="sr")
+    # パラメータを調整してAlignerを初期化
+    aligner = mp.Aligner(str(fasta_path), k=21, w=1)
 
     # 1. 計算対象の列を準備（+を削除し、大文字に統一）
     sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.upper()
@@ -28,12 +29,17 @@ def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: 
     # 2. ユニークな各配列に対してオフターゲット数を計算し、結果を辞書に保存
     offtarget_counts = {}
     for seq in unique_sequences:
+        print(f"--- Processing sequence: {seq} (k=21, w=1) ---") # デバッグ出力
         exact_match_count = 0
         for hit in aligner.map(seq):
+            # デバッグ出力: hitオブジェクトの情報を表示
+            print(f"  Hit: mlen={hit.mlen}, NM={hit.NM}, ctg={hit.ctg}, r_st={hit.r_st}, r_en={hit.r_en}, q_st={hit.q_st}, q_en={hit.q_en}, strand={hit.strand}, cs={hit.cs}")
+            # 完全一致の条件をチェック
             if hit.mlen == len(seq) and hit.NM == 0:
                 exact_match_count += 1
             if exact_match_count > 10:
                 break
+        print(f"  >>> Found {exact_match_count} exact matches for {seq}") # デバッグ出力
         offtarget_counts[seq] = exact_match_count
 
     # 3. 計算結果を元のDataFrameにマップする
