@@ -487,6 +487,13 @@ def design_sgrna_for_base_editors(
         # 3. sgRNAの開始位置と終了位置をゲノム上の位置に変換する
         temp_df = convert_sgrna_start_end_position_to_position_in_chromosome(temp_df)
 
+        # concatで余計な列の重複が生じないようにするため、新たに生成された列だけを抽出する
+        newcol = [
+            col for col in temp_df.columns 
+            if col.startswith("acceptor_sgrna") or col.startswith("donor_sgrna")
+        ]
+        temp_df = temp_df[newcol]
+
         # 4. 列名にbase_editorの名前を付ける
         temp_df = temp_df.rename(
             columns={
@@ -501,7 +508,6 @@ def design_sgrna_for_base_editors(
 
     # すべての結果を結合
     final_result = pd.concat(results, axis=1)
-    final_result = final_result.loc[:, ~final_result.columns.duplicated()]
     return final_result.reset_index(drop=True)
 
 # 論文用には、各BEのsgRNAを1行にまとめたほうが便利ではあるが、ユーザーにはそれは必要ない。のちのexplodeを考えて、main.pyではdictで返すようにする

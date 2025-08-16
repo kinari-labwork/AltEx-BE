@@ -76,3 +76,5 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: li
     # 'base_editor_name'をキーとしてマージ（結合）
     exploded_sgrna_df = pd.merge(exploded_sgrna_df, be_df, on="base_editor_name", how="left")
     return exploded_sgrna_df
+
+def add_gene
