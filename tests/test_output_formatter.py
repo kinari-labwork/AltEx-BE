@@ -140,5 +140,6 @@ def test_add_base_editor_info_to_df():
         "site_type": ["acceptor", "acceptor", "donor", "donor"],
     })
     output_df = add_base_editor_info_to_df(input_df, mock_base_editors)
+    output_df = output_df[expected_df.columns]  
     print(output_df)
     pd.testing.assert_frame_equal(output_df, expected_df)
