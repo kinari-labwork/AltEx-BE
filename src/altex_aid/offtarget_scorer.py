@@ -15,10 +15,9 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     exploded_sgrna_df["crisprdirect_url"] = base_url + target_sequences + "&pam=" + pams + "&db=" + assembly_name
     return exploded_sgrna_df
 
-def calculate_offtarget_site_count_optimized(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
+def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
-    DataFrameから直接ユニークな配列を処理することで、
-    中間辞書の作成を省略した最終的な最適化版。
+    Purpose: とりあえず 20bp + PAMの完全一致のマッチ数を計算する
     """
     aligner = mp.Aligner(str(fasta_path), preset="sr")
 
@@ -37,8 +36,7 @@ def calculate_offtarget_site_count_optimized(exploded_sgrna_df: pd.DataFrame, fa
                 break
         offtarget_counts[seq] = exact_match_count
 
-    # 3. 計算結果を元のDataFrameにマップ（対応付け）する
-    #    .map()は辞書のキーを使って各行に対応する値を効率的に割り当てる
+    # 3. 計算結果を元のDataFrameにマップする
     exploded_sgrna_df["pam+20bp_exact_match_count"] = sgrna_sequences.map(offtarget_counts)
 
     return exploded_sgrna_df
