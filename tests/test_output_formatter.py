@@ -3,9 +3,7 @@ from altex_aid.output_formatter import (
     convert_empty_list_into_na,
     prepare_melted_df,
     explode_sgrna_df,
-    add_base_editor_info_to_df,
-    add_gene_info_to_df,
-    update_uuid_unique_to_every_sgrna
+    add_base_editor_info_to_df
 )
 from altex_aid.sgrna_designer import BaseEditor
 
