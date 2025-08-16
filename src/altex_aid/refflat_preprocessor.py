@@ -219,6 +219,36 @@ def add_exon_position_flags(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat = refflat.apply(flip_first_last_to_minus_strand, axis=1)
     return refflat
 
+def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
+    """
+    各エキソンごとに 'cds_exon', 'cds_edge_exon', 'utr_exon' のラベルを付与し、cds_infoカラムに格納する。
+    """
+    def label_exons(row):
+        # non-coding遺伝子はすべてutr_exon
+        if row["coding"] == "non-coding":
+            return ["utr_exon" for _ in row["exons"]]
+        cds_start = row["cdsStart"]
+        cds_end = row["cdsEnd"]
+        exon_starts = row["exonStarts"]
+        exon_ends = row["exonEnds"]
+        labels = []
+        for start, end in zip(exon_starts, exon_ends):
+            if end <= cds_start or start >= cds_end:
+                label = "utr_exon"
+            elif (start < cds_start < end) and (start < cds_end < end):
+                label = "cds_edge_exon_start_end"
+            elif start < cds_start < end:
+                label = "cds_edge_exon_start"
+            elif start < cds_end < end:
+                label = "cds_edge_exon_end"
+            else:
+                label = "cds_exon"
+            labels.append(label)
+        return labels
+
+    refflat["cds_info"] = refflat.apply(label_exons, axis=1)
+    return refflat
+
 def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
     """
     Validate the processed refFlat DataFrame.
@@ -246,6 +276,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = annotate_cording_information(refflat)
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
+    refflat = annotate_utr_and_cds_exons(refflat)
     
     validate_filtered_refflat(refflat, interest_genes)
     
