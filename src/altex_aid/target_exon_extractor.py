@@ -13,6 +13,7 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame) -> pd.DataFrame
     classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
     # 重複を削除し一方だけ残す
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
+    classified_refflat['uuid'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
     return classified_refflat.reset_index(drop=True)
 
 def format_classified_refflat_to_bed(exploded_classified_refflat: pd.DataFrame) -> pd.DataFrame:
@@ -33,12 +34,13 @@ def format_classified_refflat_to_bed(exploded_classified_refflat: pd.DataFrame) 
             "exonEnds",
             "exontype",
             "exon_position",
+            "uuid"
         ]
     ]
     # 編集のために、リストになっている列を展開する
-    exploded_classified_refflat['name'] = [uuid.uuid4().hex for _ in range(len(exploded_classified_refflat))]  # 一意のIDを生成
     exploded_classified_refflat['score'] = 0  # BED形式のスコア列を追加
     #BED に合わせたカラム順に並べ替え
+    exploded_classified_refflat = exploded_classified_refflat.rename(columns={"uuid": "name"})
     classified_refflat = exploded_classified_refflat[["chrom", "exonStarts", "exonEnds", "name", "score", "strand", "exontype", "exon_position"]]
     return classified_refflat.reset_index(drop=True)
 
