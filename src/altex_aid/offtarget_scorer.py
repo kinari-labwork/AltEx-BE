@@ -21,8 +21,8 @@ def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: 
     """
     aligner = mp.Aligner(str(fasta_path), preset="sr")
 
-    # 1. 計算対象の列を準備（+を削除し、小文字に統一）
-    sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.lower()
+    # 1. 計算対象の列を準備（+を削除し、大文字に統一）
+    sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.upper()
 
     unique_sequences = sgrna_sequences.dropna().unique()
     # 2. ユニークな各配列に対してオフターゲット数を計算し、結果を辞書に保存
