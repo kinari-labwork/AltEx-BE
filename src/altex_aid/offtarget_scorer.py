@@ -21,6 +21,8 @@ def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: 
     """
     # パラメータを調整してAlignerを初期化
     aligner = mp.Aligner(str(fasta_path), preset = "sr" ,k=23, w=1)
+    if not aligner:
+        raise Exception(f"Error: failed to load the index from {fasta_path}")
 
     # 1. 計算対象の列を準備（+を削除し、大文字に統一）
     sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.upper()
