@@ -3,10 +3,10 @@ import numpy as np
 from pathlib import Path
 from altex_aid.offtarget_scorer import (
     add_crisprdirect_url_to_df,
-    calculate_offtarget_site_count
+    calculate_offtarget_site_count_simple
 )
 
-def test_add_crisprdirect_url_to_df_robust_success():
+def test_add_crisprdirect_url_to_df():
     # 1. Arrange: テストデータの準備
     input_df = pd.DataFrame({
         "sgrna_target_sequence": ["GAT+TACA", "ATA+TATA"],
@@ -43,9 +43,9 @@ def test_calculate_offtarget_site_count():
     input_df = pd.DataFrame({
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GGGGATTACAGATTACAGATTACA",      # 23-mer, 3回出現
-            "AAAAAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
-            "GGGGATTACAGATTACAGATTACA",      # 重複ケース
+            "GGG+GATTACAGATTACAGATTACA",      # 23-mer, 3回出現
+            "AAA+AAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
+            "ggg+gattacagattacagattaca",      # 小文字にした場合のテストケース
             pd.NA
         ]
     })
@@ -53,15 +53,16 @@ def test_calculate_offtarget_site_count():
     expected_df = pd.DataFrame({
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GGGGATTACAGATTACAGATTACA",
-            "AAAAAAAAAAAAAAAAAAAAAAAA",
-            "GGGGATTACAGATTACAGATTACA",
+            "GGG+GATTACAGATTACAGATTACA",
+            "AAA+AAAAAAAAAAAAAAAAAAAAA",
+            "ggg+gattacagattacagattaca",
             pd.NA
         ],
         "pam+20bp_exact_match_count": [3.0, 0.0, 3.0, np.nan]
     })
 
-    output_df = calculate_offtarget_site_count(input_df, fasta_path)
+    output_df = calculate_offtarget_site_count_simple(input_df, fasta_path)
+    print(output_df)
 
     # Assert: 結果を検証
     pd.testing.assert_frame_equal(output_df, expected_df)

@@ -1,6 +1,6 @@
 import pandas as pd
-import mappy as mp
 from pathlib import Path
+import re
 
 def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
@@ -15,36 +15,37 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     exploded_sgrna_df["crisprdirect_url"] = base_url + target_sequences + "&pam=" + pams + "&db=" + assembly_name
     return exploded_sgrna_df
 
-def calculate_offtarget_site_count(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
+def calculate_offtarget_site_count_simple(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
-    Purpose: とりあえず 20bp + PAMの完全一致のマッチ数を計算する
+    Purpose: exploded_sgrna_dfにオフターゲットサイトのカウントを追加する
+    Parameters: exploded_sgrna_df (pd.DataFrame): 入力のDataFrame
+                fasta_path (Path): FASTAファイルのパス
+    Return: pd.DataFrame: オフターゲットサイトのカウントを追加したDataFrame
     """
-    # パラメータを調整してAlignerを初期化
-    aligner = mp.Aligner(str(fasta_path), preset = "sr" ,k=23, w=1)
-    if not aligner:
-        raise Exception(f"Error: failed to load the index from {fasta_path}")
-
-    # 1. 計算対象の列を準備（+を削除し、大文字に統一）
+    # + を除去し、全て大文字に変換
     sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.upper()
-
     unique_sequences = sgrna_sequences.dropna().unique()
-    # 2. ユニークな各配列に対してオフターゲット数を計算し、結果を辞書に保存
-    offtarget_counts = {}
-    for seq in unique_sequences:
-        print(f"--- Processing sequence: {seq} (k=23, w=1) ---") # デバッグ出力
-        exact_match_count = 0
-        for hit in aligner.map(seq):
-            # デバッグ出力: hitオブジェクトの情報を表示
-            print(f"  Hit: mlen={hit.mlen}, NM={hit.NM}, ctg={hit.ctg}, r_st={hit.r_st}, r_en={hit.r_en}, q_st={hit.q_st}, q_en={hit.q_en}, strand={hit.strand}, cs={hit.cs}")
-            # 完全一致の条件をチェック
-            if hit.mlen == len(seq) and hit.NM == 0:
-                exact_match_count += 1
-            if exact_match_count > 10:
-                break
-        print(f"  >>> Found {exact_match_count} exact matches for {seq}") # デバッグ出力
-        offtarget_counts[seq] = exact_match_count
+    compiled_patterns = {seq: re.compile(f"(?={seq})") for seq in unique_sequences}
+    offtarget_count_dict = {seq:0 for seq in unique_sequences}
+    print(offtarget_count_dict)
 
-    # 3. 計算結果を元のDataFrameにマップする
-    exploded_sgrna_df["pam+20bp_exact_match_count"] = sgrna_sequences.map(offtarget_counts)
+    with open(fasta_path, 'r') as fasta_file:
+        current_chromosome = []
+        chromosome_sequence = ""
+        for line in fasta_file:
+            if line.startswith(">"):
+                if current_chromosome:
+                    chromosome_sequence = "".join(current_chromosome)
+                for seq, pattern in compiled_patterns.items():
+                    offtarget_count_dict[seq] += len(list(pattern.finditer(chromosome_sequence)))
+                current_chromosome = []
+            else:
+                # FASTA側も大文字に変換する
+                current_chromosome.append(line.strip().upper())
+        if current_chromosome:
+            for seq, pattern in compiled_patterns.items():
+                offtarget_count_dict[seq] += len(list(pattern.finditer("".join(current_chromosome))))
+    
+    exploded_sgrna_df["pam+20bp_exact_match_count"] = sgrna_sequences.map(offtarget_count_dict)
 
     return exploded_sgrna_df
