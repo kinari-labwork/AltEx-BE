@@ -33,9 +33,9 @@ def test_calculate_offtarget_site_count():
     """
     テスト用のFastaファイル
     >chr1_test
-    CCCCCGATTACAGATTACAGATTACAGGGGGGATTACAGATTACAGATTACACCCCC
+    CCCCCGGGGATTACAGATTACAGATTACAGGGGGGATTACAGATTACAGATTACACCCCC
     >chr2_test
-    AAAAAGCTAGCTAGCTAGCTAGCTATTTTTGATTACAGATTACAGATTACA
+    AAAAAGCTAGCTAGCTAGCTAGCTATTTTTGGGGATTACAGATTACAGATTACA
     """
 
     fasta_path = Path("tests/data/test2.fa")
@@ -43,9 +43,9 @@ def test_calculate_offtarget_site_count():
     input_df = pd.DataFrame({
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GATTACAGATTACAGATTACA",      # 21-mer, 3回出現
-            "AAAAAAAAAAAAAAAAAAAAA",      # 21-mer, 0回出現
-            "GATTACAGATTACAGATTACA",      # 重複ケース
+            "GGGGATTACAGATTACAGATTACA",      # 23-mer, 3回出現
+            "AAAAAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
+            "GGGGATTACAGATTACAGATTACA",      # 重複ケース
             pd.NA
         ]
     })
@@ -53,9 +53,9 @@ def test_calculate_offtarget_site_count():
     expected_df = pd.DataFrame({
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GATTACAGATTACAGATTACA",
-            "AAAAAAAAAAAAAAAAAAAAA",
-            "GATTACAGATTACAGATTACA",
+            "GGGGATTACAGATTACAGATTACA",
+            "AAAAAAAAAAAAAAAAAAAAAAAA",
+            "GGGGATTACAGATTACAGATTACA",
             pd.NA
         ],
         "pam+20bp_exact_match_count": [3.0, 0.0, 3.0, np.nan]
