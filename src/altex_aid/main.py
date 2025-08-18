@@ -9,6 +9,8 @@ from . import (
     splicing_event_classifier,
     target_exon_extractor,
     sgrna_designer,
+    output_formatter,
+    offtarget_scorer
 )
 
 logging.basicConfig(
@@ -172,7 +174,7 @@ def main():
     del refflat
 
     print("Extracting target exons...")
-    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
@@ -181,12 +183,20 @@ def main():
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
     print("designing sgRNAs...")
-    target_exon_df_with_sgrna = sgrna_designer.design_sgrna_for_base_editors(
+    target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
         base_editors=base_editors
     )
 
-    target_exon_df_with_sgrna.to_pickle(output_directory / "target_exon_df_with_sgrna.pickle")
+    logging.info("Formatting output...")
+    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, exploded_classified_refflat, base_editors)
+    del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
+
+    logging.info("Scoring off-targets...")
+    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, fasta_path)
+
+    logging.info("Saving results...")
+    exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
 
 if __name__ == "__main__":
     main()
