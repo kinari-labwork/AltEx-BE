@@ -49,3 +49,11 @@ def calculate_offtarget_site_count_simple(exploded_sgrna_df: pd.DataFrame, fasta
     exploded_sgrna_df["pam+20bp_exact_match_count"] = sgrna_sequences.map(offtarget_count_dict)
 
     return exploded_sgrna_df
+
+def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_path: Path) -> pd.DataFrame:
+    """
+    Purpose: このモジュールのラップ関数
+    """
+    exploded_sgrna_df = add_crisprdirect_url_to_df(exploded_sgrna_df, assembly_name)
+    exploded_sgrna_df = calculate_offtarget_site_count_simple(exploded_sgrna_df, fasta_path)
+    return exploded_sgrna_df
