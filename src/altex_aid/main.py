@@ -168,7 +168,7 @@ def main():
             ],
         )
 
-    print("running processing of refFlat file...")
+    logging.info("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
     refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
 
