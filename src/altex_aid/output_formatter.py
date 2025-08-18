@@ -119,3 +119,29 @@ def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.Dat
     """
     exploded_sgrna_df['uuid'] = [uuid.uuid4().hex for _ in range(len(exploded_sgrna_df))]
     return exploded_sgrna_df
+
+def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame], 
+                  exploded_classified_refflat: pd.DataFrame, 
+                  base_editors: list[BaseEditor]) -> pd.DataFrame:
+    """
+    Purpose: このモジュールのラップ関数
+    """
+    # 空のリストをNaNに変換
+    target_exon_with_sgrna_dict = convert_empty_list_into_na(target_exon_with_sgrna_dict)
+
+    # sgRNAのdfをexplodeして1列-1sgRNAに変換
+    exploded_sgrna_df = explode_sgrna_df(target_exon_with_sgrna_dict)
+
+    # exploded_sgrna_dfの検証
+    validate_exploded_df(exploded_sgrna_df)
+
+    # BaseEditorの情報を追加
+    exploded_sgrna_df = add_base_editor_info_to_df(exploded_sgrna_df, base_editors)
+
+    # 遺伝子情報を追加
+    exploded_sgrna_df = add_gene_info_to_df(exploded_sgrna_df, exploded_classified_refflat)
+
+    # UUIDをsgRNAごとにユニークに更新
+    exploded_sgrna_df = update_uuid_unique_to_every_sgrna(exploded_sgrna_df)
+
+    return exploded_sgrna_df
