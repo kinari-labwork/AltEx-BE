@@ -136,6 +136,10 @@ def main():
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
         base_editors.extend(for_cli_setting.parse_base_editors(args))
 
+    assembly_name = str(args.assembly_name)
+    if assembly_name not in for_cli_setting.validate_genome_assembly_name_for_crispr_direct(assembly_name):
+        raise Warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
+
     if not base_editors:
         raise ValueError("No base editors specified. Please provide at least one base editor.")
 
@@ -193,7 +197,7 @@ def main():
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
 
     logging.info("Scoring off-targets...")
-    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, fasta_path)
+    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
 
     logging.info("Saving results...")
     exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
