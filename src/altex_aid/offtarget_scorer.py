@@ -27,7 +27,6 @@ def calculate_offtarget_site_count_simple(exploded_sgrna_df: pd.DataFrame, fasta
     unique_sequences = sgrna_sequences.dropna().unique()
     compiled_patterns = {seq: re.compile(f"(?={seq})") for seq in unique_sequences}
     offtarget_count_dict = {seq:0 for seq in unique_sequences}
-    print(offtarget_count_dict)
 
     with open(fasta_path, 'r') as fasta_file:
         current_chromosome = []
