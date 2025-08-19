@@ -60,17 +60,17 @@ def join_sequence_to_single_exon_df(
     """
 
     acceptor_bed_with_sequences = acceptor_bed_with_sequences.rename(
-        columns = {"chromStart": "chromStart_acceptor", "chromEnd": "chromEnd_acceptor"})
+        columns = {"name":"uuid","chromStart": "chromStart_acceptor", "chromEnd": "chromEnd_acceptor"})
     
     donor_bed_with_sequences = donor_bed_with_sequences.rename(
-        columns = {"chromStart": "chromStart_donor", "chromEnd": "chromEnd_donor"})
+        columns = {"name":"uuid","chromStart": "chromStart_donor", "chromEnd": "chromEnd_donor"})
 
     for label, bed in [
         ("acceptor", acceptor_bed_with_sequences),
         ("donor", donor_bed_with_sequences),
     ]:
         single_exon_df = single_exon_df.merge(
-            bed[["name", f"chromStart_{label}", f"chromEnd_{label}", "sequence"]], on="name", how="left"
+            bed[["uuid", f"chromStart_{label}", f"chromEnd_{label}", "sequence"]], on="uuid", how="left"
         ).rename(columns={"sequence": f"{label}_exon_intron_boundary_±25bp_sequence"})
     return single_exon_df
 
