@@ -55,7 +55,7 @@ def test_join_sequence_to_single_exon_df():
             "chrom": ["chr1", "chr2"],
             "chromStart": [0, 5],
             "chromEnd": [4, 12],
-            "name": ["UUID1", "UUID2"],
+            "uuid": ["UUID1", "UUID2"],
             "score": [0, 0],
             "strand": ["+", "-"],
         }
@@ -75,7 +75,7 @@ def test_join_sequence_to_single_exon_df():
             "chrom": ["chr1", "chr2"],
             "chromStart": [0, 5],
             "chromEnd": [4, 12],
-            "name": ["UUID1", "UUID2"],
+            "uuid": ["UUID1", "UUID2"],
             "score": [0, 0],
             "strand": ["+", "-"],
             "chromStart_acceptor": [0, 5],
