@@ -19,7 +19,19 @@ def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     Return : melted_df: 整形後のデータフレーム
     """
 
-    foundation_cols = ["chrom", "exonStarts", "exonEnds", "strand", "exontype", "exon_position", "base_editor_name"]
+    foundation_cols = [
+        "geneName",
+        "chrom",
+        "exonStarts",
+        "exonEnds",
+        "strand",
+        "exonlengths",
+        "coding",
+        "flame",
+        "exontype",
+        "exon_position",
+        "uuid"
+        ]
     df_list = []
     for site in ["acceptor", "donor"]:
         cols = [col for col in target_exon_with_sgrna_df.columns if col.startswith(site)]
@@ -30,7 +42,7 @@ def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
         )
         site_df = site_df.dropna(subset=["sgrna_target_sequence"])
         site_df["site_type"] = site
-        df_list.append(site_df)
+        df_list.append(site_df.reset_index(drop=True))
     melted_df = pd.concat(df_list, ignore_index=True)
     return melted_df
 
@@ -48,8 +60,8 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
     # 各BEに対して、sgRNAのdfを1列-1sgRNAに変換
     exploded_dfs = []
     for be, df in target_exon_with_sgrna_dict.items():
-        df["base_editor_name"] = be
         melted_df = prepare_melted_df(df)
+        melted_df["base_editor_name"] = be
         sgrna_cols = [col for col in melted_df.columns if col.startswith("sgrna_")]
         melted_df = melted_df.explode(column=sgrna_cols)
         exploded_dfs.append(melted_df)
@@ -57,7 +69,7 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
     exploded_sgrna_df = pd.concat(exploded_dfs, ignore_index=True)
     return exploded_sgrna_df
 
-def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: list[BaseEditor]) -> pd.DataFrame:
+def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
     """
     Purpose: exploded_sgrna_dfにBaseEditorの情報を追加する
     """
@@ -70,47 +82,12 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: li
             "base_editor_editing_window_end": be.editing_window_end_in_grna,
             "base_editor_type": be.base_editor_type,
         }
-        for be in base_editors
+        for be in base_editors.values()
     ]
     be_df = pd.DataFrame(be_info)
 
     # 'base_editor_name'をキーとしてマージ（結合）
     exploded_sgrna_df = pd.merge(exploded_sgrna_df, be_df, on="base_editor_name", how="left")
-    return exploded_sgrna_df
-
-def add_gene_info_to_df(exploded_sgrna_df: pd.DataFrame, exploded_classified_refflat: pd.DataFrame) -> pd.DataFrame:
-    """
-    Purpose: exploded_sgrna_df に bed 化の際に欠落した遺伝子情報を追加する
-    """
-    # exploded_classified_refflatの列名を修正
-    gene_info = exploded_classified_refflat[
-        [
-            "geneName",
-            "exonlengths",
-            "flame",
-            "cds_info",
-            "uuid"
-        ]
-    ]
-
-    gene_info = gene_info.rename(
-        columns={
-            "geneName": "gene_name",
-            "exonlengths": "exon_length",
-        }
-    )
-    exploded_sgrna_df = exploded_sgrna_df.rename(
-        columns={
-            "exonStarts": "exon_start",
-            "exonEnds": "exon_end",
-            "name": "uuid",
-            "exontype": "exon_type"
-        }
-    )
-
-    # uuidをキーとしてマージ
-    exploded_sgrna_df = pd.merge(exploded_sgrna_df, gene_info, on="uuid", how="left")
-
     return exploded_sgrna_df
 
 def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
@@ -121,8 +98,7 @@ def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.Dat
     return exploded_sgrna_df
 
 def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame], 
-                  exploded_classified_refflat: pd.DataFrame, 
-                  base_editors: list[BaseEditor]) -> pd.DataFrame:
+                  base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
     """
     Purpose: このモジュールのラップ関数
     """
@@ -131,17 +107,19 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
 
     # sgRNAのdfをexplodeして1列-1sgRNAに変換
     exploded_sgrna_df = explode_sgrna_df(target_exon_with_sgrna_dict)
+    print(exploded_sgrna_df.columns)
 
     # exploded_sgrna_dfの検証
     validate_exploded_df(exploded_sgrna_df)
 
     # BaseEditorの情報を追加
     exploded_sgrna_df = add_base_editor_info_to_df(exploded_sgrna_df, base_editors)
-
-    # 遺伝子情報を追加
-    exploded_sgrna_df = add_gene_info_to_df(exploded_sgrna_df, exploded_classified_refflat)
+    print(exploded_sgrna_df.columns)
 
     # UUIDをsgRNAごとにユニークに更新
     exploded_sgrna_df = update_uuid_unique_to_every_sgrna(exploded_sgrna_df)
 
-    return exploded_sgrna_df
+    # geneNameを基にソート
+    exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exon_position"])
+
+    return exploded_sgrna_df.reset_index(drop=True)
