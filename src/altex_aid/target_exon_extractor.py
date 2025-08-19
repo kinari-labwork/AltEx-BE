@@ -99,4 +99,4 @@ def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataF
         raise ValueError("there are no exons in your interested genes which have targetable splicing events")
     splice_acceptor_single_exon_df = extract_splice_acceptor_regions(target_exon_df, 25)
     splice_donor_single_exon_df = extract_splice_donor_regions(target_exon_df, 25)
-    return target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat
+    return splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat

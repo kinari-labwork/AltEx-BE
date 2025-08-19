@@ -178,11 +178,11 @@ def main():
     del refflat
 
     print("Extracting target exons...")
-    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
-        target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
+        exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 

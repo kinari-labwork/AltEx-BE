@@ -6,10 +6,9 @@ from altex_aid.target_exon_extractor import (
 
 classified_refflat = pd.read_pickle("data/classified_exon_refflat.pkl")
 
-target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = wrap_extract_target_exon(classified_refflat)
+splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = wrap_extract_target_exon(classified_refflat)
 
 # BED形式で保存するためにタブ区切りで保存
-target_exon_df.to_pickle("data/skipped_or_unique_exon_df.pkl")
 splice_acceptor_single_exon_df.to_csv(
     "data/splice_acceptor_single_exon.bed", sep="\t", index=False, header=False
 )
