@@ -5,7 +5,7 @@ from altex_aid.sequence_annotator import (
     join_sequence_to_single_exon_df,
 )
 
-target_exons_df = pd.read_pickle("data/skipped_or_unique_exon_df.pkl")
+target_exons_df = pd.read_pickle("data/exploded_classified_refflat.pkl")
 splice_acceptor_bed = pd.read_csv(
     "data/splice_acceptor_single_exon.bed", sep="\t", header=None
 )
