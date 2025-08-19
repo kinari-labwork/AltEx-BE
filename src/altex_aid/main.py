@@ -193,7 +193,7 @@ def main():
     )
 
     logging.info("Formatting output...")
-    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, exploded_classified_refflat, base_editors)
+    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
 
     logging.info("Scoring off-targets...")
