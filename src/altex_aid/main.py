@@ -137,7 +137,7 @@ def main():
         base_editors.extend(for_cli_setting.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)
-    if assembly_name not in for_cli_setting.validate_genome_assembly_name_for_crispr_direct(assembly_name):
+    if not for_cli_setting.validate_genome_assembly_name_for_crispr_direct(assembly_name):
         raise Warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
 
     if not base_editors:
