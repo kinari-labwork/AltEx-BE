@@ -96,15 +96,15 @@ def load_supported_assemblies() -> list[str]:
         supported_assemblies = [line.strip() for line in f if line.strip() and not line.startswith("#")]
     return supported_assemblies
 
-def validate_genome_assembly_name_for_crispr_direct(assembly_name:str):
+def validate_genome_assembly_name_for_crispr_direct(assembly_name:str) -> bool:
     """
     Purpose: ユーザーが入力したアセンブリ名がCRISPRdirectでサポートされているかを確認する。
     Parameter: 
             assembly_name (str): ユーザーが入力したアセンブリ名
             supported_assemblies (list[str]): CRISPRdirectでサポートされているアセンブリ名のリスト 長いので外部txtとして保存
-    return : ログメッセージに警告を出力する
+    return : bool
     """
     supported_assemblies = load_supported_assemblies()
     if assembly_name not in supported_assemblies:
-        logging.warning(f"Assembly name '{assembly_name}' is not supported by CRISPRdirect. urls to CRISPR direct is not available.")
-    return
+        return False
+    return True
