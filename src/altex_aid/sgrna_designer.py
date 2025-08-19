@@ -474,15 +474,19 @@ def design_sgrna_for_base_editors(
     results = []  # 各BaseEditorの結果を格納するリスト
 
     foundation_cols = [
+        "geneName",
         "chrom",
         "exonStarts",
         "exonEnds",
         "strand",
+        "exonlengths",
+        "coding",
+        "flame",
         "exontype",
         "exon_position",
-        "name",
         "acceptor_exon_intron_boundary_±25bp_sequence",
         "donor_exon_intron_boundary_±25bp_sequence",
+        "uuid"
     ]
     foundation_cols_df = target_exon_df[foundation_cols].copy()
 
