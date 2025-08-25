@@ -93,7 +93,7 @@ def load_supported_assemblies() -> list[str]:
     # このファイルと同じディレクトリにあるtxtを参照
     txt_path = Path(__file__).parent / "crispr_direct_supported_assemblies.txt"
     with open(txt_path, encoding="utf-8") as f:
-        supported_assemblies = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        supported_assemblies = {line.strip() for line in f if line.strip() and not line.startswith("#")}
     return supported_assemblies
 
 def validate_genome_assembly_name_for_crispr_direct(assembly_name:str) -> bool:
