@@ -96,7 +96,7 @@ def load_supported_assemblies() -> list[str]:
         supported_assemblies = {line.strip() for line in f if line.strip() and not line.startswith("#")}
     return supported_assemblies
 
-def validate_genome_assembly_name_for_crispr_direct(assembly_name:str) -> bool:
+def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> bool:
     """
     Purpose: ユーザーが入力したアセンブリ名がCRISPRdirectでサポートされているかを確認する。
     Parameter: 
