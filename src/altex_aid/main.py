@@ -10,12 +10,8 @@ from . import (
     target_exon_extractor,
     sgrna_designer,
     output_formatter,
-    offtarget_scorer
-)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    offtarget_scorer,
+    logging_config # noqa: F401
 )
 
 

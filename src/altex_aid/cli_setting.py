@@ -2,11 +2,6 @@ from altex_aid.sgrna_designer import BaseEditor
 import argparse
 import pandas as pd
 from pathlib import Path
-import logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 
 def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:

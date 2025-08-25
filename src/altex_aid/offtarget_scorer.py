@@ -3,11 +3,7 @@ from pathlib import Path
 import re
 import logging
 from tqdm import tqdm
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from . import logging_config # noqa: F401
 
 def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """

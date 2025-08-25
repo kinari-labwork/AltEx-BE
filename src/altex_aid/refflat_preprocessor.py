@@ -3,10 +3,7 @@ from __future__ import annotations
 import re
 import pandas as pd
 import logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from . import logging_config # noqa: F401
 
 def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
