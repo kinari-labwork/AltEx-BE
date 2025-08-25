@@ -1,6 +1,8 @@
 from altex_aid.sgrna_designer import BaseEditor
 import pandas as pd
 import uuid
+import logging
+from . import logging_config # noqa: F401
 
 
 def convert_empty_list_into_na(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
@@ -46,12 +48,14 @@ def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     melted_df = pd.concat(df_list, ignore_index=True)
     return melted_df
 
-def validate_exploded_df(melted_df: pd.DataFrame) -> None:
+def is_sgrna_designed(melted_df: pd.DataFrame) -> bool:
     """
     Purpose: Validate the exploded sgRNA DataFrame.
     """
     if melted_df.empty:
-        raise ValueError("there are no designed sgRNAs for your interest gene and your base editor.")
+        logging.warning("there are no designed sgRNAs for your interest gene and your base editor.")
+        return False
+    return True
 
 def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
@@ -109,7 +113,8 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
     exploded_sgrna_df = explode_sgrna_df(target_exon_with_sgrna_dict)
 
     # exploded_sgrna_dfの検証
-    validate_exploded_df(exploded_sgrna_df)
+    if not is_sgrna_designed(exploded_sgrna_df):
+        return pd.DataFrame()  # 空のDataFrameを返す
 
     # BaseEditorの情報を追加
     exploded_sgrna_df = add_base_editor_info_to_df(exploded_sgrna_df, base_editors)

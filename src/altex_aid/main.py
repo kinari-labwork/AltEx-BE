@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import logging
+import sys
 from . import (
     cli_setting,
     refflat_preprocessor,
@@ -175,6 +176,9 @@ def main():
 
     print("Extracting target exons...")
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
+        logging.warning("No target exons found for the given genes, exiting")
+        sys.exit(0)
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
@@ -190,6 +194,9 @@ def main():
 
     logging.info("Formatting output...")
     formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors)
+    if formatted_exploded_sgrna_df.empty:
+        logging.warning("No sgRNAs could be designed for given genes and Base Editors, Exiting")
+        sys.exit(0)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
 
     logging.info("Scoring off-targets...")
