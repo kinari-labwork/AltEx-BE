@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 from . import (
-    for_cli_setting,
+    cli_setting,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
@@ -115,7 +115,7 @@ def main():
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_directory)
 
-    for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
+    cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
     interest_gene_list = args.gene_symbols + args.refseq_ids
     if not interest_gene_list:
@@ -126,7 +126,7 @@ def main():
     # BaseEditorの決定
     base_editors = []
     if args.be_files:
-        base_editors.extend(for_cli_setting.get_base_editors_from_args(args))
+        base_editors.extend(cli_setting.get_base_editors_from_args(args))
 
     if args.be_preset and args.be_preset not in preset_base_editors:
         raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
@@ -134,17 +134,17 @@ def main():
         base_editors.extend(preset_base_editors[args.be_preset])
 
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
-        base_editors.extend(for_cli_setting.parse_base_editors(args))
+        base_editors.extend(cli_setting.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)
-    if not for_cli_setting.validate_genome_assembly_name_for_crispr_direct(assembly_name):
+    if not cli_setting.validate_genome_assembly_name_for_crispr_direct(assembly_name):
         raise Warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
 
     if not base_editors:
         raise ValueError("No base editors specified. Please provide at least one base editor.")
 
     logging.info("Designing sgRNAs for the following base editors:")
-    for_cli_setting.show_base_editors_info(base_editors)
+    cli_setting.show_base_editors_info(base_editors)
 
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
 
