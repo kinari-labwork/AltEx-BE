@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from altex_aid.offtarget_scorer import (
     add_crisprdirect_url_to_df,
-    calculate_offtarget_site_count_simple
+    calculate_offtarget_site_count_ahocorasick
 )
 
 def test_add_crisprdirect_url_to_df():
@@ -61,7 +61,7 @@ def test_calculate_offtarget_site_count():
         "pam+20bp_exact_match_count": [3.0, 0.0, 3.0, np.nan]
     })
 
-    output_df = calculate_offtarget_site_count_simple(input_df, fasta_path)
+    output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)
     print(output_df)
 
     # Assert: 結果を検証
