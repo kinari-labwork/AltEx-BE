@@ -41,24 +41,26 @@ def test_calculate_offtarget_site_count():
     fasta_path = Path("tests/data/test2.fa")
 
     input_df = pd.DataFrame({
-        "strand": ["+", "+", "+"],
-        "uuid": ["id_A", "id_B", "id_C"],
+        "strand": ["+", "+", "+", "-"],
+        "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
             "GGG+GATTACAGATTACAGATTACA",      # 23-mer, 3回出現
             "AAA+AAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
             "ggg+gattacagattacagattaca",      # 小文字にした場合のテストケース
+            "TGTAATCTGTAATCTGTAAT+CCC"       # 23-mer, 逆相補化したもの。 3回出現
         ]
     })
     
     expected_df = pd.DataFrame({
-        "strand": ["+", "+", "+"],
-        "uuid": ["id_A", "id_B", "id_C"],
+        "strand": ["+", "+", "+", "-"],
+        "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
             "GGG+GATTACAGATTACAGATTACA",
             "AAA+AAAAAAAAAAAAAAAAAAAAA",
             "ggg+gattacagattacagattaca",
+            "TGTAATCTGTAATCTGTAAT+CCC" 
         ],
-        "pam+20bp_exact_match_count": [3, 0, 3]
+        "pam+20bp_exact_match_count": [3, 0, 3, 3]
     })
 
     input_df = add_reversed_complement_sgrna_column(input_df)
