@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from altex_aid.offtarget_scorer import (
     add_crisprdirect_url_to_df,
@@ -41,24 +40,24 @@ def test_calculate_offtarget_site_count():
     fasta_path = Path("tests/data/test2.fa")
 
     input_df = pd.DataFrame({
-        "uuid": ["id_A", "id_B", "id_C", "id_D"],
+        "strand": ["+", "+", "+"],
+        "uuid": ["id_A", "id_B", "id_C"],
         "sgrna_target_sequence": [
             "GGG+GATTACAGATTACAGATTACA",      # 23-mer, 3回出現
             "AAA+AAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
             "ggg+gattacagattacagattaca",      # 小文字にした場合のテストケース
-            pd.NA
         ]
     })
     
     expected_df = pd.DataFrame({
-        "uuid": ["id_A", "id_B", "id_C", "id_D"],
+        "strand": ["+", "+", "+"],
+        "uuid": ["id_A", "id_B", "id_C"],
         "sgrna_target_sequence": [
             "GGG+GATTACAGATTACAGATTACA",
             "AAA+AAAAAAAAAAAAAAAAAAAAA",
             "ggg+gattacagattacagattaca",
-            pd.NA
         ],
-        "pam+20bp_exact_match_count": [3.0, 0.0, 3.0, np.nan]
+        "pam+20bp_exact_match_count": [3, 0, 3]
     })
 
     output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)

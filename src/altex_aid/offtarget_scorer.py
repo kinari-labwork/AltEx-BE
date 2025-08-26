@@ -18,12 +18,37 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     exploded_sgrna_df["crisprdirect_url"] = base_url + target_sequences + "&pam=" + pams + "&db=" + assembly_name
     return exploded_sgrna_df
 
+def convert_dna_to_reversed_complement_dna(sequence: str) -> str:
+    """
+    purpose:
+        塩基配列を逆相補のRNAに変換する
+    Parameters:
+        sequence: 変換したいDNA配列
+    Returns:
+        reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
+    """
+    complement_map = {
+        "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
+        "a": "t", "t": "a", "c": "g", "g": "c", "+": "+"
+    }
+    return "".join([complement_map[base] for base in reversed(sequence)])
+
+def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Purpose: 逆相補のsgRNA配列を追加する
+    """
+    exploded_sgrna_df["reversed_sgrna_target_sequence"] = exploded_sgrna_df["sgrna_target_sequence"].apply(
+        convert_dna_to_reversed_complement_dna
+    )
+    return exploded_sgrna_df
+
 def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
-    sgrna_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.upper()
-    unique_sequences = sgrna_sequences.dropna().unique()
-    with open(fasta_path, 'r') as fasta_file:
-        header_count = sum(1 for line in fasta_file if line.startswith(">"))
-        logging.info(f"Number of headers in FASTA file: {header_count}")
+    # 遺伝子が - strandの場合、出力されている配列は - strandの配列である。しかし、検索対象は+ strandであるため、逆相補に変換する必要がある。
+    unique_sequences = set()
+    unique_sequences = exploded_sgrna_df.apply(
+        lambda row: row["reversed_sgrna_target_sequence"].replace('+', '').upper() if row["strand"] == '-' else row["sgrna_target_sequence"].replace('+', '').upper(),
+        axis=1
+    )
 
     # まず最初にAho-CorasickのAutomatonを構築
     automaton = ahocorasick.Automaton()
@@ -35,8 +60,11 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     offtarget_count_dict = {seq: 0 for seq in unique_sequences}
 
     with open(fasta_path, 'r') as fasta_file:
-        chrom_seq = ""
+        header_count = sum(1 for line in fasta_file if line.startswith(">"))
+        logging.info(f"Number of chromosomes in your FASTA file: {header_count}")
         pbar = tqdm(total=header_count, desc="Calculating off-target counts", unit="chromosome")
+        fasta_file.seek(0)
+        chrom_seq = ""
         for line in fasta_file:
             if line.startswith(">"):
                 # 新しい染色体に切り替え
@@ -53,9 +81,18 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
             chrom_seq = chrom_seq.upper()
             for end_idx, (idx, seq) in automaton.iter(chrom_seq):
                 offtarget_count_dict[seq] += 1
+            pbar.update(1)
             pbar.close()
 
-    exploded_sgrna_df["pam+20bp_exact_match_count"] = sgrna_sequences.map(offtarget_count_dict)
+    exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
+        lambda row: offtarget_count_dict.get(
+            (row["reversed_sgrna_target_sequence"] if row["strand"] == '-' else row["sgrna_target_sequence"])
+            .replace('+', '').upper(),
+            0  # デフォルト値
+    ),
+    axis=1
+    )
+    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence"])
     return exploded_sgrna_df
 
 def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_path: Path) -> pd.DataFrame:
@@ -63,5 +100,6 @@ def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_
     Purpose: このモジュールのラップ関数
     """
     exploded_sgrna_df = add_crisprdirect_url_to_df(exploded_sgrna_df, assembly_name)
+    exploded_sgrna_df = add_reversed_complement_sgrna_column(exploded_sgrna_df)
     exploded_sgrna_df = calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df, fasta_path)
     return exploded_sgrna_df
