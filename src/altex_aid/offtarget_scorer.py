@@ -43,6 +43,12 @@ def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.
     return exploded_sgrna_df
 
 def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
+    """
+    Purpose : ahocorasick法を用いて PAM+20bpのオフターゲットサイト数を計算する
+    Parameters : exploded_sgrna_df: sgRNAが1行1sgRNAに展開されたデータフレーム, fasta_path: FASTAファイルのパス
+    Returns : exploded_sgrna_df: PAM+20bpのオフターゲットサイト数を追加したデータフレーム
+    Algorism : sgRNA配列とその逆相補配列をセットに追加し、Aho-CorasickのAutomatonを構築。各染色体配列に対してAutomatonを用いて検索し、各sgRNA配列の出現回数をカウントする。
+    """
     # 遺伝子が - strandの場合、出力されている配列は - strandの配列である。しかし、検索対象は+ strandであるため、逆相補に変換する必要がある。
     # 重複しないようにセットに追加
     unique_sequences = set()
@@ -69,8 +75,9 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
                 # 新しい染色体に切り替え
                 if chrom_seq:
                     chrom_seq = chrom_seq.upper()
+                    #automaton.iter は (end_idx, (idx, seq)) を持っていて、そこに含まれるseqが見つかったらカウントを増やす
                     for end_idx, (idx, seq) in automaton.iter(chrom_seq):
-                        offtarget_count_dict[seq] += 1
+                        offtarget_count_dict[seq] += 1 
                     chrom_seq = ""
                     pbar.update(1)
             else:
@@ -82,7 +89,8 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
                 offtarget_count_dict[seq] += 1
             pbar.update(1)
             pbar.close()
-
+    
+    # 順配列、逆相補配列の両方のカウントを合計して新しい列に追加
     exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
         lambda row: (
             offtarget_count_dict.get(row["sgrna_target_sequence"].replace('+', '').upper(), 0)
@@ -90,6 +98,7 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
         ),
         axis=1
     )
+    # 逆相補配列の列は不要なので削除
     exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence"])
     return exploded_sgrna_df
 
