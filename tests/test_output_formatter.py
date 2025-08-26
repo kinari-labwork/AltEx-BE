@@ -1,11 +1,11 @@
 import pandas as pd
-from altex_aid.output_formatter import (
+from altex_be.output_formatter import (
     convert_empty_list_into_na,
     prepare_melted_df,
     explode_sgrna_df,
     add_base_editor_info_to_df
 )
-from altex_aid.sgrna_designer import BaseEditor
+from altex_be.sgrna_designer import BaseEditor
 
 
 def test_convert_empty_list_into_na():

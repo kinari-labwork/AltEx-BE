@@ -1,6 +1,6 @@
 import pandas as pd
 
-from altex_aid.target_exon_extractor import (
+from altex_be.target_exon_extractor import (
     extract_splice_acceptor_regions,
     extract_splice_donor_regions,
     explode_classified_refflat,

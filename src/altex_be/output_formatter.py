@@ -1,4 +1,4 @@
-from altex_aid.sgrna_designer import BaseEditor
+from altex_be.sgrna_designer import BaseEditor
 import pandas as pd
 import uuid
 import logging
