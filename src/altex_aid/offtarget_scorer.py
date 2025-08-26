@@ -44,11 +44,10 @@ def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.
 
 def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     # 遺伝子が - strandの場合、出力されている配列は - strandの配列である。しかし、検索対象は+ strandであるため、逆相補に変換する必要がある。
+    # 重複しないようにセットに追加
     unique_sequences = set()
-    unique_sequences = exploded_sgrna_df.apply(
-        lambda row: row["reversed_sgrna_target_sequence"].replace('+', '').upper() if row["strand"] == '-' else row["sgrna_target_sequence"].replace('+', '').upper(),
-        axis=1
-    )
+    unique_sequences.update(exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '').str.upper())
+    unique_sequences.update(exploded_sgrna_df["reversed_sgrna_target_sequence"].str.replace('+', '').str.upper())
 
     # まず最初にAho-CorasickのAutomatonを構築
     automaton = ahocorasick.Automaton()
@@ -85,12 +84,11 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
             pbar.close()
 
     exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
-        lambda row: offtarget_count_dict.get(
-            (row["reversed_sgrna_target_sequence"] if row["strand"] == '-' else row["sgrna_target_sequence"])
-            .replace('+', '').upper(),
-            0  # デフォルト値
-    ),
-    axis=1
+        lambda row: (
+            offtarget_count_dict.get(row["sgrna_target_sequence"].replace('+', '').upper(), 0)
+            + offtarget_count_dict.get(row["reversed_sgrna_target_sequence"].replace('+', '').upper(), 0)
+        ),
+        axis=1
     )
     exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence"])
     return exploded_sgrna_df
