@@ -2,7 +2,8 @@ import pandas as pd
 from pathlib import Path
 from altex_aid.offtarget_scorer import (
     add_crisprdirect_url_to_df,
-    calculate_offtarget_site_count_ahocorasick
+    calculate_offtarget_site_count_ahocorasick,
+    add_reversed_complement_sgrna_column
 )
 
 def test_add_crisprdirect_url_to_df():
@@ -60,6 +61,7 @@ def test_calculate_offtarget_site_count():
         "pam+20bp_exact_match_count": [3, 0, 3]
     })
 
+    input_df = add_reversed_complement_sgrna_column(input_df)
     output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)
     print(output_df)
 
