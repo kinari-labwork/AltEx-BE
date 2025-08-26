@@ -8,6 +8,7 @@ from altex_aid.refflat_preprocessor import (
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
     parse_exon_coordinates,
+    annotate_utr_and_cds_exons,
 )
 
 annotation_genome = "mm39"  # ここは必要に応じて変更してください
@@ -52,6 +53,8 @@ refflat = annotate_flame_information(refflat)
 
 # エキソンの位置を示す列を追加
 refflat = add_exon_position_flags(refflat)
+
+refflat = annotate_utr_and_cds_exons(refflat)
 
 # データフレームを保存
 refflat.to_pickle("data/processed_refflat.pkl")

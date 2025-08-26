@@ -32,6 +32,8 @@ jobs:
         run: |
           conda activate test-AltExAid
           conda install -y -c bioconda pybedtools
+          conda install tqdm
+          conda install conda-forge::pyahocorasick
           python -m pip install --upgrade pip pytest numpy pandas 
 
       - name: Run pytest

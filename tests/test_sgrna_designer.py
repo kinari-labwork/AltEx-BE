@@ -96,7 +96,7 @@ def test_design_sgrna_cbe_acceptor():
 
     expected_output = [
         SgrnaInfo(
-            target_sequence="CCNNNNNNNNNNNNNNNAGG",
+            target_sequence="CCC+CCNNNNNNNNNNNNNNNAGG",
             actual_sequence="CCUNNNNNNNNNNNNNNNGG",
             start_in_sequence = 6,
             end_in_sequence=26,
@@ -105,7 +105,7 @@ def test_design_sgrna_cbe_acceptor():
             possible_unintended_edited_base_count= 0
         ),
         SgrnaInfo(
-            target_sequence="CNNNNNNNNNNNNNNNAGGG",
+            target_sequence="CCC+CNNNNNNNNNNNNNNNAGGG",
             actual_sequence="CCCUNNNNNNNNNNNNNNNG",
             start_in_sequence = 7,
             end_in_sequence=27,
@@ -114,7 +114,7 @@ def test_design_sgrna_cbe_acceptor():
             possible_unintended_edited_base_count= 1
         ),
         SgrnaInfo(
-            target_sequence="NNNNNNNNNNNNNNNAGGGN",
+            target_sequence="CCC+NNNNNNNNNNNNNNNAGGGN",
             actual_sequence="NCCCUNNNNNNNNNNNNNNN",
             start_in_sequence = 8,
             end_in_sequence=28,
@@ -151,7 +151,7 @@ def test_design_sgrna_cbe_donor():
 
     expected_output = [
         SgrnaInfo(
-            target_sequence="CCNNNNNNNNNNNNNNGGGT",
+            target_sequence="CCC+CCNNNNNNNNNNNNNNGGGT",
             actual_sequence="ACCCNNNNNNNNNNNNNNGG",
             start_in_sequence = 7,
             end_in_sequence=27,
@@ -160,7 +160,7 @@ def test_design_sgrna_cbe_donor():
             possible_unintended_edited_base_count=2
         ),
         SgrnaInfo(
-            target_sequence="CNNNNNNNNNNNNNNGGGTN",
+            target_sequence="CCC+CNNNNNNNNNNNNNNGGGTN",
             actual_sequence="NACCCNNNNNNNNNNNNNNG",
             start_in_sequence = 8,
             end_in_sequence=28,
@@ -169,7 +169,7 @@ def test_design_sgrna_cbe_donor():
             possible_unintended_edited_base_count= 1
         ),
         SgrnaInfo(
-            target_sequence="NNNNNNNNNNNNNNGGGTNN",
+            target_sequence="CCC+NNNNNNNNNNNNNNGGGTNN",
             actual_sequence="NNACCCNNNNNNNNNNNNNN",
             start_in_sequence = 9,
             end_in_sequence=29,
@@ -207,7 +207,7 @@ def test_design_sgrna_abe_acceptor():
 
     expected_output = [
         SgrnaInfo(
-            target_sequence="NNNAGAANNNNNNNNNNNNN",
+            target_sequence="NNNAGAANNNNNNNNNNNNN+GGG",
             actual_sequence="NNNAGAANNNNNNNNNNNNN",
             start_in_sequence= 20,
             end_in_sequence= 40,
@@ -216,7 +216,7 @@ def test_design_sgrna_abe_acceptor():
             possible_unintended_edited_base_count=0
         ),
         SgrnaInfo(
-            target_sequence="NNAGAANNNNNNNNNNNNNG",
+            target_sequence="NNAGAANNNNNNNNNNNNNG+GGG",
             actual_sequence="NNAGAANNNNNNNNNNNNNG",
             start_in_sequence= 21,
             end_in_sequence= 41,
@@ -225,7 +225,7 @@ def test_design_sgrna_abe_acceptor():
             possible_unintended_edited_base_count=0
         ),
         SgrnaInfo(
-            target_sequence="NAGAANNNNNNNNNNNNNGG",
+            target_sequence="NAGAANNNNNNNNNNNNNGG+GGG",
             actual_sequence="NAGAANNNNNNNNNNNNNGG",
             start_in_sequence= 22,
             end_in_sequence= 42,
@@ -263,7 +263,7 @@ def test_design_sgrna_abe_donor():
 
     expected_output = [
         SgrnaInfo(
-            target_sequence="CCNNNNNNNNNNNNNTTGTN",
+            target_sequence="CCC+CCNNNNNNNNNNNNNTTGTN",
             actual_sequence="NACAANNNNNNNNNNNNNGG",
             start_in_sequence = 8,
             end_in_sequence=28,
@@ -272,7 +272,7 @@ def test_design_sgrna_abe_donor():
             possible_unintended_edited_base_count=1
         ),
         SgrnaInfo(
-            target_sequence="CNNNNNNNNNNNNNTTGTNN",
+            target_sequence="CCC+CNNNNNNNNNNNNNTTGTNN",
             actual_sequence="NNACAANNNNNNNNNNNNNG",
             start_in_sequence = 9,
             end_in_sequence=29,
@@ -281,7 +281,7 @@ def test_design_sgrna_abe_donor():
             possible_unintended_edited_base_count= 0
         ),
         SgrnaInfo(
-            target_sequence="NNNNNNNNNNNNNTTGTNNN",
+            target_sequence="CCC+NNNNNNNNNNNNNTTGTNNN",
             actual_sequence="NNNACAANNNNNNNNNNNNN",
             start_in_sequence = 10,
             end_in_sequence=30,
@@ -354,10 +354,10 @@ def test_design_sgrna_for_target_exon_df():
         "exon_position": ["internal", "internal"],
         "chromStart_acceptor":[75, 275],
         "chromEnd_acceptor":[125, 325],
-        "acceptor_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
+        "acceptor_exon_intron_boundary_±25bp_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
         "chromStart_donor":[175, 375],
         "chromEnd_donor":[225, 425],
-        "donor_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"]
+        "donor_exon_intron_boundary_±25bp_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"]
     })
     expected_output = pd.DataFrame({
         "chrom": ["chr1", "chr2"],
@@ -370,14 +370,14 @@ def test_design_sgrna_for_target_exon_df():
         "exon_position": ["internal", "internal"],
         "chromStart_acceptor": [75, 275],
         "chromEnd_acceptor": [125, 325],
-        "acceptor_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
+        "acceptor_exon_intron_boundary_±25bp_sequence":["NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN","NNNNCCCNNNNNNNNNNNNNNNNAGNNNNNNNNNNNNNNNNNNNNNNNNN"],
         "chromStart_donor": [175, 375],
         "chromEnd_donor": [225, 425],
-        "donor_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"],
+        "donor_exon_intron_boundary_±25bp_sequence":["NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN","NNNNNCCCNNNNNNNNNNNNNNNNNGTNNNNNNNNNNNNNNNNNNNNNNN"],
         "grna_acceptor": [
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNNAGNN",
+                target_sequence="CCC+NNNNNNNNNNNNNNNNAGNN",
                 actual_sequence="NNCUNNNNNNNNNNNNNNNN",
                 start_in_sequence=7,
                 end_in_sequence=27,
@@ -391,7 +391,7 @@ def test_design_sgrna_for_target_exon_df():
         "grna_donor": [
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNNNGTN",
+                target_sequence="CCC+NNNNNNNNNNNNNNNNNGTN",
                 actual_sequence="NACNNNNNNNNNNNNNNNNN",
                 start_in_sequence=8,
                 end_in_sequence=28,
@@ -402,7 +402,7 @@ def test_design_sgrna_for_target_exon_df():
             ],
             [
             SgrnaInfo(
-                target_sequence="NNNNNNNNNNNNNNNNNGTN",
+                target_sequence="CCC+NNNNNNNNNNNNNNNNNGTN",
                 actual_sequence="NACNNNNNNNNNNNNNNNNN",
                 start_in_sequence=8,
                 end_in_sequence=28,

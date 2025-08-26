@@ -80,3 +80,26 @@ def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_
         raise FileNotFoundError(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():
         raise NotADirectoryError(f"The provided output directory '{output_directory}' does not exist.")
+
+def load_supported_assemblies() -> list[str]:
+    """
+    パッケージ内のcrispr_direct_supported_assemblies.txtを読み込み、アセンブリ名リストを返す
+    """
+    # このファイルと同じディレクトリにあるtxtを参照
+    txt_path = Path(__file__).parent / "crispr_direct_supported_assemblies.txt"
+    with open(txt_path, encoding="utf-8") as f:
+        supported_assemblies = {line.strip() for line in f if line.strip() and not line.startswith("#")}
+    return supported_assemblies
+
+def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> bool:
+    """
+    Purpose: ユーザーが入力したアセンブリ名がCRISPRdirectでサポートされているかを確認する。
+    Parameter: 
+            assembly_name (str): ユーザーが入力したアセンブリ名
+            supported_assemblies (list[str]): CRISPRdirectでサポートされているアセンブリ名のリスト 長いので外部txtとして保存
+    return : bool
+    """
+    supported_assemblies = load_supported_assemblies()
+    if assembly_name not in supported_assemblies:
+        return False
+    return True

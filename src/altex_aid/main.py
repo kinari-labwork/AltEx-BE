@@ -2,18 +2,17 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import logging
+import sys
 from . import (
-    for_cli_setting,
+    cli_setting,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
     target_exon_extractor,
     sgrna_designer,
-)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    output_formatter,
+    offtarget_scorer,
+    logging_config # noqa: F401
 )
 
 
@@ -48,54 +47,60 @@ def main():
     )
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
-        "--interest-gene-symbols",
+        "--gene-symbols",
         nargs="+",
         help="List of interest gene symbols (space-separated)"
     )
     gene_group.add_argument(
-        "--interest-gene-refseq-ids",
+        "--refseq-ids",
         nargs="+",
         help="List of interest gene Refseq IDs (space-separated)"
     )
+    gene_group.add_argument(
+        "-a", "--assembly-name",
+        default=None,
+        required=True,
+        help="Name of the genome assembly to use"
+    )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
-        "-n", "--base-editor-name",
+        "-n", "--be-name",
         default=None,
         required=False,
         help="Name of the base editor to optional use",
     )
     base_editors.add_argument(
-        "-p", "--base-editor-pam",
+        "-p", "--be-pam",
         default=None,
         required=False,
         help="PAM sequence for the base editor",
     )
     base_editors.add_argument(
-        "-s", "--base-editor-window-start",
+        "-s", "--be-start",
         default=None,
         required=False,
         help="Window start for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "-e", "--base-editor-window-end",
+        "-e", "--be-end",
         default=None,
         required=False,
         help="Window end for the base editor (Count from next to PAM)",
     )
     base_editors.add_argument(
-        "-t", "--base-editor-type",
+        "-t", "--be-type",
         default=None,
         required=False,
         help="Choose the type of base editor, this tool supports ABE and CBE",
     )
     base_editors.add_argument(
-        "--base-editor-preset",
+        "--be-preset",
         default=None,
         required=False,
         help="Preset for the base editor",
     )
     base_editors.add_argument(
-        "--base-editor-files",
+        "--be-files",
         default=None,
         required=False,
         help="input the path of csv file or txt file of base editor information",
@@ -107,9 +112,9 @@ def main():
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_directory)
 
-    for_cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
+    cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    interest_gene_list = args.interest_gene_symbols + args.interest_gene_refseq_ids
+    interest_gene_list = args.gene_symbols + args.refseq_ids
     if not interest_gene_list:
         raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
 
@@ -117,22 +122,26 @@ def main():
 
     # BaseEditorの決定
     base_editors = []
-    if args.base_editor_files:
-        base_editors.extend(for_cli_setting.get_base_editors_from_args(args))
+    if args.be_files:
+        base_editors.extend(cli_setting.get_base_editors_from_args(args))
 
-    if args.base_editor_preset and args.base_editor_preset not in preset_base_editors:
-        raise ValueError(f"Invalid base editor preset: {args.base_editor_preset}. Available presets are: {list(preset_base_editors.keys())}")
+    if args.be_preset and args.be_preset not in preset_base_editors:
+        raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
     else:
-        base_editors.extend(preset_base_editors[args.base_editor_preset])
+        base_editors.extend(preset_base_editors[args.be_preset])
 
-    if args.base_editor_name or args.base_editor_pam or args.base_editor_window_start or args.base_editor_window_end or args.base_editor_type:
-        base_editors.extend(for_cli_setting.parse_base_editors(args))
+    if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
+        base_editors.extend(cli_setting.parse_base_editors(args))
+
+    assembly_name = str(args.assembly_name)
+    if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
+        logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
 
     if not base_editors:
         raise ValueError("No base editors specified. Please provide at least one base editor.")
 
     logging.info("Designing sgRNAs for the following base editors:")
-    for_cli_setting.show_base_editors_info(base_editors)
+    cli_setting.show_base_editors_info(base_editors)
 
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
 
@@ -156,7 +165,7 @@ def main():
             ],
         )
 
-    print("running processing of refFlat file...")
+    logging.info("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
     refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
 
@@ -166,21 +175,35 @@ def main():
     del refflat
 
     print("Extracting target exons...")
-    target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
+        logging.warning("No target exons found for the given genes, exiting")
+        sys.exit(0)
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
-        target_exon_df, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
+        exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
     print("designing sgRNAs...")
-    target_exon_df_with_sgrna = sgrna_designer.design_sgrna_for_base_editors(
+    target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
         base_editors=base_editors
     )
 
-    target_exon_df_with_sgrna.to_pickle(output_directory / "target_exon_df_with_sgrna.pickle")
+    logging.info("Formatting output...")
+    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors)
+    if formatted_exploded_sgrna_df.empty:
+        logging.warning("No sgRNAs could be designed for given genes and Base Editors, Exiting")
+        sys.exit(0)
+    del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
+
+    logging.info("Scoring off-targets...")
+    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
+
+    logging.info("Saving results...")
+    exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
 
 if __name__ == "__main__":
     main()

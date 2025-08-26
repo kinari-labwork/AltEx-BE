@@ -3,7 +3,8 @@ import pandas as pd
 from altex_aid.target_exon_extractor import (
     extract_splice_acceptor_regions,
     extract_splice_donor_regions,
-    extract_target_exon,
+    explode_classified_refflat,
+    format_classified_refflat_to_bed,
 )
 
 
@@ -14,12 +15,40 @@ def test_extract_target_exon():
             "strand": ["+", "+", "-", "-", "+"],
             "exonStarts": [[100, 200, 300], [100, 400], [500, 600], [700, 850], [900]],
             "exonEnds": [[150, 250, 350], [150, 450], [550, 650], [750, 850], [1000]],
+            "exons": [
+                ["exon1", "exon2", "exon3"],
+                ["exon1", "exon2"],
+                ["exon1", "exon2"],
+                ["exon1", "exon2"],
+                ["exon1"],
+            ],
             "exontype": [
                 ["skipped", "constitutive", "skipped"],
                 ["skipped", "constitutive"],
                 ["a3ss-long", "constitutive"],
                 ["a5ss-long", "constitutive"],
                 ["constitutive"],
+            ],
+            "exonlengths": [
+                [50, 100, 50],
+                [50, 50],
+                [100, 100],
+                [100, 100],
+                [1000],
+            ],
+            "flame":[
+                ["in-flame", "in-flame", "out-flame"],
+                ["in-flame", "out-flame"],
+                ["in-flame", "out-flame"],
+                ["in-flame", "out-flame"],
+                ["in-flame"],
+            ],
+            "cds_info": [
+                ["cds_start", "cds_end", "cds_start"],
+                ["cds_start", "cds_end"],
+                ["cds_start", "cds_end"],
+                ["cds_start", "cds_end"],
+                ["cds_start"],
             ],
             "exon_position": [
                 ["first", "internal", "last"],
@@ -31,7 +60,8 @@ def test_extract_target_exon():
         }
     )
 
-    output_data = extract_target_exon(input_data)
+    output_data = explode_classified_refflat(input_data)
+    output_data = format_classified_refflat_to_bed(output_data)
     expected_output = pd.DataFrame(
         {
             "chrom": ["chr1", "chr1", "chr2", "chr2"],
