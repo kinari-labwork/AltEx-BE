@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from altex_aid.offtarget_scorer import (
+from altex_be.offtarget_scorer import (
     add_crisprdirect_url_to_df,
     calculate_offtarget_site_count_ahocorasick,
     add_reversed_complement_sgrna_column

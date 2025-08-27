@@ -1,6 +1,6 @@
 import pandas as pd
 import pickle
-from altex_aid.sgrna_designer import (
+from altex_be.sgrna_designer import (
     design_sgrna_for_base_editors,
     make_preset_base_editors,
     design_sgrna_for_base_editors_dict
