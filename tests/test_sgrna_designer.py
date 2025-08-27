@@ -3,8 +3,7 @@ import re
 from altex_be.sgrna_designer import (
     SgrnaInfo,
     BaseEditor,
-    convert_dna_to_reversed_complement_rna,
-    convert_dna_to_rna,
+    convert_dna_to_reversed_complement,
     reverse_complement_pam_as_regex,
     convert_pam_as_regex,
     calculate_overlap_and_unintended_edits_to_cds,
@@ -20,16 +19,10 @@ from altex_be.sgrna_designer import (
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
 
-def test_convert_dna_to_reversed_complement_rna():
+def test_convert_dna_to_reversed_complement():
     input_sequence = "ATGCATGC"
-    expected_output = "GCAUGCAU" # RNAにした逆相補鎖
-    output_sequence = convert_dna_to_reversed_complement_rna(input_sequence)
-    assert output_sequence == expected_output
-
-def test_convert_dna_to_rna():
-    input_sequence = "ATGCATGC"
-    expected_output = "AUGCAUGC"  # RNAに変換した結果
-    output_sequence = convert_dna_to_rna(input_sequence)
+    expected_output = "GCATGCAT"  # 逆相補鎖
+    output_sequence = convert_dna_to_reversed_complement(input_sequence)
     assert output_sequence == expected_output
 
 def test_reverse_complement_pam_as_regex():
@@ -97,7 +90,7 @@ def test_design_sgrna_cbe_acceptor():
     expected_output = [
         SgrnaInfo(
             target_sequence="CCC+CCNNNNNNNNNNNNNNNAGG",
-            actual_sequence="CCUNNNNNNNNNNNNNNNGG",
+            actual_sequence="CCTNNNNNNNNNNNNNNNGG",
             start_in_sequence = 6,
             end_in_sequence=26,
             target_pos_in_sgrna=19,
@@ -106,7 +99,7 @@ def test_design_sgrna_cbe_acceptor():
         ),
         SgrnaInfo(
             target_sequence="CCC+CNNNNNNNNNNNNNNNAGGG",
-            actual_sequence="CCCUNNNNNNNNNNNNNNNG",
+            actual_sequence="CCCTNNNNNNNNNNNNNNNG",
             start_in_sequence = 7,
             end_in_sequence=27,
             target_pos_in_sgrna=18,
@@ -115,7 +108,7 @@ def test_design_sgrna_cbe_acceptor():
         ),
         SgrnaInfo(
             target_sequence="CCC+NNNNNNNNNNNNNNNAGGGN",
-            actual_sequence="NCCCUNNNNNNNNNNNNNNN",
+            actual_sequence="NCCCTNNNNNNNNNNNNNNN",
             start_in_sequence = 8,
             end_in_sequence=28,
             target_pos_in_sgrna=17,
@@ -378,7 +371,7 @@ def test_design_sgrna_for_target_exon_df():
             [
             SgrnaInfo(
                 target_sequence="CCC+NNNNNNNNNNNNNNNNAGNN",
-                actual_sequence="NNCUNNNNNNNNNNNNNNNN",
+                actual_sequence="NNCTNNNNNNNNNNNNNNNN",
                 start_in_sequence=7,
                 end_in_sequence=27,
                 target_pos_in_sgrna=18,
@@ -494,7 +487,7 @@ def test_organize_target_exon_df_with_grna_sequence():
 
     # acceptor列
     assert result["acceptor_sgrna_target_sequence"][0] == ["AAA"]
-    assert result["acceptor_sgrna_actual_sequence"][0] == ["UUU"]
+    assert result["acceptor_sgrna_sequence"][0] == ["UUU"]
     assert result["acceptor_sgrna_start_in_sequence"][0] == [1]
     assert result["acceptor_sgrna_end_in_sequence"][0] == [21]
     assert result["acceptor_sgrna_target_pos_in_sgrna"][0] == [5]
@@ -502,7 +495,7 @@ def test_organize_target_exon_df_with_grna_sequence():
     assert result["acceptor_sgrna_possible_unintended_edited_base_count"][0] == [1]
     # donor列
     assert result["donor_sgrna_target_sequence"][0] == ["CCC"]
-    assert result["donor_sgrna_actual_sequence"][0] == ["GGG"]
+    assert result["donor_sgrna_sequence"][0] == ["GGG"]
     assert result["donor_sgrna_start_in_sequence"][0] == [2]
     assert result["donor_sgrna_end_in_sequence"][0] == [22]
     assert result["donor_sgrna_target_pos_in_sgrna"][0] == [6]
