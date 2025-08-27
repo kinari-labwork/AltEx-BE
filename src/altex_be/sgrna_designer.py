@@ -29,33 +29,20 @@ class BaseEditor:
     editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
     base_editor_type: str # "CBE" or "ABE"
 
-def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
+def convert_dna_to_reversed_complement(sequence: str) -> str:
     """
     purpose:
-        塩基配列を逆相補のRNAに変換する
+        塩基配列を逆相補のDNAに変換する
     Parameters:
         sequence: 変換したいDNA配列
     Returns:
         reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
     """
     complement_map = {
-        "A": "U", "T": "A", "C": "G", "G": "C", "N": "N",
-        "a": "u", "t": "a", "c": "g", "g": "c"
+        "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
+        "a": "t", "t": "a", "c": "g", "g": "c"
         }
     return "".join([complement_map[base] for base in reversed(sequence)])
-
-def convert_dna_to_rna(sequence: str) -> str:
-    """
-    Purpose:
-        塩基配列をRNAに変換する
-    Parameters:
-        sequence: 変換したいDNA配列
-    Returns:
-        rna_sequence: 入力したDNA配列のRNA配列
-    """
-    sequence = sequence.replace("T", "U")
-    sequence = sequence.replace("t", "u")
-    return sequence
 
 def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
@@ -286,11 +273,11 @@ def design_sgrna(
         target_sequence = editing_sequence[sgrna_start:sgrna_end]
         pam_plus_target_sequence = f"{target_sequence}+{match.group(1)}" if site_type == "acceptor" and base_editor_type == "abe" else f"{match.group(1)}+{target_sequence}"
         if site_type == "acceptor" and base_editor_type == "cbe":
-            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+            actual_sequence = convert_dna_to_reversed_complement(target_sequence)
         elif site_type == "acceptor" and base_editor_type == "abe":
-            actual_sequence = convert_dna_to_rna(target_sequence)
+            actual_sequence = target_sequence
         else:
-            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+            actual_sequence = convert_dna_to_reversed_complement(target_sequence)
         if site_type == "acceptor" and base_editor_type == "abe":
             target_pos_in_sgrna = -(target_base_pos_in_sequence - sgrna_end)
         else:
