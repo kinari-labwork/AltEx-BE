@@ -387,7 +387,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
         extracted = zip(*target_exon_df_with_grna_sequence[f"grna_{site}"].apply(extract_sgrna_features))
         columns =[
             f"{site}_sgrna_target_sequence",
-            f"{site}_sgrna_actual_sequence",
+            f"{site}_sgrna_sequence",
             f"{site}_sgrna_start_in_sequence",
             f"{site}_sgrna_end_in_sequence",
             f"{site}_sgrna_target_pos_in_sgrna",
