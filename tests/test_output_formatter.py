@@ -156,7 +156,7 @@ def test_add_base_editor_info_to_df():
         "exontype": ["skipped", "skipped", "skipped", "skipped"],
         "exon_position": ["first", "first", "first", "first"],
         "base_editor_name": ["MockBE1", "MockBE1", "MockBE2", "MockBE2"],
-        "base_editor_pam": ["NGG", "NGG", "NGG", "NGG"],
+        "base_editor_pam_sequence": ["NGG", "NGG", "NGG", "NGG"],
         "base_editor_editing_window_start": [10, 10, 15, 15],
         "base_editor_editing_window_end": [15, 15, 20, 20],
         "base_editor_type": ["cbe", "cbe", "abe", "abe"],
