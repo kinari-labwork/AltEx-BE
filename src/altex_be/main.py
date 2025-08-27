@@ -177,8 +177,13 @@ def main():
     print("Extracting target exons...")
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
     if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
-        logging.warning("No target exons found for the given genes, exiting")
+        logging.warning("No target exons found for all of the given genes, exiting")
         sys.exit(0)
+    for gene in interest_gene_list:
+        if gene not in exploded_classified_refflat['geneName'].values:
+            logging.info(f"No target exons found for the gene: {gene}. Further processing of {gene} will be skipped.")
+        else:
+            logging.info(f"Target exons found for the gene: {gene}.")
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
