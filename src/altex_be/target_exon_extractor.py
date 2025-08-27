@@ -98,7 +98,7 @@ def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataF
     exploded_classified_refflat = explode_classified_refflat(classified_refflat)
     target_exon_df = format_classified_refflat_to_bed(exploded_classified_refflat)
     if target_exon_df is None:
-        logging.warning("there are no exons in your interested genes which have targetable splicing events")
+        logging.warning("there are no exons in your interested genes which have at least one targetable splicing event")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     splice_acceptor_single_exon_df = extract_splice_acceptor_regions(target_exon_df, 25)
     splice_donor_single_exon_df = extract_splice_donor_regions(target_exon_df, 25)
