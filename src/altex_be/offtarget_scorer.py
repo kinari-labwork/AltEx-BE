@@ -109,4 +109,5 @@ def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_
     exploded_sgrna_df = add_crisprdirect_url_to_df(exploded_sgrna_df, assembly_name)
     exploded_sgrna_df = add_reversed_complement_sgrna_column(exploded_sgrna_df)
     exploded_sgrna_df = calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df, fasta_path)
+    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["sgrna_target_sequence"])
     return exploded_sgrna_df
