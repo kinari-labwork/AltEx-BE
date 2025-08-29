@@ -403,31 +403,51 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
     target_exon_df_with_grna_sequence: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Purpose:
-        この段階でのacceptor/donor_start_in_sequenceは、ゲノム上の位置ではなく、取得した配列内での位置である。
-        sgRNAの開始位置と終了位置を、ゲノム上の位置に変換する
-    Parameters:
-        target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
-    Returns:
-        pd.DataFrame, sgRNAの開始位置と終了位置がゲノム上の位置に変換されたDataFrame
+    Purpose: sgRNAの開始位置と終了位置は取得配列50bp中の相対位置なので、ゲノム上の絶対位置に変換する
+    Parameter: target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
+    Caution: 各列には複数のsgRNAの情報がリストとして格納されている
     """
-    for splicesite in ["acceptor", "donor"]:
-        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_genome"] = [
-            [start + chrom_start for start in starts]
-        for starts, chrom_start in zip(
-            target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_sequence"],
-            target_exon_df_with_grna_sequence[f"chromStart_{splicesite}"]
-        )
-    ]
-        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_genome"] = [
-            [end + chrom_start for end in ends]
-        for ends, chrom_start in zip(
-            target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_sequence"],
-            target_exon_df_with_grna_sequence[f"chromStart_{splicesite}"]
-        )
-    ]
 
-    # 不要な列を削除
+    def get_genomic_positions_for_row(row, splicesite):
+        starts_rels = row[f"{splicesite}_sgrna_start_in_sequence"]
+        ends_rels = row[f"{splicesite}_sgrna_end_in_sequence"]
+        chrom_start = row[f"chromStart_{splicesite}"]
+        chrom_end = row[f"chromEnd_{splicesite}"]
+        
+        row_genomic_starts = []
+        row_genomic_ends = []
+        
+        # そもそも何もsgRNAがない列は空リストを返す
+        if not isinstance(starts_rels, list):
+            return [], []
+        
+        # + strandの時は、取得配列の開始位置を基準に相対位置を足すとゲノム上の絶対位置になる
+        if row["strand"] == "+":
+            for start_rel, end_rel in zip(starts_rels, ends_rels):
+                row_genomic_starts.append(chrom_start + start_rel)
+                row_genomic_ends.append(chrom_start + end_rel)
+        # - strandの時は、取得配列内の相対位置は - strandの 5-3 方向に向かって増える。
+        # しかし、ゲノム上の絶対位置は + strandの 5-3 方向に向かって増えているため、相対位置のstartとendを逆にしてから絶対位置を計算する必要がある
+        else:
+            region_len = chrom_end - chrom_start
+            for start_rel, end_rel in zip(starts_rels, ends_rels):
+                g_start = chrom_start + (region_len - end_rel)
+                g_end = chrom_start + (region_len - start_rel)
+                row_genomic_starts.append(g_start)
+                row_genomic_ends.append(g_end)
+                
+        return row_genomic_starts, row_genomic_ends
+
+    for splicesite in ["acceptor", "donor"]:
+        results = target_exon_df_with_grna_sequence.apply(
+            get_genomic_positions_for_row, 
+            axis=1, 
+            splicesite=splicesite
+        )
+        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_genome"] = results.apply(lambda x: x[0])
+        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_genome"] = results.apply(lambda x: x[1])
+
+    # いらない列を削除
     target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.drop(
         columns=[
             "acceptor_sgrna_start_in_sequence",
