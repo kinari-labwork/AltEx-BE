@@ -10,12 +10,12 @@ def test_add_crisprdirect_url_to_df():
     # 1. Arrange: テストデータの準備
     input_df = pd.DataFrame({
         "sgrna_target_sequence": ["GAT+TACA", "ATA+TATA"],
-        "base_editor_pam": ["NGG", "NGG"],
+        "base_editor_pam_sequence": ["NGG", "NGG"],
     })
     
     expected_df = pd.DataFrame({
         "sgrna_target_sequence": ["GAT+TACA", "ATA+TATA"],
-        "base_editor_pam": ["NGG", "NGG"],
+        "base_editor_pam_sequence": ["NGG", "NGG"],
         "crisprdirect_url": [
             "https://crispr.dbcls.jp/?userseq=gattaca&pam=NGG&db=hg38",
             "https://crispr.dbcls.jp/?userseq=atatata&pam=NGG&db=hg38",
