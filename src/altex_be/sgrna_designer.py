@@ -429,7 +429,7 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
         # - strandの時は、取得配列内の相対位置は - strandの 5-3 方向に向かって増える。
         # しかし、ゲノム上の絶対位置は + strandの 5-3 方向に向かって増えているため、相対位置のstartとendを逆にしてから絶対位置を計算する必要がある
         else:
-            region_len = chrom_end - chrom_start
+            region_len = chrom_end - chrom_start # 絶対に取得配列の長さは50bpとなるが、hard cordingを避けるために計算している
             for start_rel, end_rel in zip(starts_rels, ends_rels):
                 g_start = chrom_start + (region_len - end_rel)
                 g_end = chrom_start + (region_len - start_rel)
