@@ -4,34 +4,34 @@ import pandas as pd
 from pathlib import Path
 
 
-def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
+def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
     if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
         raise ValueError(
             "Base editor information is incomplete. Please provide all required parameters."
         )
     try:
-        return [
-            BaseEditor(
+        return {
+            args.base_editor_name: BaseEditor(
                 base_editor_name=args.base_editor_name,
                 pam_sequence=args.base_editor_pam.upper(),
                 editing_window_start_in_grna=int(args.base_editor_window_start),
                 editing_window_end_in_grna=int(args.base_editor_window_end),
                 base_editor_type=args.base_editor_type.lower(),
             )
-        ]
+        }
     except ValueError as e:
         raise ValueError(f"Error parsing base editor information: {e}")
 
-def show_base_editors_info(base_editors: list[BaseEditor]):
+def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
         raise ValueError("No base editors available to display.")
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
         
 
-def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | None:
+def get_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
     """
     base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
     csvまたはtxt, tsv形式のファイルをサポートする
@@ -62,8 +62,8 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
             f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
         )
     else:
-        return [
-            BaseEditor(
+        return {
+            row["base_editor_name"]: BaseEditor(
                 base_editor_name=row["base_editor_name"],
                 pam_sequence=row["pam_sequence"],
                 editing_window_start=int(row["editing_window_start"]),
@@ -71,7 +71,7 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
                 base_editor_type=row["base_editor_type"],
             )
             for _, row in be_df.iterrows()
-        ]
+        }
 
 def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
     if not refflat_path.is_file():

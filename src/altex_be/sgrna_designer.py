@@ -467,14 +467,14 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
 # 実際に実行するのはこの関数だけでよい
 def design_sgrna_for_base_editors(
     target_exon_df: pd.DataFrame,
-    base_editors: list[BaseEditor],
+    base_editors: dict[str, BaseEditor],
 ) -> pd.DataFrame:
     """
     Purpose:
         各BaseEditorに対してsgRNAを設計し、結果をDataFrameにまとめる
     Parameters:
         target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
-        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+        base_editors: dict[str, BaseEditor], BaseEditorの情報を含む辞書
     Returns:
         pd.DataFrame, 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
     """
@@ -497,7 +497,7 @@ def design_sgrna_for_base_editors(
     ]
     foundation_cols_df = target_exon_df[foundation_cols].copy()
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         # 1. sgRNAを設計する
         temp_df = design_sgrna_for_target_exon_df(
             target_exon_df=target_exon_df,
@@ -539,20 +539,20 @@ def design_sgrna_for_base_editors(
 # 論文用には、各BEのsgRNAを1行にまとめたほうが便利ではあるが、ユーザーにはそれは必要ない。のちのexplodeを考えて、main.pyではdictで返すようにする
 def design_sgrna_for_base_editors_dict(
     target_exon_df: pd.DataFrame,
-    base_editors: list[BaseEditor],
+    base_editors: dict[str,BaseEditor],
 ) -> dict[str, pd.DataFrame]:
     """
     Purpose:
         各BaseEditorに対してsgRNAを設計し、結果をdictにまとめる
     Parameters:
         target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
-        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+        base_editors: dict[str, BaseEditor], BaseEditorの情報を含む辞書
     Returns:
         dict[str, pd.DataFrame], 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
     """
     results = {}  # 各BaseEditorの結果を格納する辞書
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         # 1. sgRNAを設計する
         temp_df = design_sgrna_for_target_exon_df(
             target_exon_df=target_exon_df,

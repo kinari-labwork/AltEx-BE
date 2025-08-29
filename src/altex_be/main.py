@@ -125,18 +125,18 @@ def main():
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
     # BaseEditorの決定
-    base_editors = []
+    base_editors = {}
     if args.be_files:
-        base_editors.extend(cli_setting.get_base_editors_from_args(args))
+        base_editors = cli_setting.get_base_editors_from_args(args)
 
     if args.be_preset and args.be_preset not in preset_base_editors:
         raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
     else:
         base_editor = preset_base_editors[args.be_preset]
-        base_editors.append(base_editor)
+        base_editors[base_editor.base_editor_name] = base_editor
 
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
-        base_editors.extend(cli_setting.parse_base_editors(args))
+        base_editors.update(cli_setting.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)
     if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
