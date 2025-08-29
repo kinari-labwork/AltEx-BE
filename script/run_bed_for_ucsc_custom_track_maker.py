@@ -3,9 +3,9 @@ import pandas as pd
 from pathlib import Path
 import datetime
 
-output_directory = Path("/home/kinari/lab-work/KOnezumiEx/data/")
+output_directory = Path("data/")
 output_track_name = "altex_be_sgrnas"
-exploded_sgrna_with_offtarget_info = pd.read_pickle("/home/kinari/lab-work/KOnezumiEx/data/exploded_sgrna_df_with_offtarget_counts.pkl")
+exploded_sgrna_with_offtarget_info = pd.read_pickle("data/exploded_sgrna_df_with_offtarget_counts.pkl")
 
 bed_df = format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
 
