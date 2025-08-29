@@ -1,13 +1,13 @@
 from  altex_be.bed_for_ucsc_custom_track_maker import format_sgrna_for_ucsc_custom_track
 import pandas as pd
-import pathlib as Path
+from pathlib import Path
 import datetime
 
-output_directory = Path("../data/")
+output_directory = Path("/home/kinari/lab-work/KOnezumiEx/data/")
 output_track_name = "altex_be_sgrnas"
-exploded_sgrna_with_offtarget_info = pd.read_pickle("../data/exploded_sgrna_with_offtarget_info.pkl")
+exploded_sgrna_with_offtarget_info = pd.read_pickle("/home/kinari/lab-work/KOnezumiEx/data/exploded_sgrna_df_with_offtarget_counts.pkl")
 
-bed_df = format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory, output_track_name)
+bed_df = format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
 
 output_path = output_directory / f"{output_track_name}_ucsc_custom_track.bed"
 track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
