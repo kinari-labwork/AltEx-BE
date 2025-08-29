@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 import sys
+import datetime
 from . import (
     cli_setting,
     refflat_preprocessor,
@@ -112,6 +113,7 @@ def main():
     refflat_path = Path(args.refflat_path)
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_directory)
+    output_track_name = f"{datetime.now().strftime('%Y%m%d%H%M')}_sgRNA_designed_by_altex-be"
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
@@ -209,10 +211,10 @@ def main():
     exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
 
     logging.info("Saving results...")
-    exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
+    exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
 
     logging.info("Generating UCSC custom track...")
-    bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory)
+    bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory, output_track_name)
 
     return logging.info("All altex-be processes completed successfully.")
 
