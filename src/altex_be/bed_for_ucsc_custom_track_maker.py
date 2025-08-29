@@ -1,5 +1,4 @@
 import pandas as pd
-from pathlib import Path
 
 def format_sgrna_for_ucsc_custom_track(
     sgrna_df: pd.DataFrame,
