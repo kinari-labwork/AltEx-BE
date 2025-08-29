@@ -12,6 +12,7 @@ from . import (
     sgrna_designer,
     output_formatter,
     offtarget_scorer,
+    bed_for_ucsc_custom_track_maker,
     logging_config # noqa: F401
 )
 
@@ -209,6 +210,11 @@ def main():
 
     logging.info("Saving results...")
     exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
+
+    logging.info("Generating UCSC custom track...")
+    bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory)
+
+    return logging.info("All altex-be processes completed successfully.")
 
 if __name__ == "__main__":
     main()
