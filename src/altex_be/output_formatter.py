@@ -86,7 +86,7 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: di
             "base_editor_editing_window_end": be.editing_window_end_in_grna,
             "base_editor_type": be.base_editor_type,
         }
-        for be in base_editors
+        for be in base_editors.values()
     ]
     be_df = pd.DataFrame(be_info)
 
