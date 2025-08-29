@@ -142,7 +142,7 @@ def main():
     if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
         logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
     
-    output_track_name = f"{datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
+    output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
 
     if not base_editors:
         raise ValueError("No base editors specified. Please provide at least one base editor.")
