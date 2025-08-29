@@ -214,8 +214,18 @@ def main():
     exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
 
     logging.info("Generating UCSC custom track...")
-    bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory, output_track_name)
+    bed_df = bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info, output_directory)
 
+    output_path = output_directory / f"{output_track_name}_ucsc_custom_track.bed"
+    track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
+
+    with open(output_path, "w") as f:
+        track_header = f'track name="{output_track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
+        f.write(track_header)
+        bed_df.to_csv(f, sep="\t", header=False, index=False, lineterminator='\n')
+
+    logging.info(f"UCSC custom track file saved to: {output_path}")
+    
     return logging.info("All altex-be processes completed successfully.")
 
 if __name__ == "__main__":
