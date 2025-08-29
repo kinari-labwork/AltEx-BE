@@ -41,7 +41,7 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
         if (exon_counts > 1).any():
             logging.info(f"Gene {gene} has multiple exons")
             return True
-    logging.info("No gene has multiple exons")
+    logging.warning("No gene has multiple exons")
     return False
 
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
@@ -58,13 +58,13 @@ def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -
         # 遺伝子ごとにトランスクリプトの数をカウント
         transcripts = refFlat[refFlat["geneName"] == gene]
         if transcripts.shape[0] > 1:
-            print(f"Gene {gene} has multiple transcripts")
+            logging.info(f"Gene {gene} has multiple transcripts")
             bool_list.append(True)
         else:
-            print(f"Gene {gene} has a single transcript")
+            logging.warning(f"Gene {gene} has a single transcript")
             bool_list.append(False)
     if all([x is False for x in bool_list]):
-        print("All genes have a single transcript, stop further processing.")
+        logging.warning("All genes have a single transcript, stop further processing.")
         return False
     return True
 
@@ -251,16 +251,17 @@ def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[st
     """
     Validate the processed refFlat DataFrame.
     """
-    if refflat.empty:
-        raise ValueError("The processed refFlat DataFrame is empty. Please check your input data.")
-
     variant_check = check_transcript_variant(refflat, interest_gene_list)
     if not variant_check:
-        raise ValueError("No transcript variants found for your interest genes.")
-    
+        logging.warning("No transcript variants found for your interest genes.")
+        return False
+
     multiple_exon_check = check_multiple_exon_existance(refflat)
     if not multiple_exon_check:
-        raise ValueError("Your interest genes do not have multiple exons. These genes are out of scope.")
+        logging.warning("Your interest genes do not have multiple exons. These genes are out of scope.")
+        return False
+
+    return True
 
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
@@ -275,7 +276,5 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)
-    
-    validate_filtered_refflat(refflat, interest_genes)
-    
+
     return refflat

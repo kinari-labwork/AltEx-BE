@@ -175,6 +175,9 @@ def main():
     logging.info("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
     refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    if not refflat_preprocessor.validate_filtered_refflat(refflat, interest_gene_list) :
+        logging.warning("Filtered refFlat DataFrame is invalid. Exiting...")
+        sys.exit(0)
 
     logging.info("Classifying splicing events...")
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
