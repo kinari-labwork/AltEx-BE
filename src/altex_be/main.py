@@ -132,7 +132,8 @@ def main():
     if args.be_preset and args.be_preset not in preset_base_editors:
         raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
     else:
-        base_editors.extend(preset_base_editors[args.be_preset])
+        base_editor = preset_base_editors[args.be_preset]
+        base_editors.append(base_editor)
 
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
         base_editors.extend(cli_setting.parse_base_editors(args))
