@@ -116,7 +116,9 @@ def main():
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    interest_gene_list = args.gene_symbols + args.refseq_ids
+    gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
+    refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
+    interest_gene_list = gene_symbols + refseq_ids
     if not interest_gene_list:
         raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
 
