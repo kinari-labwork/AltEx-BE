@@ -1,13 +1,13 @@
 import pandas as pd
 from pathlib import Path
 import logging
+import datetime
 from . import logging_config # noqa: F401
 
 def format_sgrna_for_ucsc_custom_track(
     sgrna_df: pd.DataFrame,
     output_directory: Path,
     track_name: str = "sgRNAs",
-    track_description: str = "sgRNAs designed by Altex-BE"
 ) -> None:
     """
     Converts the final sgRNA DataFrame to a BED file for UCSC custom track.
@@ -23,8 +23,8 @@ def format_sgrna_for_ucsc_custom_track(
     bed_df["chrom"] = sgrna_df["chrom"]
     bed_df["chromStart"] = sgrna_df["sgrna_start_in_genome"]
     bed_df["chromEnd"] = sgrna_df["sgrna_end_in_genome"]
-    bed_df["name"] = sgrna_df["geneName"] + "_" + sgrna_df["base_editor_name"] + "_" + sgrna_df["site_type"] + "_" + sgrna_df["uuid"].str[:8]
-    bed_df["score"] = sgrna_df["sgrna_possible_unintended_editing_base_count"]
+    bed_df["name"] = sgrna_df["geneName"] + "_" + sgrna_df["exontype"] + "_" + sgrna_df["base_editor_name"]  + "_" + sgrna_df["uuid"].str[:8]
+    bed_df["score"] = sgrna_df["pam+20bp_exact_match"]
     bed_df["strand"] = sgrna_df["strand"]
     bed_df["thickStart"] = bed_df["sgrna_start_in_genome"]
     bed_df["thickEnd"] = bed_df["sgrna_end_in_genome"]
@@ -36,7 +36,8 @@ def format_sgrna_for_ucsc_custom_track(
     # Reorder columns for BED9 format
     bed_df = bed_df[["chrom", "chromStart", "chromEnd", "name", "score", "strand", "thickStart", "thickEnd", "itemRgb"]]
 
-    output_path = output_directory / "ucsc_custom_track.bed"
+    output_path = output_directory / f"{track_name}_ucsc_custom_track.bed"
+    track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
 
     with open(output_path, "w") as f:
         track_header = f'track name="{track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
