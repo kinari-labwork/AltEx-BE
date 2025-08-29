@@ -43,7 +43,7 @@ def main():
         help="Path of FASTA file"
     )
     dir_group.add_argument(
-        "-o", "--output-directory",
+        "-o", "--output-dir",
         required=True,
         help="Directory of the output files"
     )
@@ -112,7 +112,7 @@ def main():
 
     refflat_path = Path(args.refflat_path)
     fasta_path = Path(args.fasta_path)
-    output_directory = Path(args.output_directory)
+    output_directory = Path(args.output_dir)
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
