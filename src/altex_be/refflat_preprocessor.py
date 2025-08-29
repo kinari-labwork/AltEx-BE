@@ -16,7 +16,7 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
         pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
     """
     for gene in interest_genes:
-        if gene not in refFlat["geneName"].values | refFlat["name"].values:
+        if gene not in (refFlat["geneName"].values + refFlat["name"].values).tolist():
             logging.warning(f"Gene {gene} is not found in refFlat.")
             continue
         else :
@@ -37,7 +37,8 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
         bool, 複数のエキソンが存在する場合はTrue、存在しない場合はFalse
     """
     for gene in refFlat["geneName"].unique():
-        if refFlat[refFlat["exonCount"] == gene].shape[0] > 1:
+        exon_counts = refFlat[refFlat["geneName"] == gene]["exonCount"]
+        if (exon_counts > 1).any():
             print(f"Gene {gene} has multiple exons")
             return True
     print("No gene has multiple exons")
