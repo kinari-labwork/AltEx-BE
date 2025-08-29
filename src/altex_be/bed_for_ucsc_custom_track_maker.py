@@ -6,17 +6,12 @@ from . import logging_config # noqa: F401
 
 def format_sgrna_for_ucsc_custom_track(
     sgrna_df: pd.DataFrame,
-    output_directory: Path,
-    track_name: str = "sgRNAs",
-) -> None:
+) -> pd.DataFrame:
     """
-    Converts the final sgRNA DataFrame to a BED file for UCSC custom track.
-
-    Args:
-        sgrna_df (pd.DataFrame): The final DataFrame with sgRNA information.
-        output_directory (Path): The directory to save the BED file.
-        track_name (str, optional): The name of the track. Defaults to "sgRNAs".
-        track_description (str, optional): The description of the track. Defaults to "sgRNAs designed by Altex-BE".
+    Purpose : 最終出力のsgRNA情報をUCSCカスタムトラック用のBED形式に変換する
+    Parameters:
+        sgrna_df (pd.DataFrame): offtarget までの情報を含むsgRNA情報のDataFrame。
+    Return : pd.DataFrame 12 bedに修正された DataFrame
     """
 
     bed_df = pd.DataFrame()
@@ -32,17 +27,9 @@ def format_sgrna_for_ucsc_custom_track(
     # Add RGB color based on base editor type
     color_map = {"abe": "255,0,0", "cbe": "0,0,255"} # ABE: red, CBE: blue
     bed_df["itemRgb"] = sgrna_df["base_editor_type"].map(color_map)
-
+    
     # Reorder columns for BED9 format
     bed_df = bed_df[["chrom", "chromStart", "chromEnd", "name", "score", "strand", "thickStart", "thickEnd", "itemRgb"]]
 
-    output_path = output_directory / f"{track_name}_ucsc_custom_track.bed"
-    track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
 
-    with open(output_path, "w") as f:
-        track_header = f'track name="{track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
-        f.write(track_header)
-        bed_df.to_csv(f, sep="\t", header=False, index=False, lineterminator='\n')
-
-    logging.info(f"UCSC custom track file saved to: {output_path}")
 
