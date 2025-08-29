@@ -113,7 +113,6 @@ def main():
     refflat_path = Path(args.refflat_path)
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_directory)
-    output_track_name = f"{datetime.now().strftime('%Y%m%d%H%M')}_sgRNA_designed_by_altex-be"
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
@@ -139,6 +138,8 @@ def main():
     assembly_name = str(args.assembly_name)
     if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
         logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
+    
+    output_track_name = f"{datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
 
     if not base_editors:
         raise ValueError("No base editors specified. Please provide at least one base editor.")
