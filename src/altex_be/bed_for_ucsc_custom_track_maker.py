@@ -17,7 +17,7 @@ def format_sgrna_for_ucsc_custom_track(
     bed_df["chrom"] = sgrna_df["chrom"]
     bed_df["chromStart"] = sgrna_df["sgrna_start_in_genome"]
     bed_df["chromEnd"] = sgrna_df["sgrna_end_in_genome"]
-    bed_df["name"] = sgrna_df["geneName"] + "_" + sgrna_df["exontype"] + "_" + sgrna_df["base_editor_name"]  + "_" + sgrna_df["uuid"].str[:8]
+    bed_df["name"] = sgrna_df["geneName"] + "_" + sgrna_df["site_type"] + "_" + sgrna_df["base_editor_name"]  + "_" + sgrna_df["uuid"].str[:8]
     bed_df["score"] = sgrna_df["pam+20bp_exact_match_count"]
     bed_df["strand"] = sgrna_df["strand"]
     bed_df["thickStart"] = bed_df["chromStart"] # 別に必要ないが、9bed にするために追加
