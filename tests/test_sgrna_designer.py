@@ -513,8 +513,9 @@ def test_organize_target_exon_df_with_grna_sequence_empty():
     for col in result.columns:
         assert result[col][0] == []
 
-def test_convert_sgrna_start_end_position_to_position_in_chromosome():
+def test_convert_sgrna_start_end_position_to_position_in_chromosome_plus_strand():
     df = pd.DataFrame({
+        "strand": ["+"],
         "acceptor_sgrna_start_in_sequence": [[1, 5]],
         "acceptor_sgrna_end_in_sequence": [[21, 25]],
         "donor_sgrna_start_in_sequence": [[2, 6]],
@@ -536,8 +537,36 @@ def test_convert_sgrna_start_end_position_to_position_in_chromosome():
     # 他の列が残っていること
     assert result["other_col"][0] == 123
 
+def test_convert_sgrna_start_end_position_to_position_in_chromosome_minus_strand():
+    df = pd.DataFrame({
+        "strand": ["-"],
+        "acceptor_sgrna_start_in_sequence": [[1, 1]], # 1, 49 などというようなsgRNAは長すぎるが、わかりやすい例として使用
+        "acceptor_sgrna_end_in_sequence": [[21, 49]],
+        "donor_sgrna_start_in_sequence": [[2, 1]],
+        "donor_sgrna_end_in_sequence": [[22, 49]],
+        "chromStart_acceptor": [100],
+        "chromEnd_acceptor": [150],
+        "chromStart_donor": [200],
+        "chromEnd_donor": [250],
+        "other_col": [123]  # 他の列も含める
+    })
+
+    result = convert_sgrna_start_end_position_to_position_in_chromosome(df)
+
+    # ゲノム座標が正しく計算されているか
+    # 例えば 100, 150の範囲で配列を取得しているとする
+    # minus strandのとき, sgRNA_start相対位置が 1 sgRNA_endの相対位置が 49であるならば、sgRNA_start 絶対位置は、49, sgRNA_end 絶対位置 1になる
+    # その理由は、minus strandの時、pybedtools で取得された配列は逆相補化されているため、相対位置の1は実際には配列の最後の方に位置するからである
+    assert result["acceptor_sgrna_start_in_genome"][0] == [129, 101]
+    assert result["acceptor_sgrna_end_in_genome"][0] == [149, 149]
+    assert result["donor_sgrna_start_in_genome"][0] == [228, 201]
+    assert result["donor_sgrna_end_in_genome"][0] == [248, 249]
+    # 他の列が残っていること
+    assert result["other_col"][0] == 123
+
 def test_convert_sgrna_start_end_position_to_position_in_chromosome_empty():
     df = pd.DataFrame({
+        "strand": ["+"],
         "acceptor_sgrna_start_in_sequence": [[]],
         "acceptor_sgrna_end_in_sequence": [[]],
         "donor_sgrna_start_in_sequence": [[]],
