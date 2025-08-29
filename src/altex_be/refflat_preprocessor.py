@@ -15,8 +15,11 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
     Returns:
         pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
     """
+    gene_symbol_set = set(refFlat["geneName"].values)
+    ref_seq_id_set = set(refFlat["name"].values)
+
     for gene in interest_genes:
-        if gene not in (refFlat["geneName"].values + refFlat["name"].values).tolist():
+        if gene not in gene_symbol_set and gene not in ref_seq_id_set:
             logging.warning(f"Gene {gene} is not found in refFlat.")
             continue
         else :
