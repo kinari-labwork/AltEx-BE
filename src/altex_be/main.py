@@ -181,7 +181,7 @@ def main():
     classified_refflat.to_pickle(output_directory / "processed_refFlat.pickle")
     del refflat
 
-    print("Extracting target exons...")
+    logging.info("Extracting target exons...")
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
     if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
         logging.warning("No target exons found for all of the given genes, exiting")
@@ -198,7 +198,7 @@ def main():
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
-    print("designing sgRNAs...")
+    logging.info("designing sgRNAs...")
     target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
         base_editors=base_editors

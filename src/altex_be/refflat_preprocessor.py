@@ -39,9 +39,9 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
     for gene in refFlat["geneName"].unique():
         exon_counts = refFlat[refFlat["geneName"] == gene]["exonCount"]
         if (exon_counts > 1).any():
-            print(f"Gene {gene} has multiple exons")
+            logging.info(f"Gene {gene} has multiple exons")
             return True
-    print("No gene has multiple exons")
+    logging.info("No gene has multiple exons")
     return False
 
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
