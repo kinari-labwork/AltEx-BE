@@ -1,8 +1,5 @@
 import pandas as pd
 from pathlib import Path
-import logging
-import datetime
-from . import logging_config # noqa: F401
 
 def format_sgrna_for_ucsc_custom_track(
     sgrna_df: pd.DataFrame,
@@ -13,6 +10,8 @@ def format_sgrna_for_ucsc_custom_track(
         sgrna_df (pd.DataFrame): offtarget までの情報を含むsgRNA情報のDataFrame。
     Return : pd.DataFrame 12 bedに修正された DataFrame
     """
+    # score 列に100を超える値が入ることがあるため、100でクリップする
+    sgrna_df["pam+20bp_exact_match"] = sgrna_df["pam+20bp_exact_match"].apply(lambda x: 100 if x > 100 else x)
 
     bed_df = pd.DataFrame()
     bed_df["chrom"] = sgrna_df["chrom"]
@@ -30,6 +29,4 @@ def format_sgrna_for_ucsc_custom_track(
     
     # Reorder columns for BED9 format
     bed_df = bed_df[["chrom", "chromStart", "chromEnd", "name", "score", "strand", "thickStart", "thickEnd", "itemRgb"]]
-
-
-
+    return bed_df
