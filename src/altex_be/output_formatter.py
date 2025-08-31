@@ -117,6 +117,7 @@ def get_pam_sequence_based_on_real_sequence(exploded_sgrna_df:pd.DataFrame) -> p
         pam_seq_list.append(pam_seq)
     col_index = exploded_sgrna_df.columns.get_loc("sgrna_sequence") + 1
     exploded_sgrna_df.insert(col_index, 'pam_sequence', pam_seq_list)
+    return exploded_sgrna_df
 
 def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame], 
                 base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
@@ -138,6 +139,9 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
 
     # UUIDをsgRNAごとにユニークに更新
     exploded_sgrna_df = update_uuid_unique_to_every_sgrna(exploded_sgrna_df)
+
+    # 実際のPAM配列を追加
+    exploded_sgrna_df = get_pam_sequence_based_on_real_sequence(exploded_sgrna_df)
 
     # geneNameを基にソート
     exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exon_position"])
