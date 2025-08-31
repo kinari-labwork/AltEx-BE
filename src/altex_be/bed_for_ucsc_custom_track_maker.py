@@ -10,7 +10,7 @@ def format_sgrna_for_ucsc_custom_track(
     Return : pd.DataFrame 12 bedに修正された DataFrame
     """
     # score 列に100を超える値が入ることがあるため、100でクリップする
-    sgrna_df["pam+20bp_exact_match"] = sgrna_df["pam+20bp_exact_match_count"].apply(lambda x: 100 if x > 100 else x)
+    sgrna_df["pam+20bp_exact_match_count"] = sgrna_df["pam+20bp_exact_match_count"].apply(lambda x: 100 if x > 100 else x)
 
     bed_df = pd.DataFrame()
     bed_df["chrom"] = sgrna_df["chrom"]
