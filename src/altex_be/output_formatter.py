@@ -101,24 +101,6 @@ def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.Dat
     exploded_sgrna_df['uuid'] = [uuid.uuid4().hex for _ in range(len(exploded_sgrna_df))]
     return exploded_sgrna_df
 
-def get_pam_sequence_based_on_real_sequence(exploded_sgrna_df:pd.DataFrame) -> pd.DataFrame:
-    """
-    Purpose: 今の時点では、base_editor_pam_sequence列は、"NGG"のように曖昧配列で表現されている。
-            これを、実際のsgRNA配列に基づいて、"AGG"や"TGG"のように具体的な配列の表現の列を追加する
-    """
-    exploded_sgrna_df = exploded_sgrna_df.reset_index(drop=True)
-    pam_seq_list = []
-
-    for index, row in exploded_sgrna_df.iterrows():
-        if row["site_type"] == "acceptor" and row["base_editor_type"] == "abe":
-            pam_seq = row["sgrna_sequence"].split("+")[0]
-        else:
-            pam_seq = row["sgrna_sequence"].split("+")[1]
-        pam_seq_list.append(pam_seq)
-    col_index = exploded_sgrna_df.columns.get_loc("sgrna_sequence") + 1
-    exploded_sgrna_df.insert(col_index, 'pam_sequence', pam_seq_list)
-    return exploded_sgrna_df
-
 def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame], 
                 base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
     """
@@ -139,9 +121,6 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
 
     # UUIDをsgRNAごとにユニークに更新
     exploded_sgrna_df = update_uuid_unique_to_every_sgrna(exploded_sgrna_df)
-
-    # 実際のPAM配列を追加
-    exploded_sgrna_df = get_pam_sequence_based_on_real_sequence(exploded_sgrna_df)
 
     # geneNameを基にソート
     exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exon_position"])
