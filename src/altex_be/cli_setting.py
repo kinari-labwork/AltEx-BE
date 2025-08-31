@@ -66,8 +66,8 @@ def get_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor
             row["base_editor_name"]: BaseEditor(
                 base_editor_name=row["base_editor_name"],
                 pam_sequence=row["pam_sequence"],
-                editing_window_start=int(row["editing_window_start"]),
-                editing_window_end=int(row["editing_window_end"]),
+                editing_window_start_in_grna=int(row["editing_window_start"]),
+                editing_window_end_in_grna=int(row["editing_window_end"]),
                 base_editor_type=row["base_editor_type"],
             )
             for _, row in be_df.iterrows()
