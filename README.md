@@ -74,6 +74,7 @@ To use AltexBE, you should prepare 2 input files in your computer
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
     - when you assign bed file, you should choose correct assembly name in above website
+    - score columns in bed file means offtarget count of 20bp+PAM
 
 ## Usage
 
