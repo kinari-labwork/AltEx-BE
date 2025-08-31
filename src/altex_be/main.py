@@ -207,8 +207,7 @@ def main():
     )
 
     logging.info("Formatting output...")
-    base_editors_dict = sgrna_designer.make_preset_base_editors()
-    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors_dict)
+    formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors)
     if formatted_exploded_sgrna_df.empty:
         logging.warning("No sgRNAs could be designed for given genes and Base Editors, Exiting")
         sys.exit(0)
