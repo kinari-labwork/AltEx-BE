@@ -31,7 +31,7 @@ By transforming a complex, multi-step design process into a single command, AltE
 
 Here is a simplified diagram illustrating the workflow of `AltexBE`:
 
-
+![pipeline_explanation](docs/pipeline_explanation.png)
 
 ## Installation
 
@@ -43,7 +43,6 @@ git clone https://github.com/kinari-labwork/AltEx-BE
 cd AltEx-BE
 pip install -e .
 ```
-![pipeline_explanation](docs/pipeline_explanation.png)
 
 ## Usage
 
