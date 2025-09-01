@@ -43,7 +43,7 @@ def test_format_sgrna_for_ucsc_custom_track_edge_case():
         'base_editor_type': ['abe'],
         'uuid': ['1234-5678'],
         'sgrna_sequence': ['ATGCATGCATGCATGCATGC'],
-        'pam+20bp_exact_match_count': [101],
+        'pam+20bp_exact_match_count': [1001],
         'strand': ['+'],
         'sgrna_start_in_genome': [100],
         'sgrna_end_in_genome': [120],
@@ -64,5 +64,5 @@ def test_format_sgrna_for_ucsc_custom_track_edge_case():
     assert output_df['chromStart'].iloc[0] == 100
     assert output_df['chromEnd'].iloc[0] == 120
     assert output_df['name'].iloc[0] == 'MYGENE_donor_ABE8e_1234-5678'
-    assert output_df['score'].iloc[0] == 100
+    assert output_df['score'].iloc[0] == 1000
     assert output_df['strand'].iloc[0] == '+'
