@@ -10,13 +10,12 @@
   - [Workflow Diagram](#workflow-diagram)
   - [Installation](#installation)
   - [Required dataset](#required-dataset)
-  - [Format of altex-be output](#format-of-altex-be-output)
+  - [Format of Altex-BE output](#format-of-altex-be-output)
   - [Usage](#usage)
     - [List of command line options](#list-of-command-line-options)
       - [1. Input Base Editor Information in the Command Line:](#1-input-base-editor-information-in-the-command-line)
       - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
       - [3. Using a Preset Editor:](#3-using-a-preset-editor)
-  - [Project Structure](#project-structure)
   - [License](#license)
 
 ## Overview
@@ -65,12 +64,12 @@ To use AltexBE, you should prepare 2 input files in your computer
     - you can download refflat files from  UCSC goldenpath: refflat files of mm39 is [here](https://hgdownload.cse.ucsc.edu/goldenpath/mm39/database/)
 - Fasta files contain all chromosome sequence of your interest species
     - you can download Fasta file also from UCSC goldenpath
-    - please comfirm your .fa files contain all of chromosome. if not, altex-be process will fail
+    - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
 
-## Format of altex-be output
+## Format of Altex-BE output
 `altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
 - Summary sgRNA table (.csv)
-    - this table contain imformation of sgRNAs designed by altex-be
+    - this table contain imformation of sgRNAs designed by AltEx-BE
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
     - when you assign bed file, you should choose correct assembly name in above website
@@ -156,21 +155,6 @@ altex-be \
     --gene-symbols MYGENE \
     --assembly-name hg38 \
     --be-preset ABE8e
-```
-
-## Project Structure
-
-```
-.
-├── analysis/         # for analysis file 
-├── docs/             # Documentation for development 
-├── script/           # Scripts to run modules individually
-├── src/
-│   └── altex_be/     # Source code for the AltexBE tool
-├── tests/            # Unit tests
-├── .gitignore
-├── pyproject.toml
-└── README.md
 ```
 
 ## License
