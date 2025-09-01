@@ -131,7 +131,7 @@ def main():
     
     if args.be_preset is not None:
         if args.be_preset not in preset_base_editors:
-            raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
+            parser.error(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
         else:
             base_editor = preset_base_editors[args.be_preset]
             base_editors[base_editor.base_editor_name] = base_editor
@@ -150,7 +150,7 @@ def main():
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
 
     if not base_editors:
-        raise ValueError("No base editors specified. Please provide at least one base editor.")
+        parser.error("No base editors specified. Please provide at least one base editor.")
 
     logging.info("Designing sgRNAs for the following base editors:")
     cli_setting.show_base_editors_info(base_editors)
@@ -181,10 +181,13 @@ def main():
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
     refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
     if not refflat_preprocessor.validate_filtered_refflat(refflat, interest_gene_list) :
-        logging.warning("Filtered refFlat DataFrame is invalid. Exiting...")
+        logging.warning("your interest gene is not targetable. Exiting...")
         sys.exit(0)
+
     logging.info("-" * 50)
+
     logging.info("Classifying splicing events...")
+
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
     del refflat
     logging.info("-" * 50)
@@ -199,6 +202,7 @@ def main():
         else:
             logging.info(f"Target exons found for the gene: {gene}.")
     logging.info("-" * 50)
+
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
         exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
