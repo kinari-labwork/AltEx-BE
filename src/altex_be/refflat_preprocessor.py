@@ -30,7 +30,7 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
         raise ValueError("No interest genes found in refFlat. Please check the format of interest_genes. Allowed formats are gene symbols or Refseq IDs.")
     return refFlat
 
-def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
+def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
     """
     Purpose:
         refFlatのデータフレームに、複数のエキソンが存在するかを確認する。
@@ -39,13 +39,15 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame) -> bool:
     Returns:
         bool, 複数のエキソンが存在する場合はTrue、存在しない場合はFalse
     """
-    for gene in refFlat["geneName"].unique():
+    found = False
+    for gene in interest_gene_list:
         exon_counts = refFlat[refFlat["geneName"] == gene]["exonCount"]
         if (exon_counts > 1).any():
             logging.info(f"Gene {gene} has multiple exons")
-            return True
-    logging.warning("No gene has multiple exons")
-    return False
+            found = True
+    if not found:
+        logging.warning("No gene has multiple exons")
+    return found
 
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
     """
@@ -259,7 +261,7 @@ def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[st
         logging.warning("No transcript variants found for your interest genes.")
         return False
 
-    multiple_exon_check = check_multiple_exon_existance(refflat)
+    multiple_exon_check = check_multiple_exon_existance(refflat, interest_gene_list)
     if not multiple_exon_check:
         logging.warning("Your interest genes do not have multiple exons. These genes are out of scope.")
         return False
