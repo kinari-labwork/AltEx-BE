@@ -233,7 +233,7 @@ def main():
     bed_df = bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
 
     output_path = output_directory / f"{output_track_name}_ucsc_custom_track.bed"
-    track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
+    track_description: str = f"sgRNAs designed by AltEx-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
 
     with open(output_path, "w") as f:
         track_header = f'track name="{output_track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
@@ -242,7 +242,7 @@ def main():
 
     logging.info(f"UCSC custom track file saved to: {output_path}")
     
-    logging.info("All altex-be processes completed successfully.")
+    logging.info("All AltEx-BE processes completed successfully.")
     logging.info("Printing summary of output:")
     summary_dfs = cli_setting.split_df_by_column_chunks(exploded_sgrna_with_offtarget_info, chunk_sizes=[12, 6, 6])
     for sub_df in summary_dfs:
