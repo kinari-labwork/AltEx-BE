@@ -14,8 +14,8 @@
       - [1. Input Base Editor Information in the Command Line:](#1-input-base-editor-information-in-the-command-line)
       - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
       - [3. Using a Preset Editor:](#3-using-a-preset-editor)
-  - [Format of Altex-BE output](#format-of-altex-be-output)
   - [List of command line options](#list-of-command-line-options)
+  - [Format of Altex-BE output](#format-of-altex-be-output)
   - [License](#license)
 
 ## Overview
@@ -127,6 +127,25 @@ altex-be \
     --assembly-name hg38 \
     --be-preset ABE8e
 ```
+## List of command line options
+
+| Short Option | Long Option | Argument | Explanation |
+| :--- | :--- | :--- | :--- |
+| -h | --help | | Show the help message and exit. |
+| -v | --version | | Show the version of Altex BE. |
+| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
+| -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
+| -o | --output-dir | DIR | (Required) Directory for the output files. |
+| | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
+| | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
+| -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
+| -n | --be-name | NAME | The name of the base editor to use. |
+| -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
+| -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
+| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
+| | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
 ## Format of Altex-BE output
 `altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
@@ -161,26 +180,6 @@ altex-be \
     - colored box (red, blue) is sgRNA sequences. red means sgRNAs for abe, blue means sgRNAs for cbe.
     - score columns in bed file means offtarget count of 20bp+PAM
     - when you assign bed file, you should choose correct assembly name in above website
-
-## List of command line options
-
-| Short Option | Long Option | Argument | Explanation |
-| :--- | :--- | :--- | :--- |
-| -h | --help | | Show the help message and exit. |
-| -v | --version | | Show the version of Altex BE. |
-| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
-| -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
-| -o | --output-dir | DIR | (Required) Directory for the output files. |
-| | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
-| | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
-| -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
-| -n | --be-name | NAME | The name of the base editor to use. |
-| -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
-| -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
-| -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
-| -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
-| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
-| | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
 ## License
 
