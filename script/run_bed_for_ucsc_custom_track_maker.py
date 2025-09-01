@@ -10,7 +10,7 @@ exploded_sgrna_with_offtarget_info = pd.read_pickle("data/exploded_sgrna_df_with
 bed_df = format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
 
 output_path = output_directory / f"{output_track_name}_ucsc_custom_track.bed"
-track_description: str = f"sgRNAs designed by Altex-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
+track_description: str = f"sgRNAs designed by altex-be on {datetime.datetime.now().strftime('%Y%m%d')}"
 
 with open(output_path, "w") as f:
     track_header = f'track name="{output_track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
