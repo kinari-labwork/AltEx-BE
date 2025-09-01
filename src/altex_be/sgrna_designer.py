@@ -40,7 +40,7 @@ def convert_dna_to_reversed_complement(sequence: str) -> str:
     """
     complement_map = {
         "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
-        "a": "t", "t": "a", "c": "g", "g": "c"
+        "a": "t", "t": "a", "c": "g", "g": "c", "n": "n"
         }
     return "".join([complement_map[base] for base in reversed(sequence)])
 
