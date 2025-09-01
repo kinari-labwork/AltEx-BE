@@ -10,12 +10,12 @@
   - [Workflow Diagram](#workflow-diagram)
   - [Installation](#installation)
   - [Required dataset](#required-dataset)
-  - [Format of Altex-BE output](#format-of-altex-be-output)
-  - [Usage](#usage)
-    - [List of command line options](#list-of-command-line-options)
+  - [Usage \& Quick example](#usage--quick-example)
       - [1. Input Base Editor Information in the Command Line:](#1-input-base-editor-information-in-the-command-line)
       - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
       - [3. Using a Preset Editor:](#3-using-a-preset-editor)
+  - [Format of Altex-BE output](#format-of-altex-be-output)
+  - [List of command line options](#list-of-command-line-options)
   - [License](#license)
 
 ## Overview
@@ -66,38 +66,9 @@ To use AltexBE, you should prepare 2 input files in your computer
     - you can download Fasta file also from UCSC goldenpath
     - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
 
-## Format of Altex-BE output
-`altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
-- Summary sgRNA table (.csv)
-    - this table contain imformation of sgRNAs designed by AltEx-BE
-- BED file for UCSC custom track (.bed)
-    - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
-    - when you assign bed file, you should choose correct assembly name in above website
-    - score columns in bed file means offtarget count of 20bp+PAM
-
-## Usage
+## Usage & Quick example
 
 AltexBE is operated via the `altex-be` command.
-
-### List of command line options
-
-| Short Option | Long Option | Argument | Explanation |
-| :--- | :--- | :--- | :--- |
-| -h | --help | | Show the help message and exit. |
-| -v | --version | | Show the version of Altex BE. |
-| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
-| -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
-| -o | --output-dir | DIR | (Required) Directory for the output files. |
-| | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
-| | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
-| -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
-| -n | --be-name | NAME | The name of the base editor to use. |
-| -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
-| -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
-| -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
-| -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
-| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
-| | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
 #### 1. Input Base Editor Information in the Command Line:
 
@@ -156,6 +127,60 @@ altex-be \
     --assembly-name hg38 \
     --be-preset ABE8e
 ```
+
+## Format of Altex-BE output
+`altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
+- Summary sgRNA table (.csv)
+    - this table contain imformation of sgRNAs designed by AltEx-BE
+![summary_sgrna_table](docs/output_csv_example.png)
+- Meaning of each column is :
+
+|column name|meaning|remark|
+|:-----------|:-------------------|--|
+|geneName|gene symbol of target gene|
+|chrom|location of target gene|
+|exonstart, exonend, exonlength|general information of target exon|
+|coding|whether target gene is protein coding or non coding gene|
+|flame| mod3 of the length of target exon|0 = in-flame or 1,2 = out-flame |
+|exon_position|relative location of target exon in target gene|"first" or "internal" or "last"|
+|uuid|the unique id for each sgRNAs|changes in every run|
+|exon_intron_boundary+-25bp_sequence| sequence around SA or SD |
+|sgrna_sequence| sgRNA sequence | Thymine is not replaced by Uracil |
+|sgrna_target_pos_in_seq| position of target A or C in sgRNA | relative location in sgrna |
+|sgrna_overlap_between_cds_and_editing_window| number of overlapping bases with editing window|
+|sgrna_unintended_edited_base_count| number of possible being edited bases (A or C) in cds|
+|sgrna_start/end_in_genome| location of sgrna|
+|site type| target splicing site of sgRNA | acceptor or donor|
+|base_editor_name/pam_sequence/window_start or end / base editor type| infomation of BE to design sgRNA|
+|crispr_direct_url| link to CRISPR direct|
+|pam+20bp exact match| pam+20bp (23-mer) exact match in all chromosome|
+
+- BED file for UCSC custom track (.bed)
+    - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
+![example_of_custom_track](docs/examle_of_custom_track.png)
+    - colored box (red, blue) is sgRNA sequences. red means sgRNAs for abe, blue means sgRNAs for cbe.
+    - score columns in bed file means offtarget count of 20bp+PAM
+    - when you assign bed file, you should choose correct assembly name in above website
+
+## List of command line options
+
+| Short Option | Long Option | Argument | Explanation |
+| :--- | :--- | :--- | :--- |
+| -h | --help | | Show the help message and exit. |
+| -v | --version | | Show the version of Altex BE. |
+| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
+| -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
+| -o | --output-dir | DIR | (Required) Directory for the output files. |
+| | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
+| | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
+| -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
+| -n | --be-name | NAME | The name of the base editor to use. |
+| -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
+| -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
+| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
+| | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
 ## License
 
