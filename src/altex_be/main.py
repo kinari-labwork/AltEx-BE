@@ -120,7 +120,7 @@ def main():
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
     interest_gene_list = gene_symbols + refseq_ids
     if not interest_gene_list:
-        raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
+        parser.error("Please provide at least one interest gene symbol or Refseq ID.")
 
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
@@ -137,6 +137,10 @@ def main():
             base_editors[base_editor.base_editor_name] = base_editor
 
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
+        if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
+            parser.error(
+            "Base editor information is incomplete. Please provide all required parameters."
+            )
         base_editors.update(cli_setting.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)

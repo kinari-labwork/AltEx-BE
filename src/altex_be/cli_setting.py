@@ -3,14 +3,8 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-
 def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
-    if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
-        raise ValueError(
-            "Base editor information is incomplete. Please provide all required parameters."
-        )
-    try:
-        return {
+    return {
             args.base_editor_name: BaseEditor(
                 base_editor_name=args.base_editor_name,
                 pam_sequence=args.base_editor_pam.upper(),
@@ -19,8 +13,6 @@ def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None
                 base_editor_type=args.base_editor_type.lower(),
             )
         }
-    except ValueError as e:
-        raise ValueError(f"Error parsing base editor information: {e}")
 
 def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
