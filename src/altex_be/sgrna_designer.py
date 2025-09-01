@@ -464,7 +464,6 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
     return target_exon_df_with_grna_sequence.reset_index(drop=True)
 
 # 今までの動作をまとめて、sgrnaを設計する関数
-# 実際に実行するのはこの関数だけでよい
 def design_sgrna_for_base_editors(
     target_exon_df: pd.DataFrame,
     base_editors: dict[str, BaseEditor],
