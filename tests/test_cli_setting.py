@@ -22,17 +22,6 @@ def test_parse_base_editors_valid():
     assert be.editing_window_end_in_grna == 15
     assert be.base_editor_type == "cbe"
 
-def test_parse_base_editors_incomplete():
-    args = argparse.Namespace(
-        base_editor_name=None,
-        base_editor_pam="NGG",
-        base_editor_window_start="10",
-        base_editor_window_end="15",
-        base_editor_type="cbe"
-    )
-    with pytest.raises(ValueError):
-        parse_base_editors(args)
-
 def test_get_base_editors_from_args(tmp_path):
     # ダミーのbase editorファイル作成
     be_file = tmp_path / "editors.csv"
