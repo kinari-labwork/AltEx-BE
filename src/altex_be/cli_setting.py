@@ -17,7 +17,10 @@ def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None
 def parse_gene_file(args: argparse.Namespace) -> list[str] | None:
     if not args.gene_file:
         return None
-    with open(args.gene_file, "r") as f:
+    gene_file = Path(args.gene_file)
+    if gene_file.suffix.lower() not in [".txt", ".tsv", ".csv"]:
+        raise ValueError("Unsupported file extension for gene file. Use .txt, .tsv, or .csv")
+    with open(gene_file, "r") as f:
         interest_genes = [line.strip() for line in f if line.strip()] #空の行は if line.strip がFalseになるので除外できる
     return interest_genes
 

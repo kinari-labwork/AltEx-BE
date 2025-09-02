@@ -68,7 +68,7 @@ def main():
         "--gene-file",
         default=None,
         required=False,
-        help="Path to a file containing gene symbols or Refseq IDs (one gene per line)"
+        help="Path to a file (csv,txt,tsv) containing gene symbols or Refseq IDs (one gene per line)"
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
@@ -122,9 +122,10 @@ def main():
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
+    genes_from_file = cli_setting.parse_gene_file(args)
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
-    interest_gene_list = gene_symbols + refseq_ids
+    interest_gene_list = gene_symbols + refseq_ids + genes_from_file
     if not interest_gene_list:
         parser.error("Please provide at least one interest gene symbol or Refseq ID.")
 
