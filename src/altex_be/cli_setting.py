@@ -14,6 +14,13 @@ def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None
             )
         }
 
+def parse_gene_file(args: argparse.Namespace) -> list[str] | None:
+    if not args.gene_file:
+        return None
+    with open(args.gene_file, "r") as f:
+        interest_genes = [line.strip() for line in f if line.strip()] #空の行は if line.strip がFalseになるので除外できる
+    return interest_genes
+
 def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
         raise ValueError("No base editors available to display.")

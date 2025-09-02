@@ -1,6 +1,6 @@
 import pytest
 import argparse
-from altex_be.cli_setting import parse_base_editors,check_input_output_directories, get_base_editors_from_args, is_supported_assembly_name_in_crispr_direct
+from altex_be.cli_setting import parse_base_editors,check_input_output_directories, get_base_editors_from_args, is_supported_assembly_name_in_crispr_direct, parse_gene_file
 from altex_be.sgrna_designer import BaseEditor
 
 def test_parse_base_editors_valid():
@@ -21,6 +21,18 @@ def test_parse_base_editors_valid():
     assert be.editing_window_start_in_grna == 10
     assert be.editing_window_end_in_grna == 15
     assert be.base_editor_type == "cbe"
+
+def test_parse_gene_file(tmp_path):
+    # ダミーの遺伝子ファイル作成
+    gene_file = tmp_path / "genes.txt"
+    gene_file.write_text("GeneA\nGeneB\n  \nGeneC\n")
+    args = argparse.Namespace(gene_file=str(gene_file))
+    result = parse_gene_file(args)
+    assert isinstance(result, list)
+    assert "GeneA" in result
+    assert "GeneB" in result
+    assert "GeneC" in result
+    assert len(result) == 3  # 空行が除外されていることを確認
 
 def test_get_base_editors_from_args(tmp_path):
     # ダミーのbase editorファイル作成

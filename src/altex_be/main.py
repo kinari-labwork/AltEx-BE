@@ -64,6 +64,12 @@ def main():
         required=True,
         help="Name of the genome assembly to use"
     )
+    gene_group.add_argument(
+        "--gene-file",
+        default=None,
+        required=False,
+        help="Path to a file containing gene symbols or Refseq IDs (one gene per line)"
+    )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
         "-n", "--be-name",
