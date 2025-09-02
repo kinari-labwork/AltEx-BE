@@ -119,10 +119,11 @@ def main():
     refflat_path = Path(args.refflat_path)
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_dir)
+    gene_file = Path(args.gene_file) if args.gene_file else None
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    genes_from_file = cli_setting.parse_gene_file(args)
+    genes_from_file = cli_setting.parse_gene_file(gene_file) if gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
     interest_gene_list = gene_symbols + refseq_ids + genes_from_file

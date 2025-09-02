@@ -14,10 +14,9 @@ def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None
             )
         }
 
-def parse_gene_file(args: argparse.Namespace) -> list[str] | None:
-    if not args.gene_file:
+def parse_gene_file(gene_file: Path) -> list[str] | None:
+    if not gene_file:
         return None
-    gene_file = Path(args.gene_file)
     if gene_file.suffix.lower() not in [".txt", ".tsv", ".csv"]:
         raise ValueError("Unsupported file extension for gene file. Use .txt, .tsv, or .csv")
     with open(gene_file, "r") as f:
