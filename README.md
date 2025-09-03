@@ -65,10 +65,13 @@ To use AltexBE, you should prepare 2 input files in your computer
 - Fasta files contain all chromosome sequence of your interest species
     - you can download Fasta file also from UCSC goldenpath
     - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
+- (optional) CSV or TXT or TSV contain the gene symbols or Refseq IDs
+    - AltEx-BE is avalilable for many genes. When you want to design sgRNAs for many genes, You can input gene list via `--gene-file` option. 
+    - The input file should only have 1 column with gene symbols or refseq IDs (No need the header row) 
 
 ## Usage & Quick example
 
-AltexBE is operated via the `altex-be` command.
+AltExBE is operated via the `altex-be` command.
 
 #### 1. Input Base Editor Information in the Command Line:
 
@@ -138,6 +141,7 @@ altex-be \
 | -o | --output-dir | DIR | (Required) Directory for the output files. |
 | | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
 | | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
+| | --gene-file  | FILE | Path to the file contain gene symbols or Refseq IDs|
 | -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
 | -n | --be-name | NAME | The name of the base editor to use. |
 | -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
