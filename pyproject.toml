@@ -10,7 +10,7 @@ authors = ["Kinari Matsumoto <matsumoto.kinari.qm@alumni.tsukuba.ac.jp>"]
 readme = "README.md"
 homepage = "https://github.com/kinari-labwork/AltEx-BE"
 license = "MIT"
-packages = [{ include = "altex_aid", from = "src"}]
+packages = [{ include = "altex_be", from = "src"}]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

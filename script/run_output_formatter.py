@@ -1,8 +1,8 @@
 import pandas as pd
 from pathlib import Path
 import pickle
-from altex_aid.output_formatter import format_output
-from altex_aid.sgrna_designer import BaseEditor, make_preset_base_editors
+from altex_be.output_formatter import format_output
+from altex_be.sgrna_designer import BaseEditor, make_preset_base_editors
 
 with open("data/target_exons_with_sgrna_dict.pkl", "rb") as f:
     target_exons_df_with_sgrna_dict = pickle.load(f)

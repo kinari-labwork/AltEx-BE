@@ -13,7 +13,7 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
     
     # 列全体に対して一度に文字列操作を行う
     target_sequences = exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '', regex=False).str.lower()
-    pams = exploded_sgrna_df["base_editor_pam"] # 事前にマージしておく必要がある
+    pams = exploded_sgrna_df["base_editor_pam_sequence"]
     
     exploded_sgrna_df["crisprdirect_url"] = base_url + target_sequences + "&pam=" + pams + "&db=" + assembly_name
     return exploded_sgrna_df
@@ -109,4 +109,5 @@ def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_
     exploded_sgrna_df = add_crisprdirect_url_to_df(exploded_sgrna_df, assembly_name)
     exploded_sgrna_df = add_reversed_complement_sgrna_column(exploded_sgrna_df)
     exploded_sgrna_df = calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df, fasta_path)
+    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["sgrna_target_sequence"])
     return exploded_sgrna_df

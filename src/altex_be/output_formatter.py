@@ -81,7 +81,7 @@ def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: di
     be_info = [
         {
             "base_editor_name": be.base_editor_name,
-            "base_editor_pam": be.pam_sequence,
+            "base_editor_pam_sequence": be.pam_sequence,
             "base_editor_editing_window_start": be.editing_window_start_in_grna,
             "base_editor_editing_window_end": be.editing_window_end_in_grna,
             "base_editor_type": be.base_editor_type,
@@ -102,7 +102,7 @@ def update_uuid_unique_to_every_sgrna(exploded_sgrna_df: pd.DataFrame) -> pd.Dat
     return exploded_sgrna_df
 
 def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame], 
-                  base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
+                base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
     """
     Purpose: このモジュールのラップ関数
     """

@@ -3,8 +3,7 @@ import re
 from altex_be.sgrna_designer import (
     SgrnaInfo,
     BaseEditor,
-    convert_dna_to_reversed_complement_rna,
-    convert_dna_to_rna,
+    convert_dna_to_reversed_complement,
     reverse_complement_pam_as_regex,
     convert_pam_as_regex,
     calculate_overlap_and_unintended_edits_to_cds,
@@ -20,16 +19,10 @@ from altex_be.sgrna_designer import (
 
 pd.set_option('display.max_columns', None)  # 全てのカラムを表示するための設定
 
-def test_convert_dna_to_reversed_complement_rna():
+def test_convert_dna_to_reversed_complement():
     input_sequence = "ATGCATGC"
-    expected_output = "GCAUGCAU" # RNAにした逆相補鎖
-    output_sequence = convert_dna_to_reversed_complement_rna(input_sequence)
-    assert output_sequence == expected_output
-
-def test_convert_dna_to_rna():
-    input_sequence = "ATGCATGC"
-    expected_output = "AUGCAUGC"  # RNAに変換した結果
-    output_sequence = convert_dna_to_rna(input_sequence)
+    expected_output = "GCATGCAT"  # 逆相補鎖
+    output_sequence = convert_dna_to_reversed_complement(input_sequence)
     assert output_sequence == expected_output
 
 def test_reverse_complement_pam_as_regex():
@@ -97,7 +90,7 @@ def test_design_sgrna_cbe_acceptor():
     expected_output = [
         SgrnaInfo(
             target_sequence="CCC+CCNNNNNNNNNNNNNNNAGG",
-            actual_sequence="CCUNNNNNNNNNNNNNNNGG",
+            actual_sequence="CCTNNNNNNNNNNNNNNNGG",
             start_in_sequence = 6,
             end_in_sequence=26,
             target_pos_in_sgrna=19,
@@ -106,7 +99,7 @@ def test_design_sgrna_cbe_acceptor():
         ),
         SgrnaInfo(
             target_sequence="CCC+CNNNNNNNNNNNNNNNAGGG",
-            actual_sequence="CCCUNNNNNNNNNNNNNNNG",
+            actual_sequence="CCCTNNNNNNNNNNNNNNNG",
             start_in_sequence = 7,
             end_in_sequence=27,
             target_pos_in_sgrna=18,
@@ -115,7 +108,7 @@ def test_design_sgrna_cbe_acceptor():
         ),
         SgrnaInfo(
             target_sequence="CCC+NNNNNNNNNNNNNNNAGGGN",
-            actual_sequence="NCCCUNNNNNNNNNNNNNNN",
+            actual_sequence="NCCCTNNNNNNNNNNNNNNN",
             start_in_sequence = 8,
             end_in_sequence=28,
             target_pos_in_sgrna=17,
@@ -378,7 +371,7 @@ def test_design_sgrna_for_target_exon_df():
             [
             SgrnaInfo(
                 target_sequence="CCC+NNNNNNNNNNNNNNNNAGNN",
-                actual_sequence="NNCUNNNNNNNNNNNNNNNN",
+                actual_sequence="NNCTNNNNNNNNNNNNNNNN",
                 start_in_sequence=7,
                 end_in_sequence=27,
                 target_pos_in_sgrna=18,
@@ -494,7 +487,7 @@ def test_organize_target_exon_df_with_grna_sequence():
 
     # acceptor列
     assert result["acceptor_sgrna_target_sequence"][0] == ["AAA"]
-    assert result["acceptor_sgrna_actual_sequence"][0] == ["UUU"]
+    assert result["acceptor_sgrna_sequence"][0] == ["UUU"]
     assert result["acceptor_sgrna_start_in_sequence"][0] == [1]
     assert result["acceptor_sgrna_end_in_sequence"][0] == [21]
     assert result["acceptor_sgrna_target_pos_in_sgrna"][0] == [5]
@@ -502,7 +495,7 @@ def test_organize_target_exon_df_with_grna_sequence():
     assert result["acceptor_sgrna_possible_unintended_edited_base_count"][0] == [1]
     # donor列
     assert result["donor_sgrna_target_sequence"][0] == ["CCC"]
-    assert result["donor_sgrna_actual_sequence"][0] == ["GGG"]
+    assert result["donor_sgrna_sequence"][0] == ["GGG"]
     assert result["donor_sgrna_start_in_sequence"][0] == [2]
     assert result["donor_sgrna_end_in_sequence"][0] == [22]
     assert result["donor_sgrna_target_pos_in_sgrna"][0] == [6]
@@ -520,8 +513,9 @@ def test_organize_target_exon_df_with_grna_sequence_empty():
     for col in result.columns:
         assert result[col][0] == []
 
-def test_convert_sgrna_start_end_position_to_position_in_chromosome():
+def test_convert_sgrna_start_end_position_to_position_in_chromosome_plus_strand():
     df = pd.DataFrame({
+        "strand": ["+"],
         "acceptor_sgrna_start_in_sequence": [[1, 5]],
         "acceptor_sgrna_end_in_sequence": [[21, 25]],
         "donor_sgrna_start_in_sequence": [[2, 6]],
@@ -543,8 +537,36 @@ def test_convert_sgrna_start_end_position_to_position_in_chromosome():
     # 他の列が残っていること
     assert result["other_col"][0] == 123
 
+def test_convert_sgrna_start_end_position_to_position_in_chromosome_minus_strand():
+    df = pd.DataFrame({
+        "strand": ["-"],
+        "acceptor_sgrna_start_in_sequence": [[1, 1]], # 1, 49 などというようなsgRNAは長すぎるが、わかりやすい例として使用
+        "acceptor_sgrna_end_in_sequence": [[21, 49]],
+        "donor_sgrna_start_in_sequence": [[2, 1]],
+        "donor_sgrna_end_in_sequence": [[22, 49]],
+        "chromStart_acceptor": [100],
+        "chromEnd_acceptor": [150],
+        "chromStart_donor": [200],
+        "chromEnd_donor": [250],
+        "other_col": [123]  # 他の列も含める
+    })
+
+    result = convert_sgrna_start_end_position_to_position_in_chromosome(df)
+
+    # ゲノム座標が正しく計算されているか
+    # 例えば 100, 150の範囲で配列を取得しているとする
+    # minus strandのとき, sgRNA_start相対位置が 1 sgRNA_endの相対位置が 49であるならば、sgRNA_start 絶対位置は、49, sgRNA_end 絶対位置 1になる
+    # その理由は、minus strandの時、pybedtools で取得された配列は逆相補化されているため、相対位置の1は実際には配列の最後の方に位置するからである
+    assert result["acceptor_sgrna_start_in_genome"][0] == [129, 101]
+    assert result["acceptor_sgrna_end_in_genome"][0] == [149, 149]
+    assert result["donor_sgrna_start_in_genome"][0] == [228, 201]
+    assert result["donor_sgrna_end_in_genome"][0] == [248, 249]
+    # 他の列が残っていること
+    assert result["other_col"][0] == 123
+
 def test_convert_sgrna_start_end_position_to_position_in_chromosome_empty():
     df = pd.DataFrame({
+        "strand": ["+"],
         "acceptor_sgrna_start_in_sequence": [[]],
         "acceptor_sgrna_end_in_sequence": [[]],
         "donor_sgrna_start_in_sequence": [[]],

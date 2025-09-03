@@ -29,33 +29,20 @@ class BaseEditor:
     editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
     base_editor_type: str # "CBE" or "ABE"
 
-def convert_dna_to_reversed_complement_rna(sequence: str) -> str:
+def convert_dna_to_reversed_complement(sequence: str) -> str:
     """
     purpose:
-        塩基配列を逆相補のRNAに変換する
+        塩基配列を逆相補のDNAに変換する
     Parameters:
         sequence: 変換したいDNA配列
     Returns:
         reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
     """
     complement_map = {
-        "A": "U", "T": "A", "C": "G", "G": "C", "N": "N",
-        "a": "u", "t": "a", "c": "g", "g": "c"
+        "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
+        "a": "t", "t": "a", "c": "g", "g": "c", "n": "n"
         }
     return "".join([complement_map[base] for base in reversed(sequence)])
-
-def convert_dna_to_rna(sequence: str) -> str:
-    """
-    Purpose:
-        塩基配列をRNAに変換する
-    Parameters:
-        sequence: 変換したいDNA配列
-    Returns:
-        rna_sequence: 入力したDNA配列のRNA配列
-    """
-    sequence = sequence.replace("T", "U")
-    sequence = sequence.replace("t", "u")
-    return sequence
 
 def reverse_complement_pam_as_regex(pam_sequence: str) -> re.Pattern:
     """
@@ -286,11 +273,11 @@ def design_sgrna(
         target_sequence = editing_sequence[sgrna_start:sgrna_end]
         pam_plus_target_sequence = f"{target_sequence}+{match.group(1)}" if site_type == "acceptor" and base_editor_type == "abe" else f"{match.group(1)}+{target_sequence}"
         if site_type == "acceptor" and base_editor_type == "cbe":
-            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+            actual_sequence = convert_dna_to_reversed_complement(target_sequence)
         elif site_type == "acceptor" and base_editor_type == "abe":
-            actual_sequence = convert_dna_to_rna(target_sequence)
+            actual_sequence = target_sequence
         else:
-            actual_sequence = convert_dna_to_reversed_complement_rna(target_sequence)
+            actual_sequence = convert_dna_to_reversed_complement(target_sequence)
         if site_type == "acceptor" and base_editor_type == "abe":
             target_pos_in_sgrna = -(target_base_pos_in_sequence - sgrna_end)
         else:
@@ -400,7 +387,7 @@ def organize_target_exon_df_with_grna_sequence(target_exon_df_with_grna_sequence
         extracted = zip(*target_exon_df_with_grna_sequence[f"grna_{site}"].apply(extract_sgrna_features))
         columns =[
             f"{site}_sgrna_target_sequence",
-            f"{site}_sgrna_actual_sequence",
+            f"{site}_sgrna_sequence",
             f"{site}_sgrna_start_in_sequence",
             f"{site}_sgrna_end_in_sequence",
             f"{site}_sgrna_target_pos_in_sgrna",
@@ -416,31 +403,51 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
     target_exon_df_with_grna_sequence: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Purpose:
-        この段階でのacceptor/donor_start_in_sequenceは、ゲノム上の位置ではなく、取得した配列内での位置である。
-        sgRNAの開始位置と終了位置を、ゲノム上の位置に変換する
-    Parameters:
-        target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
-    Returns:
-        pd.DataFrame, sgRNAの開始位置と終了位置がゲノム上の位置に変換されたDataFrame
+    Purpose: sgRNAの開始位置と終了位置は取得配列50bp中の相対位置なので、ゲノム上の絶対位置に変換する
+    Parameter: target_exon_df_with_grna_sequence: pd.DataFrame, sgRNAの情報を含むDataFrame
+    Caution: 各列には複数のsgRNAの情報がリストとして格納されている
     """
-    for splicesite in ["acceptor", "donor"]:
-        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_genome"] = [
-            [start + chrom_start for start in starts]
-        for starts, chrom_start in zip(
-            target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_sequence"],
-            target_exon_df_with_grna_sequence[f"chromStart_{splicesite}"]
-        )
-    ]
-        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_genome"] = [
-            [end + chrom_start for end in ends]
-        for ends, chrom_start in zip(
-            target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_sequence"],
-            target_exon_df_with_grna_sequence[f"chromStart_{splicesite}"]
-        )
-    ]
 
-    # 不要な列を削除
+    def get_genomic_positions_for_row(row, splicesite):
+        starts_rels = row[f"{splicesite}_sgrna_start_in_sequence"]
+        ends_rels = row[f"{splicesite}_sgrna_end_in_sequence"]
+        chrom_start = row[f"chromStart_{splicesite}"]
+        chrom_end = row[f"chromEnd_{splicesite}"]
+        
+        row_genomic_starts = []
+        row_genomic_ends = []
+        
+        # そもそも何もsgRNAがない列は空リストを返す
+        if not isinstance(starts_rels, list):
+            return [], []
+        
+        # + strandの時は、取得配列の開始位置を基準に相対位置を足すとゲノム上の絶対位置になる
+        if row["strand"] == "+":
+            for start_rel, end_rel in zip(starts_rels, ends_rels):
+                row_genomic_starts.append(chrom_start + start_rel)
+                row_genomic_ends.append(chrom_start + end_rel)
+        # - strandの時は、取得配列内の相対位置は - strandの 5-3 方向に向かって増える。
+        # しかし、ゲノム上の絶対位置は + strandの 5-3 方向に向かって増えているため、相対位置のstartとendを逆にしてから絶対位置を計算する必要がある
+        else:
+            region_len = chrom_end - chrom_start # 絶対に取得配列の長さは50bpとなるが、hard cordingを避けるために計算している
+            for start_rel, end_rel in zip(starts_rels, ends_rels):
+                g_start = chrom_start + (region_len - end_rel)
+                g_end = chrom_start + (region_len - start_rel)
+                row_genomic_starts.append(g_start)
+                row_genomic_ends.append(g_end)
+                
+        return row_genomic_starts, row_genomic_ends
+
+    for splicesite in ["acceptor", "donor"]:
+        results = target_exon_df_with_grna_sequence.apply(
+            get_genomic_positions_for_row, 
+            axis=1, 
+            splicesite=splicesite
+        )
+        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_start_in_genome"] = results.apply(lambda x: x[0])
+        target_exon_df_with_grna_sequence[f"{splicesite}_sgrna_end_in_genome"] = results.apply(lambda x: x[1])
+
+    # いらない列を削除
     target_exon_df_with_grna_sequence = target_exon_df_with_grna_sequence.drop(
         columns=[
             "acceptor_sgrna_start_in_sequence",
@@ -457,17 +464,16 @@ def convert_sgrna_start_end_position_to_position_in_chromosome(
     return target_exon_df_with_grna_sequence.reset_index(drop=True)
 
 # 今までの動作をまとめて、sgrnaを設計する関数
-# 実際に実行するのはこの関数だけでよい
 def design_sgrna_for_base_editors(
     target_exon_df: pd.DataFrame,
-    base_editors: list[BaseEditor],
+    base_editors: dict[str, BaseEditor],
 ) -> pd.DataFrame:
     """
     Purpose:
         各BaseEditorに対してsgRNAを設計し、結果をDataFrameにまとめる
     Parameters:
         target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
-        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+        base_editors: dict[str, BaseEditor], BaseEditorの情報を含む辞書
     Returns:
         pd.DataFrame, 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
     """
@@ -490,7 +496,7 @@ def design_sgrna_for_base_editors(
     ]
     foundation_cols_df = target_exon_df[foundation_cols].copy()
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         # 1. sgRNAを設計する
         temp_df = design_sgrna_for_target_exon_df(
             target_exon_df=target_exon_df,
@@ -532,20 +538,20 @@ def design_sgrna_for_base_editors(
 # 論文用には、各BEのsgRNAを1行にまとめたほうが便利ではあるが、ユーザーにはそれは必要ない。のちのexplodeを考えて、main.pyではdictで返すようにする
 def design_sgrna_for_base_editors_dict(
     target_exon_df: pd.DataFrame,
-    base_editors: list[BaseEditor],
+    base_editors: dict[str,BaseEditor],
 ) -> dict[str, pd.DataFrame]:
     """
     Purpose:
         各BaseEditorに対してsgRNAを設計し、結果をdictにまとめる
     Parameters:
         target_exon_df: pd.DataFrame, 各エキソンの情報を含むDataFrame
-        base_editors: list[BaseEditor], BaseEditorの情報を含むリスト
+        base_editors: dict[str, BaseEditor], BaseEditorの情報を含む辞書
     Returns:
         dict[str, pd.DataFrame], 各BaseEditorに対して設計されたsgRNAの情報を含むDataFrame
     """
     results = {}  # 各BaseEditorの結果を格納する辞書
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         # 1. sgRNAを設計する
         temp_df = design_sgrna_for_target_exon_df(
             target_exon_df=target_exon_df,

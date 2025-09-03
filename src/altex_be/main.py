@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 import sys
+import datetime
 from . import (
     cli_setting,
     refflat_preprocessor,
@@ -12,6 +13,7 @@ from . import (
     sgrna_designer,
     output_formatter,
     offtarget_scorer,
+    bed_for_ucsc_custom_track_maker,
     logging_config # noqa: F401
 )
 
@@ -41,7 +43,7 @@ def main():
         help="Path of FASTA file"
     )
     dir_group.add_argument(
-        "-o", "--output-directory",
+        "-o", "--output-dir",
         required=True,
         help="Directory of the output files"
     )
@@ -61,6 +63,12 @@ def main():
         default=None,
         required=True,
         help="Name of the genome assembly to use"
+    )
+    gene_group.add_argument(
+        "--gene-file",
+        default=None,
+        required=False,
+        help="Path to a file (csv,txt,tsv) containing gene symbols or Refseq IDs (one gene per line)"
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
@@ -110,41 +118,53 @@ def main():
 
     refflat_path = Path(args.refflat_path)
     fasta_path = Path(args.fasta_path)
-    output_directory = Path(args.output_directory)
+    output_directory = Path(args.output_dir)
+    gene_file = Path(args.gene_file) if args.gene_file else None
 
     cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    interest_gene_list = args.gene_symbols + args.refseq_ids
+    genes_from_file = cli_setting.parse_gene_file(gene_file) if gene_file else []
+    gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
+    refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
+    interest_gene_list = gene_symbols + refseq_ids + genes_from_file
     if not interest_gene_list:
-        raise ValueError("Please provide at least one interest gene symbol or Refseq ID.")
+        parser.error("Please provide at least one interest gene symbol or Refseq ID.")
 
     preset_base_editors = sgrna_designer.make_preset_base_editors()
 
     # BaseEditorの決定
-    base_editors = []
+    base_editors = {}
     if args.be_files:
-        base_editors.extend(cli_setting.get_base_editors_from_args(args))
-
-    if args.be_preset and args.be_preset not in preset_base_editors:
-        raise ValueError(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
-    else:
-        base_editors.extend(preset_base_editors[args.be_preset])
+        base_editors = cli_setting.get_base_editors_from_args(args)
+    
+    if args.be_preset is not None:
+        if args.be_preset not in preset_base_editors:
+            parser.error(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
+        else:
+            base_editor = preset_base_editors[args.be_preset]
+            base_editors[base_editor.base_editor_name] = base_editor
 
     if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
-        base_editors.extend(cli_setting.parse_base_editors(args))
+        if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
+            parser.error(
+            "Base editor information is incomplete. Please provide all required parameters."
+            )
+        base_editors.update(cli_setting.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)
     if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
         logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
+    
+    output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
 
     if not base_editors:
-        raise ValueError("No base editors specified. Please provide at least one base editor.")
+        parser.error("No base editors specified. Please provide at least one base editor.")
 
     logging.info("Designing sgRNAs for the following base editors:")
     cli_setting.show_base_editors_info(base_editors)
 
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
-
+    logging.info("-" * 50)
     logging.info("loading refFlat file...")
     refflat = pd.read_csv(
             refflat_path,
@@ -164,46 +184,79 @@ def main():
                 "exonEnds",
             ],
         )
-
+    
     logging.info("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
     refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    if not refflat_preprocessor.validate_filtered_refflat(refflat, interest_gene_list) :
+        logging.warning("your interest gene is not targetable. Exiting...")
+        sys.exit(0)
+
+    logging.info("-" * 50)
 
     logging.info("Classifying splicing events...")
-    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
-    classified_refflat.to_pickle(output_directory / "processed_refFlat.pickle")
-    del refflat
 
-    print("Extracting target exons...")
+    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
+    del refflat
+    logging.info("-" * 50)
+    logging.info("Extracting target exons...")
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
     if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
-        logging.warning("No target exons found for the given genes, exiting")
+        logging.warning("No target exons found for all of the given genes, exiting")
         sys.exit(0)
+    for gene in interest_gene_list:
+        if gene not in exploded_classified_refflat['geneName'].values:
+            logging.info(f"No target exons found for the gene: {gene}. Further processing of {gene} will be skipped.")
+        else:
+            logging.info(f"Target exons found for the gene: {gene}.")
+    logging.info("-" * 50)
 
     logging.info("Annotating sequences to dataframe from genome FASTA...")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
         exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
-
-    print("designing sgRNAs...")
+    
+    logging.info("designing sgRNAs...")
     target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
         target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
         base_editors=base_editors
     )
-
+    logging.info("-" * 50)
     logging.info("Formatting output...")
     formatted_exploded_sgrna_df = output_formatter.format_output(target_exon_df_with_sgrna_dict, base_editors)
     if formatted_exploded_sgrna_df.empty:
         logging.warning("No sgRNAs could be designed for given genes and Base Editors, Exiting")
         sys.exit(0)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
-
+    
     logging.info("Scoring off-targets...")
     exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
-
+    logging.info("-" * 50)
     logging.info("Saving results...")
-    exploded_sgrna_with_offtarget_info.to_csv(output_directory / "exploded_sgrna_with_offtarget_info.csv")
+    exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
+    logging.info(f"Results saved to: {output_directory / f'{output_track_name}_table.csv'}")
+
+    logging.info("Generating UCSC custom track...")
+    bed_df = bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
+
+    output_path = output_directory / f"{output_track_name}_ucsc_custom_track.bed"
+    track_description: str = f"sgRNAs designed by AltEx-BE on {datetime.datetime.now().strftime('%Y%m%d')}"
+
+    with open(output_path, "w") as f:
+        track_header = f'track name="{output_track_name}" description="{track_description}" visibility=2 itemRgb="On"\n'
+        f.write(track_header)
+        bed_df.to_csv(f, sep="\t", header=False, index=False, lineterminator='\n')
+
+    logging.info(f"UCSC custom track file saved to: {output_path}")
+    
+    logging.info("All AltEx-BE processes completed successfully.")
+    logging.info("Printing summary of output:")
+    summary_dfs = cli_setting.split_df_by_column_chunks(exploded_sgrna_with_offtarget_info, chunk_sizes=[12, 6, 6])
+    for sub_df in summary_dfs:
+        print(sub_df)  # indexも表示される
+        print("-" * 40)
+    return
 
 if __name__ == "__main__":
     main()

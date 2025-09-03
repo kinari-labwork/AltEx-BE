@@ -2,7 +2,21 @@
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
+![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
+
+- [AltexBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
+  - [Overview](#overview)
+  - [Key Features](#key-features)
+  - [Workflow Diagram](#workflow-diagram)
+  - [Installation](#installation)
+  - [Required dataset](#required-dataset)
+  - [Usage \& Quick example](#usage--quick-example)
+      - [1. Input Base Editor Information in the Command Line:](#1-input-base-editor-information-in-the-command-line)
+      - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
+      - [3. Using a Preset Editor:](#3-using-a-preset-editor)
+  - [List of command line options](#list-of-command-line-options)
+  - [Format of Altex-BE output](#format-of-altex-be-output)
+  - [License](#license)
 
 ## Overview
 
@@ -17,24 +31,21 @@ By transforming a complex, multi-step design process into a single command, AltE
 
 ## Key Features
 
-- 🧬 Automated Target Exon Annotation: 
+- 🧬 **Automated Target Exon Annotation**: 
     - Automatically parses transcript structures from refFlat files to identify and classify potential targets for exon skipping. This includes Skipped Exons (SE) and exons with Alternative 3'/5' Splice Sites (A3SS/A5SS), eliminating the need for tedious manual searches.
 
-- ⚙️ Universal Base Editor Compatibility: 
+- ⚙️ **Universal Base Editor Compatibility**: 
     - Supports virtually any ABE or CBE. You can use built-in presets or define any custom editor by specifying its PAM sequence and editing window, allowing immediate use of the latest editors from new publications. 
     - AltEx-BE can design sgRNAs for multiple Base-Editors in one run
 
-- 🚀 Streamlined End-to-End Workflow:
+- 🚀 **Streamlined End-to-End Workflow**:
     - Seamlessly moves from data input to candidate selection. The design command generates sgRNAs, while the visualize command creates comprehensive reports to help you evaluate and rank the best candidates for your experiment.
 
 ## Workflow Diagram
 
 Here is a simplified diagram illustrating the workflow of `AltexBE`:
 
-```
-[論文のfig1に相当する部分を入れる予定です]
-(e.g., refFlat + FASTA -> AltexBE `design` -> sgRNA candidates (pickle) -> AltexBE `visualize` -> )
-```
+![pipeline_explanation](docs/pipeline_explanation.png)
 
 ## Installation
 
@@ -43,110 +54,136 @@ To get started with AltexBE, clone the repository and install the required depen
 ```sh
 # 1. Clone the repository
 git clone https://github.com/kinari-labwork/AltEx-BE
+cd AltEx-BE
 pip install -e .
-
-pip install altex-be
 ```
+## Required dataset
+To use AltexBE, you should prepare 2 input files in your computer
+- refFlat file of your interest species   
+    - refflat file contains Refseq infomations: explanation of refFlat format is [here](https://genome.bio.fsu.edu/cgi-bin/hgTables?hgsid=235697_cnEhDmy3qVsShD0gwzprkJveBQah&hgta_doSchemaDb=mm39&hgta_doSchemaTable=refFlat)   
+    - you can download refflat files from  UCSC goldenpath: refflat files of mm39 is [here](https://hgdownload.cse.ucsc.edu/goldenpath/mm39/database/)
+- Fasta files contain all chromosome sequence of your interest species
+    - you can download Fasta file also from UCSC goldenpath
+    - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
+- (optional) CSV or TXT or TSV contain the gene symbols or Refseq IDs
+    - AltEx-BE is avalilable for many genes. When you want to design sgRNAs for many genes, You can input gene list via `--gene-file` option. 
+    - The input file should only have 1 column with gene symbols or refseq IDs (No need the header row) 
 
-## Usage
+## Usage & Quick example
 
-AltexBE is operated via two main subcommands: `design` and `visualize`.
+AltExBE is operated via the `altex-be` command.
 
----
-
-## 1. `design` Command
-
-This command designs sgRNAs based on your input files and saves the results as a csv file.  
-There are 3 ways to input your interest base editing tools
-
----
-
-### **Input base editor infomation in command line:**
-
-Here is a basic command to design sgRNAs for the gene *MYGENE*.
+#### 1. Input Base Editor Information in the Command Line:
 
 ```sh
-altex-be design \
+altex-be \
     --refflat-path /path/to/your/refFlat.txt \
     --fasta-path /path/to/your/genome.fa \
     --output-dir /path/to/output_directory \
     --gene-symbols MYGENE \
-    --base-editor-name target-aid \
-    --base-editor-type cbe \
-    --base-editor-window-start 17 \
-    --base-editor-window-end 19 \
+    --assembly-name hg38 \
+    --be-name target-aid \
+    --be-type cbe \
+    --be-pam NGG \
+    --be-start 17 \
+    --be-end 19
 ```
 
 > [!CAUTION]
-> `--base-editor-window-start/end` means editing window of your base editing tool.   
-> **Location of editing window Start and END is counted from the base next to PAM (1-index)**
+> `--be-start` and `--be-end` specify the editing window of your base editor. The location of the editing window is counted from the base next to the PAM (1-indexed).
 
----
+#### 2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:
 
-### **Input csv, txt, tsv containing infomation of your base-editors**
+You can provide a file containing the information for one or more base editors. This is useful when you want to design sgRNAs for multiple editors at once.
 
-> [!IMPORTANT]
-> AltEx-BE can design sgRNA for multiple Base-Editors
-> If you want to do that, you should use following code
-> Input `base_editor_info.csv` should follow below format
-> |base_editor_name|pam_seqence|editing_window_start|editing_window_end|base_editor_type|
-> |---|---|---|---|---|
-> |your BE name|Any Sequence|1<int<20|1<int<20|cbe or abe|
+The input file should have the following columns: `base_editor_name`, `pam_sequence`, `editing_window_start`, `editing_window_end`, `base_editor_type`.
 
 ```sh
-altex-be design \
+altex-be \
     --refflat-path /path/to/your/refFlat.txt \
     --fasta-path /path/to/your/genome.fa \
     --output-dir /path/to/output_directory \
     --gene-symbols MYGENE \
-    --base-editor-file /path/to/your/base_editor_info.csv
+    --assembly-name hg38 \
+    --be-files /path/to/your/base_editor_info.csv
 ```
 
----
+#### 3. Using a Preset Editor:
 
-### **Using a Preset Editor:**
+You can use a pre-configured base editor with the `--be-preset` flag.
 
-You can specify a pre-configured base editor using the `--editor-preset` flag.
 > [!NOTE]
-> Preset Base Editors:
-> |base_editor_name|pam_seqence|editing_window_start|editing_window_end|base_editor_type|
-> |---|---|---|---|---|
-> |target-AID|CBE|NGG|17|19|
-> |BE4max|CBE|NGG|12|17|
-> |ABE8e|ABE|NGG|12|17|
+> **Preset Base Editors:**
+>
+> | base_editor_name | pam_sequence | editing_window_start | editing_window_end | base_editor_type |
+> |:-----------------|:-------------|:---------------------|:-------------------|:-----------------|
+> | target-AID       | NGG          | 17                   | 19                 | cbe              |
+> | BE4max           | NGG          | 12                   | 17                 | cbe              |
+> | ABE8e            | NGG          | 12                   | 17                 | abe              |
 
 ```sh
-altex-be design \
+altex-be \
     --refflat-path /path/to/your/refFlat.txt \
     --fasta-path /path/to/your/genome.fa \
     --output-dir /path/to/output_directory \
     --gene-symbols MYGENE \
-    --editor-preset ABE8e
+    --assembly-name hg38 \
+    --be-preset ABE8e
 ```
+## List of command line options
 
----
+| Short Option | Long Option | Argument | Explanation |
+| :--- | :--- | :--- | :--- |
+| -h | --help | | Show the help message and exit. |
+| -v | --version | | Show the version of Altex BE. |
+| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
+| -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
+| -o | --output-dir | DIR | (Required) Directory for the output files. |
+| | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
+| | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
+| | --gene-file  | FILE | Path to the file contain gene symbols or Refseq IDs|
+| -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
+| -n | --be-name | NAME | The name of the base editor to use. |
+| -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
+| -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
+| -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
+| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
+| | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
-### 2. `visualize` Command 仮で置いてます
+## Format of Altex-BE output
+`altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
+- Summary sgRNA table (.csv)
+    - this table contain imformation of sgRNAs designed by AltEx-BE
+![summary_sgrna_table](docs/output_csv_example.png)
+- Meaning of each column is :
 
-This command takes the pickle file generated by `design` and creates a visual report.
+|column name|meaning|remark|
+|:-----------|:-------------------|--|
+|geneName|gene symbol of target gene|
+|chrom|location of target gene|
+|exonstart, exonend, exonlength|general information of target exon|
+|coding|whether target gene is protein coding or non coding gene|
+|flame| mod3 of the length of target exon|0 = in-flame or 1,2 = out-flame |
+|exon_position|relative location of target exon in target gene|"first" or "internal" or "last"|
+|uuid|the unique id for each sgRNAs|changes in every run|
+|exon_intron_boundary+-25bp_sequence| sequence around SA or SD |
+|sgrna_sequence| sgRNA sequence | Thymine is not replaced by Uracil |
+|sgrna_target_pos_in_seq| position of target A or C in sgRNA | relative location in sgrna |
+|sgrna_overlap_between_cds_and_editing_window| number of overlapping bases with editing window|
+|sgrna_unintended_edited_base_count| number of possible being edited bases (A or C) in cds|
+|sgrna_start/end_in_genome| location of sgrna|
+|site type| target splicing site of sgRNA | acceptor or donor|
+|base_editor_name/pam_sequence/window_start or end / base editor type| infomation of BE to design sgRNA|
+|crispr_direct_url| link to CRISPR direct|
+|pam+20bp exact match| pam+20bp (23-mer) exact match in all chromosome|
 
-```sh
-python altexbe/main.py visualize \
-    --input-pickle /path/to/output_directory/results.pickle \
-    --output-report /path/to/output_directory/report
-```
-
-## Notes & Warnings
-
-> [!NOTE]
-> **refFlat File Format**
-> The input `refFlat.txt` file must adhere to the standard format. You can obtain this file for your genome of interest from the UCSC Genome Browser. 
-> **reference genome Fasta File Format**
-> The imformation of reference genome `your_interest_spiecies.fa` is also required. You can also obtain genome Fasta File from UCSC genome Browser.
-
-> [!WARNING]
-> The input `your_interest_spiecies.fa` should contain imformation of all chromosome. You can obtain combined Fasta from UCSC genome browser. 
-
+- BED file for UCSC custom track (.bed)
+    - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
+![example_of_custom_track](docs/examle_of_custom_track.png)
+    - colored box (red, blue) is sgRNA sequences. red means sgRNAs for abe, blue means sgRNAs for cbe.
+    - score columns in bed file means offtarget count of 20bp+PAM
+    - when you assign bed file, you should choose correct assembly name in above website
 
 ## License
 

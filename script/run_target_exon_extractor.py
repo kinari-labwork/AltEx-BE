@@ -1,6 +1,6 @@
 import pandas as pd
 
-from altex_aid.target_exon_extractor import (
+from altex_be.target_exon_extractor import (
     wrap_extract_target_exon
 )
 

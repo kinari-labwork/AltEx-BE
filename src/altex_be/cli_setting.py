@@ -1,37 +1,38 @@
-from altex_aid.sgrna_designer import BaseEditor
+from altex_be.sgrna_designer import BaseEditor
 import argparse
 import pandas as pd
 from pathlib import Path
 
-
-def parse_base_editors(args: argparse.Namespace) -> list[BaseEditor] | None:
-    if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
-        raise ValueError(
-            "Base editor information is incomplete. Please provide all required parameters."
-        )
-    try:
-        return [
-            BaseEditor(
+def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
+    return {
+            args.base_editor_name: BaseEditor(
                 base_editor_name=args.base_editor_name,
                 pam_sequence=args.base_editor_pam.upper(),
                 editing_window_start_in_grna=int(args.base_editor_window_start),
                 editing_window_end_in_grna=int(args.base_editor_window_end),
                 base_editor_type=args.base_editor_type.lower(),
             )
-        ]
-    except ValueError as e:
-        raise ValueError(f"Error parsing base editor information: {e}")
+        }
 
-def show_base_editors_info(base_editors: list[BaseEditor]):
+def parse_gene_file(gene_file: Path) -> list[str] | None:
+    if not gene_file:
+        return None
+    if gene_file.suffix.lower() not in [".txt", ".tsv", ".csv"]:
+        raise ValueError("Unsupported file extension for gene file. Use .txt, .tsv, or .csv")
+    with open(gene_file, "r") as f:
+        interest_genes = [line.strip() for line in f if line.strip()] #空の行は if line.strip がFalseになるので除外できる
+    return interest_genes
+
+def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
         raise ValueError("No base editors available to display.")
 
-    for base_editor in base_editors:
+    for base_editor in base_editors.values():
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
         
 
-def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | None:
+def get_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
     """
     base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
     csvまたはtxt, tsv形式のファイルをサポートする
@@ -62,16 +63,16 @@ def get_base_editors_from_args(args: argparse.Namespace) -> list[BaseEditor] | N
             f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
         )
     else:
-        return [
-            BaseEditor(
+        return {
+            row["base_editor_name"]: BaseEditor(
                 base_editor_name=row["base_editor_name"],
                 pam_sequence=row["pam_sequence"],
-                editing_window_start=int(row["editing_window_start"]),
-                editing_window_end=int(row["editing_window_end"]),
+                editing_window_start_in_grna=int(row["editing_window_start"]),
+                editing_window_end_in_grna=int(row["editing_window_end"]),
                 base_editor_type=row["base_editor_type"],
             )
             for _, row in be_df.iterrows()
-        ]
+        }
 
 def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
     if not refflat_path.is_file():
@@ -103,3 +104,23 @@ def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> bool:
     if assembly_name not in supported_assemblies:
         return False
     return True
+
+def split_df_by_column_chunks(df: pd.DataFrame, chunk_sizes=[12, 6, 6]) -> list[pd.DataFrame]:
+    """
+    DataFrameをchunk_sizesで指定したカラム数ごとに分割し、各DataFrameをリストで返す。
+    """
+    columns = df.columns.tolist()
+    idx = 0
+    df = df.head()
+    dfs = []
+    for size in chunk_sizes:
+        cols = columns[idx:idx+size]
+        if not cols:
+            break
+        dfs.append(df[cols].copy())
+        idx += size
+    # 残りのカラムも追加
+    if idx < len(columns):
+        cols = columns[idx:]
+        dfs.append(df[cols].copy())
+    return dfs
