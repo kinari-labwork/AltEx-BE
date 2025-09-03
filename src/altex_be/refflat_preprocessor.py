@@ -5,7 +5,7 @@ import pandas as pd
 import logging
 from . import logging_config # noqa: F401
 
-def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームから、興味のある遺伝子のみを選択する。
@@ -22,7 +22,7 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
         if gene not in gene_symbol_set and gene not in ref_seq_id_set:
             logging.warning(f"Gene {gene} is not found in refFlat.")
             continue
-        else :
+        else:
             logging.info(f"Gene {gene} is found in refFlat.")
     
     refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
