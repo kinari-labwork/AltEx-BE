@@ -126,11 +126,7 @@ def main():
     genes_from_file = cli_setting.parse_gene_file(gene_file) if gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
-<<<<<<< HEAD
     interest_gene_list = gene_symbols + refseq_ids + genes_from_file
-=======
-    interest_gene_list = set(gene_symbols) | set(refseq_ids)  # 和集合を取る
->>>>>>> 7537ae0 (重複を消すために、遺伝子リストをsetに変更しました。)
     if not interest_gene_list:
         parser.error("Please provide at least one interest gene symbol or Refseq ID.")
 
