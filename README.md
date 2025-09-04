@@ -3,6 +3,7 @@
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
+[![PyPI](https://img.shields.io/pypi/v/AltEx-BE)](https://pypi.org/project/AltEx-BE/)
 
 - [AltexBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
   - [Overview](#overview)
