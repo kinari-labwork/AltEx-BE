@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "AltEx-BE"
-version = "0.2"
+version = "0.2.1"
 description = "automatically design sgRNA for exon skipping with many base editors"
 authors = ["Kinari Matsumoto <matsumoto.kinari.qm@alumni.tsukuba.ac.jp>"]
 readme = "README.md"
