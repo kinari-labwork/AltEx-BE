@@ -45,7 +45,7 @@ By transforming a complex, multi-step design process into a single command, AltE
 
 Here is a simplified diagram illustrating the workflow of `AltexBE`:
 
-![pipeline_explanation](docs/pipeline_explanation.png)
+![pipeline_explanation](https://github.com/kinari-labwork/AltEx-BE/blob/main/docs/pipeline_explanation.png)
 
 ## Installation
 
@@ -155,7 +155,7 @@ altex-be \
 `altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
 - Summary sgRNA table (.csv)
     - this table contain imformation of sgRNAs designed by AltEx-BE
-![summary_sgrna_table](docs/output_csv_example.png)
+![summary_sgrna_table](https://github.com/kinari-labwork/AltEx-BE/blob/main/docs/output_csv_example.png)
 - Meaning of each column is :
 
 |column name|meaning|remark|
@@ -180,7 +180,7 @@ altex-be \
 
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
-![example_of_custom_track](docs/examle_of_custom_track.png)
+![example_of_custom_track](https://github.com/kinari-labwork/AltEx-BE/blob/main/docs/examle_of_custom_track.png)
     - colored box (red, blue) is sgRNA sequences. red means sgRNAs for abe, blue means sgRNAs for cbe.
     - score columns in bed file means offtarget count of 20bp+PAM
     - when you assign bed file, you should choose correct assembly name in above website
