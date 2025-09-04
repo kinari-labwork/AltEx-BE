@@ -1,11 +1,11 @@
-# AltexBE: Alternate Exon Skipping by Base Editing
+# AltExBE: Alternate Exon Skipping by Base Editing
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
 [![PyPI](https://img.shields.io/pypi/v/AltEx-BE)](https://pypi.org/project/AltEx-BE/)
 
-- [AltexBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
+- [AltExBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
   - [Overview](#overview)
   - [Key Features](#key-features)
   - [Workflow Diagram](#workflow-diagram)
@@ -21,7 +21,7 @@
 
 ## Overview
 
-**AltexBE** is a command-line bioinformatics tool that designs sgRNAs (single guide RNAs) to induce targeted exon skipping using Base Editing technology.
+**AltExBE** is a command-line bioinformatics tool that designs sgRNAs (single guide RNAs) to induce targeted exon skipping using Base Editing technology.
 
 Manipulating alternative splicing is key to understanding diseases like cancer and neurodegenerative disorders, but designing the right tools for the job is a major bottleneck. The manual process of identifying targetable exons, designing sgRNAs for specific base editors, and assessing off-target risks is complex, tedious, and slows down critical research.
 
