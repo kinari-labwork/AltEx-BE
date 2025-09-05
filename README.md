@@ -5,7 +5,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
 [![PyPI](https://img.shields.io/pypi/v/AltEx-BE)](https://pypi.org/project/AltEx-BE/)
 
-<img src= https://github.com/kinari-labwork/AltEx-BE/raw/main/docs/AltEx-BE_logo.jpg>
+<img src= https://github.com/kinari-labwork/AltEx-BE/raw/refseqid-issue/docs/AltEx-BE_logo.jpg>
 
 
 - [AltExBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
