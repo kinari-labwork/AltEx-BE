@@ -73,6 +73,11 @@ To use AltexBE, you should prepare 2 input files in your computer
     - AltEx-BE is avalilable for many genes. When you want to design sgRNAs for many genes, You can input gene list via `--gene-file` option. 
     - The input file should only have 1 column with gene symbols or refseq IDs (No need the header row) 
 
+> [!NOTE]
+> **Point of Gene and RefseqID input**
+> - When providing a gene symbol (e.g., MYGENE), AltEx-BE will analyze all known transcripts of that gene to identify alternative splicing events.
+> - When providing a RefSeq ID (e.g., NM_0012345), AltEx-BE will automatically identify the corresponding gene and analyze all of its transcripts. This ensures a comprehensive analysis even when starting from a single transcript identifier.
+
 ## Usage & Quick example
 
 AltExBE is operated via the `altex-be` command.
