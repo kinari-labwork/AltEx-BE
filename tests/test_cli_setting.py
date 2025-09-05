@@ -27,7 +27,7 @@ def test_parse_gene_file(tmp_path):
     gene_file = tmp_path / "genes.txt"
     gene_file.write_text("GeneA\nGeneB\n  \nGeneC\n")
     result = parse_gene_file(gene_file)
-    assert isinstance(result, list)
+    assert isinstance(result, set)
     assert "GeneA" in result
     assert "GeneB" in result
     assert "GeneC" in result
