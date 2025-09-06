@@ -9,26 +9,37 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     """
     Purpose:
         refFlatのデータフレームから、興味のある遺伝子のみを選択する。
+        指定されたのが遺伝子記号でもRefSeq IDでも、その遺伝子に属するすべてのトランスクリプトを返す。
     Parameters:
         refFlat: pd.DataFrame, refFlatのデータフレーム
-        interest_genes: list[str], 興味のある遺伝子名のリスト(gene symbol または Refseq ID)
+        interest_genes: set[str], 興味のある遺伝子名のリスト(gene symbol または Refseq ID)
     Returns:
         pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
     """
     gene_symbol_set = set(refFlat["geneName"].values)
     ref_seq_id_set = set(refFlat["name"].values)
 
+    target_gene_symbols = set()
+
     for gene in interest_genes:
-        if gene not in gene_symbol_set and gene not in ref_seq_id_set:
-            logging.warning(f"Gene {gene} is not found in refFlat.")
-            continue
+        if gene in gene_symbol_set:
+            target_gene_symbols.add(gene)
+            logging.info(f"Gene symbol {gene} found in refFlat. Will fetch all its transcripts.")
+        elif gene in ref_seq_id_set:
+            # Find the corresponding gene symbol for the RefSeq ID
+            corresponding_gene_symbol = refFlat.loc[refFlat["name"] == gene, "geneName"].iloc[0]
+            target_gene_symbols.add(corresponding_gene_symbol)
+            logging.info(f"RefSeq ID {gene} found in refFlat. Will fetch all transcripts for its gene, {corresponding_gene_symbol}.")
         else:
-            logging.info(f"Gene {gene} is found in refFlat.")
+            logging.warning(f"Identifier {gene} was not found in refFlat as a gene symbol or RefSeq ID.")
+
+    if not target_gene_symbols:
+        raise ValueError("None of the specified genes were found in the refFlat file.")
+
+    # Filter the main refFlat dataframe to get all transcripts for the identified genes
+    filtered_df = refFlat[refFlat["geneName"].isin(target_gene_symbols)].reset_index(drop=True)
     
-    refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
-    if refFlat.empty:
-        raise ValueError("No interest genes found in refFlat. Please check the format of interest_genes. Allowed formats are gene symbols or Refseq IDs.")
-    return refFlat
+    return filtered_df
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
     """
