@@ -1,4 +1,4 @@
-# AltExBE: Alternate Exon Skipping by Base Editing
+# AltEx-BE: Alternate Exon Skipping by Base Editing
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -8,7 +8,7 @@
 <img src= https://github.com/kinari-labwork/AltEx-BE/raw/refseqid-issue/docs/AltEx-BE_logo.jpg>
 
 
-- [AltExBE: Alternate Exon Skipping by Base Editing](#altexbe-alternate-exon-skipping-by-base-editing)
+- [AltEx-BE: Alternate Exon Skipping by Base Editing](#altex-be-alternate-exon-skipping-by-base-editing)
   - [Overview](#overview)
   - [Key Features](#key-features)
   - [Workflow Diagram](#workflow-diagram)
@@ -19,12 +19,12 @@
       - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
       - [3. Using a Preset Editor:](#3-using-a-preset-editor)
   - [List of command line options](#list-of-command-line-options)
-  - [Format of Altex-BE output](#format-of-altex-be-output)
+  - [Format of AltEx-BE output](#format-of-altex-be-output)
   - [License](#license)
 
 ## Overview
 
-**AltExBE** is a command-line bioinformatics tool that designs sgRNAs (single guide RNAs) to induce targeted exon skipping using Base Editing technology.
+**AltEx-BE** is a command-line bioinformatics tool that designs sgRNAs (single guide RNAs) to induce targeted exon skipping using Base Editing technology.
 
 Manipulating alternative splicing is key to understanding diseases like cancer and neurodegenerative disorders, but designing the right tools for the job is a major bottleneck. The manual process of identifying targetable exons, designing sgRNAs for specific base editors, and assessing off-target risks is complex, tedious, and slows down critical research.
 
@@ -47,13 +47,13 @@ By transforming a complex, multi-step design process into a single command, AltE
 
 ## Workflow Diagram
 
-Here is a simplified diagram illustrating the workflow of `AltexBE`:
+Here is a simplified diagram illustrating the workflow of **AltEx-BE**:
 
 <img src = https://github.com/kinari-labwork/AltEx-BE/raw/main/docs/pipeline_explanation.png width="75%">
 
 ## Installation
 
-To get started with AltexBE, clone the repository and install the required dependencies.
+To get started with AltEx-BE, clone the repository and install the required dependencies.
 
 ```sh
 # 1. Clone the repository
@@ -65,7 +65,7 @@ pip install -e .
 pip install AltEx-BE
 ```
 ## Required dataset
-To use AltexBE, you should prepare 2 input files in your computer
+To use AltEx-BE, you should prepare 2 input files in your computer
 - refFlat file of your interest species   
     - refflat file contains Refseq infomations: explanation of refFlat format is [here](https://genome.bio.fsu.edu/cgi-bin/hgTables?hgsid=235697_cnEhDmy3qVsShD0gwzprkJveBQah&hgta_doSchemaDb=mm39&hgta_doSchemaTable=refFlat)   
     - you can download refflat files from  UCSC goldenpath: refflat files of mm39 is [here](https://hgdownload.cse.ucsc.edu/goldenpath/mm39/database/)
@@ -83,7 +83,7 @@ To use AltexBE, you should prepare 2 input files in your computer
 
 ## Usage & Quick example
 
-AltExBE is operated via the `altex-be` command.
+AltEx-BE is operated via the `altex-be` command.
 
 #### 1. Input Base Editor Information in the Command Line:
 
@@ -163,7 +163,7 @@ altex-be \
 | | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
 | | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
-## Format of Altex-BE output
+## Format of AltEx-BE output
 `altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
 - Summary sgRNA table (.csv)
     - this table contain imformation of sgRNAs designed by AltEx-BE
