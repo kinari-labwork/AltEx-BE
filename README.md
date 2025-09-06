@@ -20,7 +20,7 @@
       - [3. Using a Preset Editor:](#3-using-a-preset-editor)
   - [List of command line options](#list-of-command-line-options)
   - [Format of AltEx-BE output](#format-of-altex-be-output)
-  - [License](#license)
+- [License](#license)
 
 ## Overview
 
@@ -197,6 +197,6 @@ altex-be \
     - score columns in bed file means offtarget count of 20bp+PAM
     - when you assign bed file, you should choose correct assembly name in above website
 
-## License
+# License
+- Please see [LICENSE.md](LICENSE.md)
 
-This project is distributed under the MIT License. See the `LICENSE` file for more information.
