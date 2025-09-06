@@ -5,9 +5,9 @@
    viewBox="0 0 300 100"
    version="1.1"
    id="svg4"
-   sodipodi:docname="logo.svg"
+   sodipodi:docname="AltEx-BE_logo .svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
-   inkscape:export-filename="AltEx-BE_logo.jpg"
+   inkscape:export-filename="AltEx-BE_logo.png"
    inkscape:export-xdpi="2000"
    inkscape:export-ydpi="2000"
    xml:space="preserve"
@@ -24,9 +24,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
-     inkscape:zoom="3.4913397"
-     inkscape:cx="83.349093"
-     inkscape:cy="19.619975"
+     inkscape:zoom="6.9826794"
+     inkscape:cx="114.5692"
+     inkscape:cy="29.429964"
      inkscape:window-width="2560"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -97,8 +97,8 @@
        ry="2"
        id="rect3"
        style="fill:#0072b2" /><!-- Skipping Arrow Path --><path
-       style="fill:none;stroke:#333333;stroke-width:2.4189;stroke-linecap:square;stroke-dasharray:none;marker-end:url(#Triangle)"
-       d="M -53.572977,8.2813987 C -43.16309,-6.9786654 -25.364784,-11.044155 -9.2095904,-11.241752 5.2390692,-11.418476 22.436479,-6.6154974 30.88273,5.2434236"
+       style="fill:none;stroke:#333333;stroke-width:1.99728;stroke-linecap:square;stroke-dasharray:none;marker-end:url(#Triangle)"
+       d="M -37.934427,10.28594 C -30.907476,-5.5227058 -19.219905,-9.5708858 -8.6631258,-9.6012967 0.77850141,-9.6284965 11.941953,-4.430118 17.28378,8.035015"
        id="path4"
        sodipodi:nodetypes="cac" /></g><!-- Title Text --><g
      id="title"
@@ -123,7 +123,7 @@
        style="font-size:17.3333px;line-height:1.04;font-family:Aptos;-inkscape-font-specification:Aptos;text-align:start;letter-spacing:0.16px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect4);display:inline;fill:#000000;stroke-width:2.4189;stroke-linecap:square" /><g
        style="fill:none"
        id="g4"
-       transform="matrix(0.64283984,0,0,0.72221086,-35.272856,36.770271)"><path
+       transform="matrix(-0.64283984,0,0,0.72221086,-87.089759,38.002835)"><path
          d="m 16.6352,7.58545 4.5099,2.53435 2.5612,4.5367 L 9.36953,28.9933 4.50768,26.4228 2.29846,21.9222 Z"
          fill="#ff822d"
          id="path1" /><path
