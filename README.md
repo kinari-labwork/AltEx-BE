@@ -56,10 +56,8 @@ Here is a simplified diagram illustrating the workflow of **AltEx-BE**:
 To get started with AltEx-BE, clone the repository and install the required dependencies.
 
 ```sh
-# 1. Clone the repository
-git clone https://github.com/kinari-labwork/AltEx-BE
-cd AltEx-BE
-pip install -e .
+# 1. install via bioconda
+conda install -c conda-forge -c bioconda altex-be
 
 # 2. install via pypi
 pip install AltEx-BE
