@@ -40,7 +40,7 @@ def test_get_base_editors_from_args(tmp_path):
         "base_editor_name,pam_sequence,editing_window_start,editing_window_end,base_editor_type\n"
         "TestBE,NGG,10,15,cbe\n"
     )
-    args = argparse.Namespace(base_editor_files=str(be_file))
+    args = argparse.Namespace(be_files=str(be_file))
     result = get_base_editors_from_args(args)
     assert isinstance(result, dict)
     assert "TestBE" in result
@@ -55,7 +55,7 @@ def test_get_base_editors_from_args_invalid(tmp_path):
         "base_editor_name,editing_window_start,editing_window_end,base_editor_type\n"
         "TestBE,10,15,cbe\n"
     )
-    args = argparse.Namespace(base_editor_files=str(be_file))
+    args = argparse.Namespace(be_files=str(be_file))
     with pytest.raises(ValueError):
         get_base_editors_from_args(args)
 
