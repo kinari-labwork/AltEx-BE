@@ -44,17 +44,17 @@ def get_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor
     "editing_window_end",
     "base_editor_type"
     ]
-    if not args.base_editor_files:
+    if not args.be-files:
         return None
     else:
-        ext = Path(args.base_editor_files).suffix.lower()
+        ext = Path(args.be-files).suffix.lower()
 
     if ext not in [".csv", ".tsv", ".txt"]:
         raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
     if ext in [".csv"]:
-        be_df = pd.read_csv(args.base_editor_files, header=0)
+        be_df = pd.read_csv(args.be-files, header=0)
     elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.base_editor_files, sep=None, engine="python", header=0)
+        be_df = pd.read_csv(args.be-files, sep=None, engine="python", header=0)
 
     # 列名が期待通りかチェック、違うならエラーを投げる
     if set(be_df.columns) != set(expected_columns):
