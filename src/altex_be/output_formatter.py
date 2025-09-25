@@ -32,6 +32,7 @@ def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
         "flame",
         "exontype",
         "exon_position",
+        "cds_info",
         "uuid"
         ]
     df_list = []
