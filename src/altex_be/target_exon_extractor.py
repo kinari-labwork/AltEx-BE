@@ -6,14 +6,17 @@ from . import logging_config # noqa: F401
 
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
-def explode_classified_refflat(classified_refflat: pd.DataFrame) -> pd.DataFrame:
+def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon=all) -> pd.DataFrame:
     classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "flame", "cds_info"])
     classified_refflat = classified_refflat.drop(columns = ["exons"])
     classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
         int
     )  # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
-    classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
+    if target_exon == "alternative_exons":
+       classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
+    elif target_exon == "all":
+        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long","constitutive"))]
     # 重複を削除し一方だけ残す
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     classified_refflat['uuid'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
@@ -95,7 +98,7 @@ def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataF
     Purpose:
     このモジュールの操作をまとめて実行するためのラッパー関数
     """
-    exploded_classified_refflat = explode_classified_refflat(classified_refflat)
+    exploded_classified_refflat = explode_classified_refflat(classified_refflat, target_exon=all)
     target_exon_df = format_classified_refflat_to_bed(exploded_classified_refflat)
     if target_exon_df is None:
         logging.warning("there are no exons in your interested genes which have at least one targetable splicing event")
