@@ -30,6 +30,7 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
         raise ValueError("No interest genes found in refFlat. Please check the format of interest_genes. Allowed formats are gene symbols or Refseq IDs.")
     return refFlat
 
+# constitutive exonも含めてデザインするなら、いらない可能性もある
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
     """
     Purpose:
@@ -49,6 +50,7 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> 
         logging.warning("No gene has multiple exons")
     return found
 
+# constitutive exonも含めてデザインするなら、いらない可能性もある
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
     """
     Purpose:

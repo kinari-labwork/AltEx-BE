@@ -60,7 +60,7 @@ def test_extract_target_exon():
         }
     )
 
-    output_data = explode_classified_refflat(input_data)
+    output_data = explode_classified_refflat(input_data, target_exon="alternative_exons")
     output_data = format_classified_refflat_to_bed(output_data)
     expected_output = pd.DataFrame(
         {
