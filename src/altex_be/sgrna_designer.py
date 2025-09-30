@@ -344,13 +344,20 @@ def design_sgrna_for_target_exon_df(
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
+    # first と last exonでは、それぞれacceptorとdonorのsgRNAを設計しない。
+
+    # design_sgrna 関数内で、splice siteがAG/GTでない場合はsgRNAを設計しないように変更したが、
+    # そもそもsplice siteがAG/GTでない場合はsgRNAは設計されない。
+    # だから、おそらく、first exonのacceptorやlast exonのdonorに対してsgRNAが設計されることはない。が、念のため、例外処理として、first exonのacceptorとlast exonのdonorに対してはsgRNAを設計しないようにした。
+
     # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor", base_editor_type), axis=1
+        lambda r:[] if r["exontype"] =="a5ss-long" or r["exon_position"] == "first" else apply_design(r, "acceptor", base_editor_type), axis=1
     )
     target_exon_df["grna_donor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor", base_editor_type), axis=1
+        lambda r:[] if r["exontype"]=="a3ss-long" or r["exon_position"] == "last" else apply_design(r, "donor", base_editor_type), axis=1
     )
+
     return target_exon_df
 
 
