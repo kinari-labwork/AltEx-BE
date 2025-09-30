@@ -1,5 +1,6 @@
 import pandas as pd
 import pickle
+import time
 from altex_be.sgrna_designer import (
     BaseEditor,
     design_sgrna_for_base_editors,
@@ -38,17 +39,24 @@ base_editors["ABE8e-NG"] = (
     )
 )
 
+t1 = time.time()
+
 target_exons_df_with_sgrna = design_sgrna_for_base_editors(
     target_exon_df=target_exons_df_with_acceptor_and_donor_sequence,
     base_editors=base_editors
 )
 
+t2 = time.time()
+print(f"Design sgRNA for base editors took {t2 - t1} seconds.")
+
+t1 = time.time()
 target_exons_df_with_sgrna_dict = design_sgrna_for_base_editors_dict(
     target_exon_df=target_exons_df_with_acceptor_and_donor_sequence,
     base_editors=base_editors
 )
-
 print(target_exons_df_with_sgrna.columns)
+t2 = time.time()
+print(f"Design sgRNA for base editors (dict version) took {t2 - t1} seconds.")
 
 target_exons_df_with_sgrna.to_pickle("data/target_exons_with_sgrna.pkl")
 
