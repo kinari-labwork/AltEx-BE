@@ -28,4 +28,4 @@ tqdm = "^4.67.1"
 pyahocorasick = "^2.2.0"
 
 [tool.poetry.scripts]
-altex-be = "altex_be.main:main"
+altex-be = "altex_be.main:run_pipeline"
