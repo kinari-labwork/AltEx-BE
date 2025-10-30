@@ -3,25 +3,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-def parse_base_editors(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
-    return {
-            args.base_editor_name: BaseEditor(
-                base_editor_name=args.base_editor_name,
-                pam_sequence=args.base_editor_pam.upper(),
-                editing_window_start_in_grna=int(args.base_editor_window_start),
-                editing_window_end_in_grna=int(args.base_editor_window_end),
-                base_editor_type=args.base_editor_type.lower(),
-            )
-        }
 
-def parse_gene_file(gene_file: Path) -> list[str] | None:
-    if not gene_file:
-        return None
-    if gene_file.suffix.lower() not in [".txt", ".tsv", ".csv"]:
-        raise ValueError("Unsupported file extension for gene file. Use .txt, .tsv, or .csv")
-    with open(gene_file, "r") as f:
-        interest_genes = [line.strip() for line in f if line.strip()] #空の行は if line.strip がFalseになるので除外できる
-    return interest_genes
 
 def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
