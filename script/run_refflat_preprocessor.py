@@ -1,7 +1,7 @@
 import pandas as pd
 
 # export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
-from altex_be.loding_and_preprocess.refflat_preprocessor import (
+from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
     annotate_cording_information,
     annotate_flame_information,
