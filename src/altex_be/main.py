@@ -38,8 +38,8 @@ def run_pipeline():
         assembly_name,
         parser
     )
-    
-    refflat = loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
+
+    refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
     classified_refflat = classify_splicing_events(refflat)
     del refflat
@@ -83,7 +83,7 @@ def run_pipeline():
         print("-" * 40)
     return
 
-def loding_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
+def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
     """
     データのロード、前処理から、興味のある遺伝子の抽出までを行う。
     """
