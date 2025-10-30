@@ -5,7 +5,6 @@ import logging
 import sys
 import datetime
 from . import (
-    refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
     target_exon_extractor,
@@ -20,82 +19,30 @@ from .manage_arguments import (
     parse_arguments,
     validate_arguments
 )
+from .loding_and_preprocess.loding_and_preprocessing import loding_and_preprocess_refflat
 
 
 def main():
     parser = build_parser.build_parser()
 
     args = parser.parse_args()
-    refflat_path, fasta_path, output_directory = parse_arguments.parse_path_from_args(args)
 
-    validate_arguments.check_input_output_directories(refflat_path, fasta_path, output_directory)
+    refflat_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args)
 
-    interest_gene_list = parse_arguments.parse_genes_from_args(args)
-    
-    if not interest_gene_list:
-        parser.error("Please provide at least one interest gene symbol or Refseq ID.")
+    validate_arguments.validate_arguments(
+        refflat_path,
+        fasta_path,
+        output_directory,
+        interest_gene_list,
+        base_editors,
+        assembly_name,
+        parser
+    )
 
-    preset_base_editors = sgrna_designer.make_preset_base_editors()
-
-    # BaseEditorの決定
-    base_editors = {}
-    if args.be_files:
-        base_editors = parse_arguments.parse_base_editors_from_file(args)
-    
-    if args.be_preset is not None:
-        if args.be_preset not in preset_base_editors:
-            parser.error(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
-        else:
-            base_editor = preset_base_editors[args.be_preset]
-            base_editors[base_editor.base_editor_name] = base_editor
-
-    if args.be_name or args.be_pam or args.be_start or args.be_end or args.be_type:
-        if not all([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
-            parser.error(
-            "Base editor information is incomplete. Please provide all required parameters."
-            )
-        base_editors.update(validate_arguments.parse_base_editors(args))
-
-    assembly_name = str(args.assembly_name)
-    if not validate_arguments.is_supported_assembly_name_in_crispr_direct(assembly_name):
-        logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
-    
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
-
-    if not base_editors:
-        parser.error("No base editors specified. Please provide at least one base editor.")
-
-    logging.info("Designing sgRNAs for the following base editors:")
-    validate_arguments.show_base_editors_info(base_editors)
-
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
-    logging.info("-" * 50)
-    logging.info("loading refFlat file...")
-    refflat = pd.read_csv(
-            refflat_path,
-            sep="\t",
-            header=None,
-            names=[
-                "geneName",
-                "name",
-                "chrom",
-                "strand",
-                "txStart",
-                "txEnd",
-                "cdsStart",
-                "cdsEnd",
-                "exonCount",
-                "exonStarts",
-                "exonEnds",
-            ],
-        )
-    
-    logging.info("running processing of refFlat file...")
-    refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
-    if not refflat_preprocessor.validate_filtered_refflat(refflat, interest_gene_list) :
-        logging.warning("your interest gene is not targetable. Exiting...")
-        sys.exit(0)
+
+    refflat = loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
     logging.info("-" * 50)
 
