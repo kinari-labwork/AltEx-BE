@@ -3,8 +3,6 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-
-
 def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     if base_editors is None:
         raise ValueError("No base editors available to display.")
@@ -12,8 +10,6 @@ def show_base_editors_info(base_editors: dict[str, BaseEditor]):
     for base_editor in base_editors.values():
         print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
-        
-
 
 def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
     if not refflat_path.is_file():
