@@ -1,7 +1,9 @@
 import argparse
 import pandas as pd
+import logging
 from pathlib import Path
 from .. class_def.base_editors import BaseEditor, PRESET_BASE_EDITORS
+from .. import logging_config  # noqa: F401
 
 def parse_gene_file(gene_file: Path) -> list[str] | None:
     if not gene_file:
@@ -18,13 +20,14 @@ def parse_path_from_args(args: argparse.Namespace):
     output_directory = Path(args.output_dir)
     return refflat_path, fasta_path, output_directory
 
+def parse_assembly_name_from_args(args: argparse.Namespace) -> str:
+    return str(args.assembly_name)
+
 def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> list[str]:
     genes_from_file = parse_gene_file(Path(args.gene_file)) if args.gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
     interest_gene_list = gene_symbols + refseq_ids + genes_from_file
-    if not interest_gene_list:
-        parser.error("Please provide at least one interest gene symbol or Refseq ID.")
     return interest_gene_list
 
 def parse_base_editors_from_file(
@@ -133,31 +136,29 @@ def parse_base_editors_from_all_sources(
     ファイル、プリセット、個別指定の順で情報を取得する。
     """
     base_editors = {}
-
     # ファイルからの読み込み
     if args.be_files:
         base_editors.update(
             parse_base_editors_from_file(args, parser, base_editors) or {}
         )
-
     # プリセットからの読み込み
     base_editors = parse_base_editors_from_presets(args, parser, base_editors) or base_editors
-
     # 個別指定からの読み込み
     base_editors = parse_base_editors_from_args(args, parser, base_editors) or base_editors
-
-    if not base_editors:
-        parser.error("No base editor information provided. Please specify base editor details via file, preset, or individual parameters.")
-
+    # 選択されたbase editorの情報を表示
+    logging.info("Designing sgRNAs for the following base editors:")
     show_base_editors_info(base_editors, parser)
-
     return base_editors
 
 def parse_arguments(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser
-) -> tuple[Path, Path, Path, list[str], dict[str, BaseEditor]]:
+) -> tuple[Path, Path, Path, list[str], dict[str, BaseEditor], str]:
+    """
+    このモジュールに含まれるすべての関数のラッパー関数。
+    """
     refflat_path, fasta_path, output_directory = parse_path_from_args(args)
     interest_gene_list = parse_genes_from_args(args, parser)
     base_editors = parse_base_editors_from_all_sources(args, parser)
-    return refflat_path, fasta_path, output_directory, interest_gene_list, base_editors
+    assembly_name = parse_assembly_name_from_args(args)
+    return refflat_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name
