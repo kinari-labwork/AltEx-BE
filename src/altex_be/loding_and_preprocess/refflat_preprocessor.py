@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import pandas as pd
 import logging
-from . import logging_config # noqa: F401
+from .. import logging_config # noqa: F401
 
 def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
@@ -26,11 +26,8 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> p
             logging.info(f"Gene {gene} is found in refFlat.")
     
     refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
-    if refFlat.empty:
-        raise ValueError("No interest genes found in refFlat. Please check the format of interest_genes. Allowed formats are gene symbols or Refseq IDs.")
     return refFlat
 
-# constitutive exonも含めてデザインするなら、いらない可能性もある
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
     """
     Purpose:
@@ -46,8 +43,6 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> 
         if (exon_counts > 1).any():
             logging.info(f"Gene {gene} has multiple exons")
             found = True
-    if not found:
-        logging.warning("No gene has multiple exons")
     return found
 
 # constitutive exonも含めてデザインするなら、いらない可能性もある
@@ -254,28 +249,13 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     return refflat
 
-def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
-    """
-    Validate the processed refFlat DataFrame.
-    """
-    variant_check = check_transcript_variant(refflat, interest_gene_list)
-    if not variant_check:
-        logging.warning("No transcript variants found for your interest genes.")
-        return False
-
-    multiple_exon_check = check_multiple_exon_existance(refflat, interest_gene_list)
-    if not multiple_exon_check:
-        logging.warning("Your interest genes do not have multiple exons. These genes are out of scope.")
-        return False
-
-    return True
-
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
     このモジュールの関数をwrapした関数
     """
     refflat = select_interest_genes(refflat, interest_genes)
-
+    if refflat.empty:
+        return refflat
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
