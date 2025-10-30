@@ -1,4 +1,4 @@
-from .. class_def.base_editors import BaseEditor
+from ..class_def.base_editors import BaseEditor
 import argparse
 import logging
 from pathlib import Path
