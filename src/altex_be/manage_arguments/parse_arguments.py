@@ -87,6 +87,14 @@ def parse_base_editors_from_presets(
             base_editors[base_editor.base_editor_name] = base_editor
     return base_editors
 
+def show_base_editors_info(base_editors: dict[str, BaseEditor], parser: argparse.ArgumentParser):
+    if base_editors is None:
+        parser.error("No base editors available to display.")
+    for base_editor in base_editors.values():
+        print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
+            f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
+    return None
+
 def parse_base_editors_from_args(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
@@ -141,4 +149,15 @@ def parse_base_editors_from_all_sources(
     if not base_editors:
         parser.error("No base editor information provided. Please specify base editor details via file, preset, or individual parameters.")
 
+    show_base_editors_info(base_editors, parser)
+
     return base_editors
+
+def parse_arguments(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser
+) -> tuple[Path, Path, Path, list[str], dict[str, BaseEditor]]:
+    refflat_path, fasta_path, output_directory = parse_path_from_args(args)
+    interest_gene_list = parse_genes_from_args(args, parser)
+    base_editors = parse_base_editors_from_all_sources(args, parser)
+    return refflat_path, fasta_path, output_directory, interest_gene_list, base_editors
