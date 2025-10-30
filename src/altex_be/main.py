@@ -5,7 +5,6 @@ import logging
 import sys
 import datetime
 from . import (
-    cli_setting,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
@@ -18,7 +17,8 @@ from . import (
 )
 from .manage_arguments import (
     build_parser,
-    parse_arguments
+    parse_arguments,
+    validate_arguments
 )
 
 
@@ -26,14 +26,12 @@ def main():
     parser = build_parser.build_parser()
 
     args = parser.parse_args()
-    refflat_path, fasta_path, output_directory, gene_file = parse_arguments.parse_path_from_args(args)
+    refflat_path, fasta_path, output_directory = parse_arguments.parse_path_from_args(args)
 
-    cli_setting.check_input_output_directories(refflat_path, fasta_path, output_directory)
+    validate_arguments.check_input_output_directories(refflat_path, fasta_path, output_directory)
 
-    genes_from_file = cli_setting.parse_gene_file(gene_file) if gene_file else []
-    gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
-    refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
-    interest_gene_list = gene_symbols + refseq_ids + genes_from_file
+    interest_gene_list = parse_arguments.parse_genes_from_args(args)
+    
     if not interest_gene_list:
         parser.error("Please provide at least one interest gene symbol or Refseq ID.")
 
@@ -42,7 +40,7 @@ def main():
     # BaseEditorの決定
     base_editors = {}
     if args.be_files:
-        base_editors = cli_setting.get_base_editors_from_args(args)
+        base_editors = parse_arguments.parse_base_editors_from_file(args)
     
     if args.be_preset is not None:
         if args.be_preset not in preset_base_editors:
@@ -56,10 +54,10 @@ def main():
             parser.error(
             "Base editor information is incomplete. Please provide all required parameters."
             )
-        base_editors.update(cli_setting.parse_base_editors(args))
+        base_editors.update(validate_arguments.parse_base_editors(args))
 
     assembly_name = str(args.assembly_name)
-    if not cli_setting.is_supported_assembly_name_in_crispr_direct(assembly_name):
+    if not validate_arguments.is_supported_assembly_name_in_crispr_direct(assembly_name):
         logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
     
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
@@ -68,7 +66,7 @@ def main():
         parser.error("No base editors specified. Please provide at least one base editor.")
 
     logging.info("Designing sgRNAs for the following base editors:")
-    cli_setting.show_base_editors_info(base_editors)
+    validate_arguments.show_base_editors_info(base_editors)
 
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
     logging.info("-" * 50)
@@ -159,7 +157,7 @@ def main():
     
     logging.info("All AltEx-BE processes completed successfully.")
     logging.info("Printing summary of output:")
-    summary_dfs = cli_setting.split_df_by_column_chunks(exploded_sgrna_with_offtarget_info, chunk_sizes=[12, 6, 6])
+    summary_dfs = validate_arguments.split_df_by_column_chunks(exploded_sgrna_with_offtarget_info, chunk_sizes=[12, 6, 6])
     for sub_df in summary_dfs:
         print(sub_df)  # indexも表示される
         print("-" * 40)
