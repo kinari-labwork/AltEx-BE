@@ -138,7 +138,7 @@ def parse_base_editors_from_all_sources(
     # ファイルからの読み込み
     if args.be_files:
         base_editors.update(
-            parse_base_editors_from_file(args, parser, base_editors) or {}
+            parse_base_editors_from_file(args, parser) or {}
         )
     # プリセットからの読み込み
     base_editors = parse_base_editors_from_presets(args, parser, base_editors) or base_editors
