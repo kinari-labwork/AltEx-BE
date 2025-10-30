@@ -61,7 +61,7 @@ def run_pipeline():
         target_exon_df_with_acceptor_and_donor_sequence,
         base_editors
     )
-    formatted_exploded_sgrna_df = format_output(target_exon_df_with_sgrna_dict, base_editors)
+    formatted_exploded_sgrna_df = format_output(target_exon_df_with_sgrna_dict, base_editors, parser)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
     
     exploded_sgrna_with_offtarget_info = score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
