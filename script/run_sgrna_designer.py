@@ -4,13 +4,12 @@ import time
 from altex_be.sgrna_designer import (
     BaseEditor,
     design_sgrna_for_base_editors,
-    make_preset_base_editors,
-    design_sgrna_for_base_editors_dict
+    design_sgrna_for_base_editors_dict,
 )
 
 target_exons_df_with_acceptor_and_donor_sequence = pd.read_pickle("data/target_exons_with_acceptor_and_donor_sequence.pkl")
 
-base_editors = make_preset_base_editors()
+base_editors = {}
 base_editors["BE4max-NG"] = (
     BaseEditor(
         base_editor_name="BE4max-NG",
