@@ -2,14 +2,12 @@ import pandas as pd
 import logging
 import argparse
 from .. import logging_config # noqa: F401
-from . import refflat_preprocessor
+from .. import refflat_preprocessor
 
 def loding_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
     """
     前処理から、興味のある遺伝子の抽出までを行う。
     """
-    logging.info("-" * 50)
-    logging.info("loading refFlat file...")
     refflat = pd.read_csv(
             refflat_path,
             sep="\t",
