@@ -35,11 +35,11 @@ def test_parse_assembly_name_from_args():
 
 def test_parse_base_editors_from_args_valid():
     args = argparse.Namespace(
-        base_editor_name="TestBE",
-        base_editor_pam="NGG",
-        base_editor_window_start="10",
-        base_editor_window_end="15",
-        base_editor_type="cbe"
+        be_name="TestBE",
+        be_pam="NGG",
+        be_window_start="10",
+        be_window_end="15",
+        be_type="cbe"
     )
     base_editors = {}
     parser = argparse.ArgumentParser()
@@ -56,11 +56,11 @@ def test_parse_base_editors_from_args_valid():
 
 def test_parse_base_editors_from_args_invalid():
     args = argparse.Namespace(
-        base_editor_name="TestBE",
-        base_editor_pam=None,
-        base_editor_window_start="10",
-        base_editor_window_end="15",
-        base_editor_type="cbe"
+        be_name="TestBE",
+        be_pam=None,
+        be_window_start="10",
+        be_window_end="15",
+        be_type="cbe"
     )
     base_editors = {}
     parser = argparse.ArgumentParser()
