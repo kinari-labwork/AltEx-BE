@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import sys
 import datetime
-from . import (
+from .. import (
     sequence_annotator,
     splicing_event_classifier,
     target_exon_extractor,
@@ -14,12 +14,12 @@ from . import (
     bed_for_ucsc_custom_track_maker,
     logging_config # noqa: F401
 )
-from .manage_arguments import (
+from ..manage_arguments import (
     build_parser,
     parse_arguments,
     validate_arguments
 )
-from .loding_and_preprocess.loding_and_preprocessing import loding_and_preprocess_refflat
+from . import main_loding_and_preprocessing
 
 
 def main():
@@ -41,15 +41,16 @@ def main():
 
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
     logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
-
-    refflat = loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
+    
+    logging.info("-" * 50)
+    logging.info("loading refFlat file...")
+    refflat = main_loding_and_preprocessing.loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
     logging.info("-" * 50)
-
     logging.info("Classifying splicing events...")
-
     classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
     del refflat
+
     logging.info("-" * 50)
     logging.info("Extracting target exons...")
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
