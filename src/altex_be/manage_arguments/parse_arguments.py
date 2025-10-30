@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 from . import validate_arguments
-from .. sgrna_designer import BaseEditor
+from .. class_def.base_editors import BaseEditor, PRESET_BASE_EDITORS
 
 def parse_path_from_args(args: argparse.Namespace):
     refflat_path = Path(args.refflat_path)
@@ -17,7 +17,11 @@ def parse_genes_from_args(args: argparse.Namespace):
     interest_gene_list = gene_symbols + refseq_ids + genes_from_file
     return interest_gene_list
 
-def parse_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
+def parse_base_editors_from_file(
+    args: argparse.Namespace, 
+    parser: argparse.ArgumentParser, 
+    base_editors: dict[str, BaseEditor]
+    ) -> dict[str, BaseEditor] | None:
     """
     base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
     csvまたはtxt, tsv形式のファイルをサポートする
@@ -43,7 +47,7 @@ def parse_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEdit
 
     # 列名が期待通りかチェック、違うならエラーを投げる
     if set(be_df.columns) != set(expected_columns):
-        raise ValueError(
+        raise parser.error(
             f"Base editor file columns are invalid. "
             f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
         )
@@ -58,3 +62,46 @@ def parse_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEdit
             )
             for _, row in be_df.iterrows()
         }
+
+def parse_base_editors_from_presets(
+    args: argparse.Namespace, 
+    parser: argparse.ArgumentParser, 
+    base_editors: dict[str, BaseEditor]
+) -> dict[str, BaseEditor] | None:
+    preset_base_editors = PRESET_BASE_EDITORS # 事前定義されたBaseEditorの辞書
+    if args.be_preset is not None:
+        if args.be_preset not in preset_base_editors:
+            parser.error(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
+        else:
+            base_editor = preset_base_editors[args.be_preset]
+            base_editors[base_editor.base_editor_name] = base_editor
+    return base_editors
+
+def parse_base_editors_from_args(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+    base_editors: dict[str, BaseEditor]
+) -> dict[str, BaseEditor] | None:
+    """
+    コマンドライン引数からBaseEditor情報を取得し、base_editorsに追加する。
+    必要な情報が揃っていない場合はparser.errorで終了。
+    """
+    required_fields = [
+        args.base_editor_name,
+        args.base_editor_pam,
+        args.base_editor_window_start,
+        args.base_editor_window_end,
+        args.base_editor_type
+    ]
+    # どれか一つでも指定されていれば、全て必須
+    if any([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
+        if not all(required_fields):
+            parser.error("Base editor information is incomplete. Please provide all required parameters.")
+        base_editors[args.base_editor_name] = BaseEditor(
+            base_editor_name=args.base_editor_name,
+            pam_sequence=args.base_editor_pam.upper(),
+            editing_window_start_in_grna=int(args.base_editor_window_start),
+            editing_window_end_in_grna=int(args.base_editor_window_end),
+            base_editor_type=args.base_editor_type.lower(),
+        )
+    return base_editors
