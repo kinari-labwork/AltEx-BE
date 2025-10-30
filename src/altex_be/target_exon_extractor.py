@@ -106,7 +106,7 @@ def wrap_extract_target_exon(classified_refflat: pd.DataFrame) -> tuple[pd.DataF
     Purpose:
     このモジュールの操作をまとめて実行するためのラッパー関数
     """
-    exploded_classified_refflat = explode_classified_refflat(classified_refflat, target_exon=all)
+    exploded_classified_refflat = explode_classified_refflat(classified_refflat, target_exon="all")
     target_exon_df = format_classified_refflat_to_bed(exploded_classified_refflat)
     if target_exon_df is None:
         logging.warning("there are no exons in your interested genes which have at least one targetable splicing event")
