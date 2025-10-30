@@ -4,7 +4,8 @@ from pathlib import Path
 import logging
 import sys
 import datetime
-from .. import (
+from . import (
+    refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
     target_exon_extractor,
@@ -14,12 +15,11 @@ from .. import (
     bed_for_ucsc_custom_track_maker,
     logging_config # noqa: F401
 )
-from ..manage_arguments import (
+from .manage_arguments import (
     build_parser,
     parse_arguments,
     validate_arguments
 )
-from . import main_loding_and_preprocessing
 
 
 def main():
@@ -40,31 +40,19 @@ def main():
     )
 
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
-    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
     
-    logging.info("-" * 50)
-    logging.info("loading refFlat file...")
-    refflat = main_loding_and_preprocessing.loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
+    refflat = loding_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
-    logging.info("-" * 50)
-    logging.info("Classifying splicing events...")
-    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
+    classified_refflat = classify_splicing_events(refflat)
     del refflat
 
+    splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = extract_target_exon(
+        classified_refflat, interest_gene_list, parser
+    )
+    
     logging.info("-" * 50)
-    logging.info("Extracting target exons...")
-    splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
-    if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
-        logging.warning("No target exons found for all of the given genes, exiting")
-        sys.exit(0)
-    for gene in interest_gene_list:
-        if gene not in exploded_classified_refflat['geneName'].values:
-            logging.info(f"No target exons found for the gene: {gene}. Further processing of {gene} will be skipped.")
-        else:
-            logging.info(f"Target exons found for the gene: {gene}.")
-    logging.info("-" * 50)
-
     logging.info("Annotating sequences to dataframe from genome FASTA...")
+    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
     target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
         exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
@@ -110,6 +98,64 @@ def main():
         print(sub_df)  # indexも表示される
         print("-" * 40)
     return
+
+def loding_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
+    """
+    データのロード、前処理から、興味のある遺伝子の抽出までを行う。
+    """
+    logging.info("-" * 50)
+    logging.info("loading refFlat file...")
+    refflat = pd.read_csv(
+            refflat_path,
+            sep="\t",
+            header=None,
+            names=[
+                "geneName",
+                "name",
+                "chrom",
+                "strand",
+                "txStart",
+                "txEnd",
+                "cdsStart",
+                "cdsEnd",
+                "exonCount",
+                "exonStarts",
+                "exonEnds",
+            ],
+        )
+    
+    logging.info("running processing of refFlat file...")
+    refflat = refflat.drop_duplicates(subset=["name"], keep=False)
+    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    if refflat.empty :
+        parser.error("No interest genes found in refFlat after preprocessing. Exiting...")
+    # すべて constitutive exonでも設計対象とするが、exonが1つしかない遺伝子は対象外とする
+    if not refflat_preprocessor.check_multiple_exon_existance(refflat, interest_gene_list) :
+        parser.error("all of your interest genes are single-exon genes. AltEx-BE cannot process these genes. Exiting...")
+    return refflat
+
+def classify_splicing_events(refflat: pd.DataFrame) -> pd.DataFrame:
+    logging.info("-" * 50)
+    logging.info("Classifying splicing events...")
+    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
+    return classified_refflat
+
+def extract_target_exon(classified_refflat: pd.DataFrame, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    分類されたスプライシングイベントデータフレームから、ターゲットエキソンを抽出する。
+    """
+    logging.info("-" * 50)
+    logging.info("Extracting target exons...")
+    splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(classified_refflat)
+    if splice_acceptor_single_exon_df.empty and splice_donor_single_exon_df.empty:
+        parser.error("No target exons found for all of the given genes, exiting")
+        
+    for gene in interest_gene_list:
+        if gene not in exploded_classified_refflat['geneName'].values:
+            logging.info(f"No target exons found for the gene: {gene}. Further processing of {gene} will be skipped.")
+        else:
+            logging.info(f"Target exons found for the gene: {gene}.")
+    return splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat
 
 if __name__ == "__main__":
     main()
