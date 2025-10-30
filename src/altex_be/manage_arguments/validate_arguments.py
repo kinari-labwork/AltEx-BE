@@ -1,6 +1,5 @@
 from .. class_def.base_editors import BaseEditor
 import argparse
-import pandas as pd
 import logging
 from pathlib import Path
 from .. import logging_config  # noqa: F401
@@ -17,6 +16,7 @@ def is_input_output_directories(
         parser.error(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():
         parser.error(f"The provided output directory '{output_directory}' does not exist.")
+    return
 
 def is_base_editors_provided(base_editors: dict[str, BaseEditor], parser: argparse.ArgumentParser) -> None:
     if not base_editors:
@@ -45,8 +45,8 @@ def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> None:
     return : bool
     """
     supported_assemblies = load_supported_assemblies()
-    if assembly_name not in supported_assemblies:
-        logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
+    if assembly_name not in supported_assemblies: 
+        return logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
     return None
 
 def validate_arguments(
