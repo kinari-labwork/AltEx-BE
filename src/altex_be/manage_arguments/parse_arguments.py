@@ -1,8 +1,16 @@
 import argparse
 import pandas as pd
 from pathlib import Path
-from . import validate_arguments
 from .. class_def.base_editors import BaseEditor, PRESET_BASE_EDITORS
+
+def parse_gene_file(gene_file: Path) -> list[str] | None:
+    if not gene_file:
+        return None
+    if gene_file.suffix.lower() not in [".txt", ".tsv", ".csv"]:
+        raise ValueError("Unsupported file extension for gene file. Use .txt, .tsv, or .csv")
+    with open(gene_file, "r") as f:
+        genes_from_file = [line.strip() for line in f if line.strip()] #空の行は if line.strip がFalseになるので除外できる
+    return genes_from_file
 
 def parse_path_from_args(args: argparse.Namespace):
     refflat_path = Path(args.refflat_path)
@@ -10,11 +18,13 @@ def parse_path_from_args(args: argparse.Namespace):
     output_directory = Path(args.output_dir)
     return refflat_path, fasta_path, output_directory
 
-def parse_genes_from_args(args: argparse.Namespace):
-    genes_from_file = validate_arguments.parse_gene_file(Path(args.gene_file)) if args.gene_file else []
+def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> list[str]:
+    genes_from_file = parse_gene_file(Path(args.gene_file)) if args.gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
     interest_gene_list = gene_symbols + refseq_ids + genes_from_file
+    if not interest_gene_list:
+        parser.error("Please provide at least one interest gene symbol or Refseq ID.")
     return interest_gene_list
 
 def parse_base_editors_from_file(
@@ -104,4 +114,31 @@ def parse_base_editors_from_args(
             editing_window_end_in_grna=int(args.base_editor_window_end),
             base_editor_type=args.base_editor_type.lower(),
         )
+    return base_editors
+
+def parse_base_editors_from_all_sources(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser
+) -> dict[str, BaseEditor] | None:
+    """
+    コマンドライン引数からBaseEditor情報を取得し、BaseEditorの辞書を返す。
+    ファイル、プリセット、個別指定の順で情報を取得する。
+    """
+    base_editors = {}
+
+    # ファイルからの読み込み
+    if args.be_files:
+        base_editors.update(
+            parse_base_editors_from_file(args, parser, base_editors) or {}
+        )
+
+    # プリセットからの読み込み
+    base_editors = parse_base_editors_from_presets(args, parser, base_editors) or base_editors
+
+    # 個別指定からの読み込み
+    base_editors = parse_base_editors_from_args(args, parser, base_editors) or base_editors
+
+    if not base_editors:
+        parser.error("No base editor information provided. Please specify base editor details via file, preset, or individual parameters.")
+
     return base_editors
