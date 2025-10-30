@@ -5,13 +5,14 @@ import pandas as pd
 import logging
 from . import logging_config # noqa: F401
 
-def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームから、興味のある遺伝子のみを選択する。
+        指定されたのが遺伝子記号でもRefSeq IDでも、その遺伝子に属するすべてのトランスクリプトを返す。
     Parameters:
         refFlat: pd.DataFrame, refFlatのデータフレーム
-        interest_genes: list[str], 興味のある遺伝子名のリスト(gene symbol または Refseq ID)
+        interest_genes: set[str], 興味のある遺伝子名のリスト(gene symbol または Refseq ID)
     Returns:
         pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
     """
