@@ -14,8 +14,16 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon=all
     )  # int型に変換
     # exontypeがskippedまたはuniqueのエキソンだけを抽出
     if target_exon == "alternative_exons":
-       classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
+        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
     elif target_exon == "all":
+        # exon数が2以下かつ、すべてのエキソンがconstitutiveである遺伝子は、スプライシング操作をしても意味がないため除外する
+        def filter_genes(group):
+            num_exons = len(group)
+            has_alternative = any(group['exontype'] != 'constitutive')
+            if num_exons >= 2 and has_alternative:
+                return False
+            return True
+        classified_refflat = classified_refflat.groupby('geneName').filter(filter_genes)
         classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long","constitutive"))]
     # 重複を削除し一方だけ残す
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
