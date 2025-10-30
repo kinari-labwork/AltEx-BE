@@ -33,7 +33,6 @@ def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentPar
 def parse_base_editors_from_file(
     args: argparse.Namespace, 
     parser: argparse.ArgumentParser, 
-    base_editors: dict[str, BaseEditor]
     ) -> dict[str, BaseEditor] | None:
     """
     base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
