@@ -107,22 +107,22 @@ def parse_base_editors_from_args(
     必要な情報が揃っていない場合はparser.errorで終了。
     """
     required_fields = [
-        args.base_editor_name,
-        args.base_editor_pam,
-        args.base_editor_window_start,
-        args.base_editor_window_end,
-        args.base_editor_type
+        args.be_name,
+        args.be_pam,
+        args.be_window_start,
+        args.be_window_end,
+        args.be_type
     ]
     # どれか一つでも指定されていれば、全て必須
-    if any([args.base_editor_name, args.base_editor_pam, args.base_editor_window_start, args.base_editor_window_end, args.base_editor_type]):
+    if any([args.be_name, args.be_pam, args.be_window_start, args.be_window_end, args.be_type]):
         if not all(required_fields):
             parser.error("Base editor information is incomplete. Please provide all required parameters.")
-        base_editors[args.base_editor_name] = BaseEditor(
-            base_editor_name=args.base_editor_name,
-            pam_sequence=args.base_editor_pam.upper(),
-            editing_window_start_in_grna=int(args.base_editor_window_start),
-            editing_window_end_in_grna=int(args.base_editor_window_end),
-            base_editor_type=args.base_editor_type.lower(),
+        base_editors[args.be_name] = BaseEditor(
+            base_editor_name=args.be_name,
+            pam_sequence=args.be_pam.upper(),
+            editing_window_start_in_grna=int(args.be_window_start),
+            editing_window_end_in_grna=int(args.be_window_end),
+            base_editor_type=args.be_type.lower(),
         )
     return base_editors
 
