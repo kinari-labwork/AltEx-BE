@@ -20,7 +20,7 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: st
         def filter_genes(group):
             num_exons = len(group)
             has_alternative = any(group['exontype'] != 'constitutive')
-            if num_exons >= 2 and has_alternative:
+            if num_exons <= 2 and not has_alternative:
                 return False
             return True
         classified_refflat = classified_refflat.groupby('geneName').filter(filter_genes)
