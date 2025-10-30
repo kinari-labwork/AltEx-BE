@@ -49,26 +49,6 @@ def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> None:
         logging.warning(f"your_assembly : {assembly_name} is not supported by CRISPRdirect. please see <https://crispr.dbcls.jp/doc/>")
     return None
 
-def split_df_by_column_chunks(df: pd.DataFrame, chunk_sizes=[12, 6, 6]) -> list[pd.DataFrame]:
-    """
-    DataFrameをchunk_sizesで指定したカラム数ごとに分割し、各DataFrameをリストで返す。
-    """
-    columns = df.columns.tolist()
-    idx = 0
-    df = df.head()
-    dfs = []
-    for size in chunk_sizes:
-        cols = columns[idx:idx+size]
-        if not cols:
-            break
-        dfs.append(df[cols].copy())
-        idx += size
-    # 残りのカラムも追加
-    if idx < len(columns):
-        cols = columns[idx:]
-        dfs.append(df[cols].copy())
-    return dfs
-
 def validate_arguments(
     refflat_path: Path, 
     fasta_path: Path, 
