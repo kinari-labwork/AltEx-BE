@@ -32,47 +32,6 @@ def show_base_editors_info(base_editors: dict[str, BaseEditor]):
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
         
 
-def get_base_editors_from_args(args: argparse.Namespace) -> dict[str, BaseEditor] | None:
-    """
-    base editorの情報を含むファイルのパスを示す引数を受け取り、BaseEditorのリストを返す。
-    csvまたはtxt, tsv形式のファイルをサポートする
-    """
-    expected_columns = [
-    "base_editor_name",
-    "pam_sequence",
-    "editing_window_start",
-    "editing_window_end",
-    "base_editor_type"
-    ]
-    if not args.base_editor_files:
-        return None
-    else:
-        ext = Path(args.base_editor_files).suffix.lower()
-
-    if ext not in [".csv", ".tsv", ".txt"]:
-        raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
-    if ext in [".csv"]:
-        be_df = pd.read_csv(args.base_editor_files, header=0)
-    elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.base_editor_files, sep=None, engine="python", header=0)
-
-    # 列名が期待通りかチェック、違うならエラーを投げる
-    if set(be_df.columns) != set(expected_columns):
-        raise ValueError(
-            f"Base editor file columns are invalid. "
-            f"Expected columns: {expected_columns}, but got: {list(be_df.columns)}"
-        )
-    else:
-        return {
-            row["base_editor_name"]: BaseEditor(
-                base_editor_name=row["base_editor_name"],
-                pam_sequence=row["pam_sequence"],
-                editing_window_start_in_grna=int(row["editing_window_start"]),
-                editing_window_end_in_grna=int(row["editing_window_end"]),
-                base_editor_type=row["base_editor_type"],
-            )
-            for _, row in be_df.iterrows()
-        }
 
 def check_input_output_directories(refflat_path: Path, fasta_path: Path, output_directory: Path):
     if not refflat_path.is_file():
