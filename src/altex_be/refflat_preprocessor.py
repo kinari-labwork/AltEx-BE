@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import pandas as pd
 import logging
-from .. import logging_config # noqa: F401
+from . import logging_config # noqa: F401
 
 def select_interest_genes(refFlat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
