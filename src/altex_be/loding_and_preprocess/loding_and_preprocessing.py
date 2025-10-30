@@ -4,7 +4,7 @@ import argparse
 from .. import logging_config # noqa: F401
 from . import refflat_preprocessor
 
-def process_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
+def loding_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
     """
     前処理から、興味のある遺伝子の抽出までを行う。
     """
