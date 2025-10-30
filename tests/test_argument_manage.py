@@ -1,6 +1,23 @@
 import pytest
 import argparse
-from altex_be.cli_setting import parse_base_editors,check_input_output_directories, get_base_editors_from_args, is_supported_assembly_name_in_crispr_direct, parse_gene_file
+from altex_be.manage_arguments.validate_arguments import (
+    is_supported_assembly_name_in_crispr_direct,
+    is_input_output_directories,
+    is_base_editors_provided,
+    is_interest_genes_provided,
+    validate_arguments
+)
+from altex_be.manage_arguments.parse_arguments import (
+    parse_path_from_args,
+    parse_gene_file,
+    parse_assembly_name_from_args,
+    parse_genes_from_args,
+    parse_base_editors_from_args,
+    parse_base_editors_from_file,
+    parse_base_editors_from_presets,
+    parse_base_editors_from_all_sources,
+    parse_arguments,
+)
 from altex_be.sgrna_designer import BaseEditor
 
 def test_parse_base_editors_valid():
@@ -11,7 +28,7 @@ def test_parse_base_editors_valid():
         base_editor_window_end="15",
         base_editor_type="cbe"
     )
-    result = parse_base_editors(args)
+    result = parse_base_editors_from_args(args)
     assert isinstance(result, dict)
     assert "TestBE" in result
     be = result["TestBE"]
@@ -41,7 +58,7 @@ def test_get_base_editors_from_args(tmp_path):
         "TestBE,NGG,10,15,cbe\n"
     )
     args = argparse.Namespace(base_editor_files=str(be_file))
-    result = get_base_editors_from_args(args)
+    result = parse_base_editors_from_file(args)
     assert isinstance(result, dict)
     assert "TestBE" in result
     be = result["TestBE"]
@@ -57,7 +74,7 @@ def test_get_base_editors_from_args_invalid(tmp_path):
     )
     args = argparse.Namespace(base_editor_files=str(be_file))
     with pytest.raises(ValueError):
-        get_base_editors_from_args(args)
+        parse_base_editors_from_file(args)
 
 def test_check_input_output_directories(tmp_path):
     # 1. Create dummy input files and an output directory
@@ -70,12 +87,12 @@ def test_check_input_output_directories(tmp_path):
     output_dir.mkdir()
 
     # 2. Test with valid directories
-    check_input_output_directories(refflat_file, fasta_file, output_dir)
+    is_input_output_directories(refflat_file, fasta_file, output_dir)
     assert output_dir.is_dir()
 
     # 3. Test with a non-existent input file
     with pytest.raises(FileNotFoundError):
-        check_input_output_directories(
+        is_input_output_directories(
             tmp_path / "non_existent.txt", fasta_file, output_dir
         )
 
