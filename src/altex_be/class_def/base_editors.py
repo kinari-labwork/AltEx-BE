@@ -13,42 +13,42 @@ class BaseEditor:
 
 PRESET_BASE_EDITORS = {
         "target_aid_ngg": BaseEditor(
-            base_editor_name="target_aid",
+            base_editor_name="target_aid_ngg",
             pam_sequence="NGG",
             editing_window_start_in_grna=17,
             editing_window_end_in_grna=19,
             base_editor_type="cbe"
         ),
         "target_aid_ng": BaseEditor(
-            base_editor_name="target_aid",
+            base_editor_name="target_aid_ng",
             pam_sequence="NG",
             editing_window_start_in_grna=17,
             editing_window_end_in_grna=19,
             base_editor_type="cbe"
         ),
         "be4max_ngg": BaseEditor(
-            base_editor_name="be4max",
+            base_editor_name="be4max_ngg",
             pam_sequence="NGG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
             base_editor_type="cbe"
         ),
         "be4max_ng": BaseEditor(
-            base_editor_name="be4max",
+            base_editor_name="be4max_ng",
             pam_sequence="NG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
             base_editor_type="cbe"
         ),
         "abe8e_ngg": BaseEditor(
-            base_editor_name="abe8e",
+            base_editor_name="abe8e_ngg",
             pam_sequence="NGG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
             base_editor_type="abe"
         ),
         "abe8e_ng": BaseEditor(
-            base_editor_name="abe8e",
+            base_editor_name="abe8e_ng",
             pam_sequence="NG",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
