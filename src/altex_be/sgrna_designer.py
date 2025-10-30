@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import (dataclass,astuple)
 import pandas as pd
 import re
+from .class_def.base_editors import BaseEditor
 
 
 @dataclass(frozen=True)
@@ -17,17 +18,6 @@ class SgrnaInfo:
     target_pos_in_sgrna: int # sgRNAの中で、編集ターゲットとなる塩基の位置 (1-indexed)
     overlap_between_cds_and_editing_window: int # 編集ウィンドウとCDSの重なりの長さ
     possible_unintended_edited_base_count: int # 意図しないcdsでの変異が起こる可能性のある塩基の数
-
-@dataclass(frozen=True)
-class BaseEditor:
-    """
-    BaseEditorの情報を保持するためのdataclass
-    """
-    base_editor_name: str # BaseEditorの名前
-    pam_sequence: str # PAM配列
-    editing_window_start_in_grna: int # 編集ウィンドウの開始位置 (1-indexed)
-    editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
-    base_editor_type: str # "CBE" or "ABE"
 
 def convert_dna_to_reversed_complement(sequence: str) -> str:
     """
@@ -576,35 +566,3 @@ def design_sgrna_for_base_editors_dict(
         results[base_editor.base_editor_name] = temp_df
 
     return results
-
-
-def make_preset_base_editors() -> dict[str, BaseEditor]:
-    """
-    Purpose:
-        デフォルトのBaseEditorのリストを返す
-    Returns:
-        dict[str, BaseEditor], デフォルトのBaseEditorのリスト
-    """
-    return {
-        "target_aid": BaseEditor(
-            base_editor_name="target_aid",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=17,
-            editing_window_end_in_grna=19,
-            base_editor_type="cbe"
-        ),
-        "be4max": BaseEditor(
-            base_editor_name="be4max",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=12,
-            editing_window_end_in_grna=17,
-            base_editor_type="cbe"
-        ),
-        "abe8e": BaseEditor(
-            base_editor_name="abe8e",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=12,
-            editing_window_end_in_grna=17,
-            base_editor_type="abe"
-        ),
-    }
