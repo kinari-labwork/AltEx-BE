@@ -1,5 +1,4 @@
 from altex_be.sgrna_designer import BaseEditor
-import argparse
 import pandas as pd
 from pathlib import Path
 
