@@ -32,11 +32,13 @@ def build_parser() -> argparse.ArgumentParser:
     gene_group = parser.add_argument_group("Gene Options")
     gene_group.add_argument(
         "--gene-symbols",
+        default=None,
         nargs="+",
         help="List of interest gene symbols (space-separated)"
     )
     gene_group.add_argument(
         "--refseq-ids",
+        default=None,
         nargs="+",
         help="List of interest gene Refseq IDs (space-separated)"
     )
