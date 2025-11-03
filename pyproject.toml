@@ -19,6 +19,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
+include = ["src/altex_be/manage_arguments/crispr_direct_supported_assemblies.txt"]
 
 [tool.poetry.dependencies]
 python = "^3.12"
