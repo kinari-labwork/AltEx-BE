@@ -41,7 +41,9 @@ def run_pipeline():
 
     refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
-    classified_refflat = classify_splicing_events(refflat)
+    logging.info("-" * 50)
+    logging.info("Classifying splicing events...")
+    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
     del refflat
 
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = extract_target_exon(
@@ -122,15 +124,6 @@ def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[s
     if not refflat_preprocessor.check_multiple_exon_existance(refflat, interest_gene_list) :
         parser.error("all of your interest genes are single-exon genes. AltEx-BE cannot process these genes. Exiting...")
     return refflat
-
-def classify_splicing_events(refflat: pd.DataFrame) -> pd.DataFrame:
-    """
-    前処理されたrefflatデータフレームから、スプライシングイベントを分類する。
-    """
-    logging.info("-" * 50)
-    logging.info("Classifying splicing events...")
-    classified_refflat = splicing_event_classifier.classify_splicing_events(refflat)
-    return classified_refflat
 
 def extract_target_exon(classified_refflat: pd.DataFrame, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
