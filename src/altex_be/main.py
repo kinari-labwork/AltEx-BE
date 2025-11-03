@@ -49,11 +49,11 @@ def run_pipeline():
     )
     del classified_refflat
 
-    target_exon_df_with_acceptor_and_donor_sequence = annotate_sequences(
-        exploded_classified_refflat,
-        splice_acceptor_single_exon_df,
-        splice_donor_single_exon_df,
-        fasta_path
+    logging.info("-" * 50)
+    logging.info("Annotating sequences to dataframe from genome FASTA...")
+    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
+    target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
+        exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
@@ -66,10 +66,16 @@ def run_pipeline():
     formatted_exploded_sgrna_df = format_output(target_exon_df_with_sgrna_dict, base_editors, parser)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
     
-    exploded_sgrna_with_offtarget_info = score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
+    logging.info("-" * 50)
+    logging.info("Scoring off-targets...")
+    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
+    logging.info("-" * 50)
 
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
-    save_results(exploded_sgrna_with_offtarget_info, output_directory, output_track_name)
+    logging.info("Saving results...")
+    exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
+    logging.info(f"Results saved to: {output_directory / f'{output_track_name}_table.csv'}")
+
     write_ucsc_custom_track(
         exploded_sgrna_with_offtarget_info,
         output_directory,
@@ -80,7 +86,6 @@ def run_pipeline():
     logging.info("All AltEx-BE processes completed successfully.")
     logging.info("Printing summary of output:")
     logging.info(f"Output directory: {output_directory}")
-    logging.info(f"Output track name prefix: {output_track_name}")
     return
 
 def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
@@ -144,20 +149,6 @@ def extract_target_exon(classified_refflat: pd.DataFrame, interest_gene_list: li
             logging.info(f"Target exons found for the gene: {gene}.")
     return splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat
 
-def annotate_sequences(
-    exploded_classified_refflat: pd.DataFrame,
-    splice_acceptor_single_exon_df: pd.DataFrame,
-    splice_donor_single_exon_df: pd.DataFrame,
-    fasta_path: str
-) -> pd.DataFrame:
-    logging.info("-" * 50)
-    logging.info("Annotating sequences to dataframe from genome FASTA...")
-    logging.info(f"Using this FASTA file as reference genome: {fasta_path}")
-    target_exon_df_with_acceptor_and_donor_sequence = sequence_annotator.annotate_sequence_to_splice_sites(
-        exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
-    )
-    return target_exon_df_with_acceptor_and_donor_sequence
-
 def format_output(
     target_exon_df_with_sgrna_dict: dict[str, pd.DataFrame],
     base_editors: dict[str, BaseEditor],
@@ -170,32 +161,10 @@ def format_output(
         parser.error("No sgRNAs could be designed for given genes and Base Editors, Exiting")
     return formatted_exploded_sgrna_df
 
-def score_offtargets(
-    formatted_exploded_sgrna_df: pd.DataFrame,
-    assembly_name: str,
-    fasta_path: str
-) -> pd.DataFrame:
-    logging.info("-" * 50)
-    logging.info("Scoring off-targets...")
-    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
-    logging.info("-" * 50)
-    return exploded_sgrna_with_offtarget_info
-
-def save_results(
-    exploded_sgrna_with_offtarget_info: pd.DataFrame,
-    output_directory: Path,
-    output_track_name: str
-) -> None:
-    logging.info("Saving results...")
-    exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
-    logging.info(f"Results saved to: {output_directory / f'{output_track_name}_table.csv'}")
-    return
-
 def write_ucsc_custom_track(
     exploded_sgrna_with_offtarget_info: pd.DataFrame,
     output_directory: Path,
     output_track_name: str,
-    assembly_name: str
 ) -> None:
     logging.info("Generating UCSC custom track...")
     bed_df = bed_for_ucsc_custom_track_maker.format_sgrna_for_ucsc_custom_track(exploded_sgrna_with_offtarget_info)
