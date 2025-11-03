@@ -57,10 +57,12 @@ def run_pipeline():
     )
     del splice_acceptor_single_exon_df, splice_donor_single_exon_df
 
-    target_exon_df_with_sgrna_dict = design_sgrnas(
-        target_exon_df_with_acceptor_and_donor_sequence,
-        base_editors
+    logging.info("designing sgRNAs...")
+    target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
+        target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
+        base_editors=base_editors
     )
+
     formatted_exploded_sgrna_df = format_output(target_exon_df_with_sgrna_dict, base_editors, parser)
     del target_exon_df_with_acceptor_and_donor_sequence, exploded_classified_refflat
     
@@ -155,17 +157,6 @@ def annotate_sequences(
         exploded_classified_refflat, splice_acceptor_single_exon_df, splice_donor_single_exon_df, fasta_path
     )
     return target_exon_df_with_acceptor_and_donor_sequence
-
-def design_sgrnas(
-    target_exon_df_with_acceptor_and_donor_sequence: pd.DataFrame,
-    base_editors: dict[str, BaseEditor]
-) -> dict[str, pd.DataFrame]:
-    logging.info("designing sgRNAs...")
-    target_exon_df_with_sgrna_dict = sgrna_designer.design_sgrna_for_base_editors_dict(
-        target_exon_df=target_exon_df_with_acceptor_and_donor_sequence,
-        base_editors=base_editors
-    )
-    return target_exon_df_with_sgrna_dict
 
 def format_output(
     target_exon_df_with_sgrna_dict: dict[str, pd.DataFrame],
