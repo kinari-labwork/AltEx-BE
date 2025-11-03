@@ -1,4 +1,5 @@
 import argparse
+import importlib.metadata
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -9,7 +10,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-v",
         "--version",
         action="version",
-        version="0.1.0",
+        version=importlib.metadata.version("altex-be"),
         help="Show the version of Altex BE",
     )
     # コマンドライン引数を追加
