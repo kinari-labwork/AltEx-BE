@@ -10,31 +10,31 @@ from altex_be.sgrna_designer import (
 target_exons_df_with_acceptor_and_donor_sequence = pd.read_pickle("data/target_exons_with_acceptor_and_donor_sequence.pkl")
 
 base_editors = {}
-base_editors["BE4max-NG"] = (
+base_editors["be4max-ng"] = (
     BaseEditor(
-        base_editor_name="BE4max-NG",
-        pam_sequence="NG",
+        base_editor_name="be4max-ng",
+        pam_sequence="ng",
         editing_window_start_in_grna= 12,
         editing_window_end_in_grna= 17,
-        base_editor_type= "CBE"
+        base_editor_type= "cbe"
     )
 )
-base_editors["Target-AID-NG"] = (
+base_editors["target-aid-ng"] = (
     BaseEditor(
-        base_editor_name="Target-AID-NG",
-        pam_sequence="NG",
-        editing_window_start_in_grna= 17,
-        editing_window_end_in_grna= 19,
-        base_editor_type= "CBE"
+        base_editor_name="target-aid-ng",
+        pam_sequence="ng",
+        editing_window_start_in_grna=17,
+        editing_window_end_in_grna=19,
+        base_editor_type= "cbe"
 )
 )
-base_editors["ABE8e-NG"] = (
+base_editors["abe8e-ng"] = (
     BaseEditor(
-        base_editor_name="ABE8e-NG",
-        pam_sequence="NG",
-        editing_window_start_in_grna= 12,
-        editing_window_end_in_grna= 17,
-        base_editor_type= "ABE"
+        base_editor_name="abe8e-ng",
+        pam_sequence="ng",
+        editing_window_start_in_grna=12,
+        editing_window_end_in_grna=17,
+        base_editor_type= "abe"
     )
 )
 
