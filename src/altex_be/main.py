@@ -222,25 +222,5 @@ def write_ucsc_custom_track(
     logging.info(f"UCSC custom track file saved to: {output_path}")
     return
 
-def split_df_by_column_chunks(df: pd.DataFrame, chunk_sizes=[12, 6, 6]) -> list[pd.DataFrame]:
-    """
-    DataFrameをchunk_sizesで指定したカラム数ごとに分割し、各DataFrameをリストで返す。
-    """
-    columns = df.columns.tolist()
-    idx = 0
-    df = df.head()
-    dfs = []
-    for size in chunk_sizes:
-        cols = columns[idx:idx+size]
-        if not cols:
-            break
-        dfs.append(df[cols].copy())
-        idx += size
-    # 残りのカラムも追加
-    if idx < len(columns):
-        cols = columns[idx:]
-        dfs.append(df[cols].copy())
-    return dfs
-
 if __name__ == "__main__":
     run_pipeline()
