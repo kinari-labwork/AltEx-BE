@@ -77,10 +77,8 @@ def run_pipeline():
     
     logging.info("All AltEx-BE processes completed successfully.")
     logging.info("Printing summary of output:")
-    summary_dfs = split_df_by_column_chunks(exploded_sgrna_with_offtarget_info, chunk_sizes=[12, 6, 6])
-    for sub_df in summary_dfs:
-        print(sub_df)  # indexも表示される
-        print("-" * 40)
+    logging.info(f"Output directory: {output_directory}")
+    logging.info(f"Output track name prefix: {output_track_name}")
     return
 
 def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
