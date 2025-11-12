@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import (dataclass,astuple)
 import pandas as pd
 import re
+from .class_def.base_editors import BaseEditor
 
 
 @dataclass(frozen=True)
@@ -17,17 +18,6 @@ class SgrnaInfo:
     target_pos_in_sgrna: int # sgRNAの中で、編集ターゲットとなる塩基の位置 (1-indexed)
     overlap_between_cds_and_editing_window: int # 編集ウィンドウとCDSの重なりの長さ
     possible_unintended_edited_base_count: int # 意図しないcdsでの変異が起こる可能性のある塩基の数
-
-@dataclass(frozen=True)
-class BaseEditor:
-    """
-    BaseEditorの情報を保持するためのdataclass
-    """
-    base_editor_name: str # BaseEditorの名前
-    pam_sequence: str # PAM配列
-    editing_window_start_in_grna: int # 編集ウィンドウの開始位置 (1-indexed)
-    editing_window_end_in_grna: int # 編集ウィンドウの終了位置 (1-indexed)
-    base_editor_type: str # "CBE" or "ABE"
 
 def convert_dna_to_reversed_complement(sequence: str) -> str:
     """
@@ -344,13 +334,20 @@ def design_sgrna_for_target_exon_df(
         return []
     
     # exontypeがa5ss-longの場合はacceptor用のsgRNAを設計しない。a5ssはacceptorの位置が-shortと同じだから。
+    # first と last exonでは、それぞれacceptorとdonorのsgRNAを設計しない。
+
+    # design_sgrna 関数内で、splice siteがAG/GTでない場合はsgRNAを設計しないように変更したが、
+    # そもそもsplice siteがAG/GTでない場合はsgRNAは設計されない。
+    # だから、おそらく、first exonのacceptorやlast exonのdonorに対してsgRNAが設計されることはない。が、念のため、例外処理として、first exonのacceptorとlast exonのdonorに対してはsgRNAを設計しないようにした。
+
     # exontypeがa3ss-longの場合はdonor用のsgRNAを設計しない。 a3ssはdonorの位置が-shortと同じだから。
     target_exon_df["grna_acceptor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"] =="a5ss-long" else apply_design(r, "acceptor", base_editor_type), axis=1
+        lambda r:[] if r["exontype"] =="a5ss-long" or r["exon_position"] == "first" else apply_design(r, "acceptor", base_editor_type), axis=1
     )
     target_exon_df["grna_donor"] = target_exon_df.apply(
-        lambda r:[] if r["exontype"]=="a3ss-long" else apply_design(r, "donor", base_editor_type), axis=1
+        lambda r:[] if r["exontype"]=="a3ss-long" or r["exon_position"] == "last" else apply_design(r, "donor", base_editor_type), axis=1
     )
+
     return target_exon_df
 
 
@@ -569,35 +566,3 @@ def design_sgrna_for_base_editors_dict(
         results[base_editor.base_editor_name] = temp_df
 
     return results
-
-
-def make_preset_base_editors() -> dict[str, BaseEditor]:
-    """
-    Purpose:
-        デフォルトのBaseEditorのリストを返す
-    Returns:
-        dict[str, BaseEditor], デフォルトのBaseEditorのリスト
-    """
-    return {
-        "target_aid": BaseEditor(
-            base_editor_name="target_aid",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=17,
-            editing_window_end_in_grna=19,
-            base_editor_type="cbe"
-        ),
-        "be4max": BaseEditor(
-            base_editor_name="be4max",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=12,
-            editing_window_end_in_grna=17,
-            base_editor_type="cbe"
-        ),
-        "abe8e": BaseEditor(
-            base_editor_name="abe8e",
-            pam_sequence="NGG",
-            editing_window_start_in_grna=12,
-            editing_window_end_in_grna=17,
-            base_editor_type="abe"
-        ),
-    }

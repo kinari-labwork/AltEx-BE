@@ -32,8 +32,8 @@ def test_prepare_melted_df():
         "coding": ["coding", "coding"],
         "flame" : ["out-flame", "in-flame"],
         "exon_position": ["first", "last"],
-        "base_editor_name": ["MockBE1", "MockBE2"],
         "uuid" : ["uuid1", "uuid2"],
+        "cds_info": ["utr_exon", "cds_exon"],
         "acceptor_sgrna_target_sequence": [["CCC+ATCG", "CCC+TAGC"], ["CCC+CGTA", "CCC+GCAT"]],
         "donor_sgrna_target_sequence": [["CCC+GCTA", "CCC+TACG"], ["CCC+AGCT", "CCC+CTAG"]]
     })
@@ -48,6 +48,7 @@ def test_prepare_melted_df():
         "flame": ["out-flame", "in-flame", "out-flame", "in-flame"],
         "exontype": ["skipped", "unique", "skipped", "unique"],
         "exon_position": ["first", "last", "first", "last"],
+        "cds_info": ["utr_exon", "cds_exon", "utr_exon", "cds_exon"],
         "uuid": ["uuid1", "uuid2", "uuid1", "uuid2"],
         "sgrna_target_sequence": [["CCC+ATCG", "CCC+TAGC"], ["CCC+CGTA", "CCC+GCAT"], ["CCC+GCTA", "CCC+TACG"], ["CCC+AGCT", "CCC+CTAG"]],
         "site_type": ["acceptor", "acceptor", "donor", "donor"]
@@ -71,6 +72,7 @@ def test_explode_sgrna_df():
         "flame": ["out-flame"],
         "exontype": ["skipped"],
         "exon_position": ["first"],
+        "cds_info": ["utr_exon"],
         "uuid": ["uuid1"],
         "acceptor_sgrna_target_sequence": [["CCC+ATCG", "CCC+TAGC"]],
         "donor_sgrna_target_sequence": [["CCC+GCTA", "CCC+TACG"]]
@@ -86,6 +88,7 @@ def test_explode_sgrna_df():
         "flame": ["in-flame"],
         "exontype": ["unique"],
         "exon_position": ["last"],
+        "cds_info": ["cds_exon"],
         "uuid": ["uuid2"],
         "acceptor_sgrna_target_sequence": [["CCC+CGTA", "CCC+GCAT"]],
         "donor_sgrna_target_sequence": [["CCC+AGCT", "CCC+CTAG"]]
@@ -107,6 +110,7 @@ def test_explode_sgrna_df():
         "flame": ["out-flame", "out-flame", "out-flame", "out-flame", "in-flame", "in-flame", "in-flame", "in-flame"],
         "exontype": ["skipped", "skipped", "skipped", "skipped", "unique", "unique", "unique", "unique"],
         "exon_position": ["first", "first", "first", "first", "last", "last", "last", "last"],
+        "cds_info": ["utr_exon", "utr_exon", "utr_exon", "utr_exon", "cds_exon", "cds_exon", "cds_exon", "cds_exon"],
         "uuid": ["uuid1", "uuid1", "uuid1", "uuid1", "uuid2", "uuid2", "uuid2", "uuid2"],
         "sgrna_target_sequence": ["CCC+ATCG", "CCC+TAGC", "CCC+GCTA", "CCC+TACG", "CCC+CGTA", "CCC+GCAT", "CCC+AGCT", "CCC+CTAG"],
         "site_type": ["acceptor", "acceptor", "donor", "donor", "acceptor", "acceptor", "donor", "donor"],

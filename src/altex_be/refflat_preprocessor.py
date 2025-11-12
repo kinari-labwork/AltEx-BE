@@ -19,27 +19,15 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     gene_symbol_set = set(refFlat["geneName"].values)
     ref_seq_id_set = set(refFlat["name"].values)
 
-    target_gene_symbols = set()
-
     for gene in interest_genes:
-        if gene in gene_symbol_set:
-            target_gene_symbols.add(gene)
-            logging.info(f"Gene symbol {gene} found in refFlat. Will fetch all its transcripts.")
-        elif gene in ref_seq_id_set:
-            # Find the corresponding gene symbol for the RefSeq ID
-            corresponding_gene_symbol = refFlat.loc[refFlat["name"] == gene, "geneName"].iloc[0]
-            target_gene_symbols.add(corresponding_gene_symbol)
-            logging.info(f"RefSeq ID {gene} found in refFlat. Will fetch all transcripts for its gene, {corresponding_gene_symbol}.")
-        else:
-            logging.warning(f"Identifier {gene} was not found in refFlat as a gene symbol or RefSeq ID.")
-
-    if not target_gene_symbols:
-        raise ValueError("None of the specified genes were found in the refFlat file.")
-
-    # Filter the main refFlat dataframe to get all transcripts for the identified genes
-    filtered_df = refFlat[refFlat["geneName"].isin(target_gene_symbols)].reset_index(drop=True)
+        if gene not in gene_symbol_set and gene not in ref_seq_id_set:
+            logging.warning(f"Gene {gene} is not found in refFlat.")
+            continue
+        else :
+            logging.info(f"Gene {gene} is found in refFlat.")
     
-    return filtered_df
+    refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
+    return refFlat
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
     """
@@ -56,10 +44,9 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> 
         if (exon_counts > 1).any():
             logging.info(f"Gene {gene} has multiple exons")
             found = True
-    if not found:
-        logging.warning("No gene has multiple exons")
     return found
 
+# constitutive exonも含めてデザインするなら、いらない可能性もある
 def check_transcript_variant(refFlat: pd.DataFrame, interest_genes: list[str]) -> bool:
     """
     Purpose:
@@ -263,28 +250,13 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     return refflat
 
-def validate_filtered_refflat(refflat: pd.DataFrame, interest_gene_list: list[str]) -> bool:
-    """
-    Validate the processed refFlat DataFrame.
-    """
-    variant_check = check_transcript_variant(refflat, interest_gene_list)
-    if not variant_check:
-        logging.warning("No transcript variants found for your interest genes.")
-        return False
-
-    multiple_exon_check = check_multiple_exon_existance(refflat, interest_gene_list)
-    if not multiple_exon_check:
-        logging.warning("Your interest genes do not have multiple exons. These genes are out of scope.")
-        return False
-
-    return True
-
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
     """
     このモジュールの関数をwrapした関数
     """
     refflat = select_interest_genes(refflat, interest_genes)
-
+    if refflat.empty:
+        return refflat
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
