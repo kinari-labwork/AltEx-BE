@@ -17,8 +17,11 @@ def build_parser() -> argparse.ArgumentParser:
     dir_group = parser.add_argument_group("Input/Output Options")
     dir_group.add_argument(
         "-r", "--refflat-path",
-        required=True,
         help="Path of refflat file"
+    )
+    dir_group.add_argument(
+        "-e", "--gtf-path",
+        help="Path of GTF file"
     )
     dir_group.add_argument(
         "-f", "--fasta-path",
@@ -44,6 +47,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="List of interest gene Refseq IDs (space-separated)"
     )
     gene_group.add_argument(
+        "--ensembl-ids",
+        default=None,
+        nargs="+",
+        help="List of interest gene Ensembl IDs (space-separated)"
+    )
+    gene_group.add_argument(
         "-a", "--assembly-name",
         default=None,
         required=True,
@@ -53,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--gene-file",
         default=None,
         required=False,
-        help="Path to a file (csv,txt,tsv) containing gene symbols or Refseq IDs (one gene per line)"
+        help="Path to a file (csv,txt,tsv) containing gene symbols or IDs correspond to reference of transcript (one per line)"
     )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
