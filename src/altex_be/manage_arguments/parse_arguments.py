@@ -16,9 +16,10 @@ def parse_gene_file(gene_file: Path) -> list[str] | None:
 
 def parse_path_from_args(args: argparse.Namespace):
     refflat_path = Path(args.refflat_path)
+    gtf_path = Path(args.gtf_path) if args.gtf_path else None
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_dir)
-    return refflat_path, fasta_path, output_directory
+    return refflat_path, gtf_path, fasta_path, output_directory
 
 def parse_assembly_name_from_args(args: argparse.Namespace) -> str:
     return str(args.assembly_name)
@@ -27,7 +28,8 @@ def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentPar
     genes_from_file = parse_gene_file(Path(args.gene_file)) if args.gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
-    interest_gene_list = gene_symbols + refseq_ids + genes_from_file
+    ensembl_ids = args.ensembl_ids if args.ensembl_ids is not None else []
+    interest_gene_list = gene_symbols + refseq_ids + ensembl_ids + genes_from_file
     return interest_gene_list
 
 def parse_base_editors_from_file(
