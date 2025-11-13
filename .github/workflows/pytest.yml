@@ -34,6 +34,7 @@ jobs:
           conda install -y -c bioconda pybedtools
           conda install tqdm
           conda install conda-forge::pyahocorasick
+          conda install -c bioconda ucsc-gtftogenepred
           python -m pip install --upgrade pip pytest numpy pandas 
 
       - name: Run pytest
