@@ -5,20 +5,20 @@ import re
 import logging
 from . import logging_config  # noqa: F401
 
-def run_gtf2genepred(gtf_path: Path, output_path: Path):
+def run_gtf2genepred(gtf_path: Path, genepred_path: Path):
     """
     Convert GTF file to genePred format using gtfToGenePred tool.
     Args:
         gtf_path (Path): Path to the input GTF file.
-        output_path (Path): Path to the output genePred file.
+        genepred_path (Path): Path to the output genePred file.
     returns: None
     """
-    cmd = ["gtfToGenePred", str(gtf_path), str(output_path)]
+    cmd = ["gtfToGenePred", str(gtf_path), str(genepred_path)]
     logging.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
-    logging.info(f"Converted GTF to genePred: {output_path}")
+    logging.info(f"Converted GTF to genepred: {genepred_path}")
 
-def convert_gtf_to_refflat(gtf_path: Path, output_path: Path):
+def convert_gtf_to_refflat_format(output_path: Path):
     """
     Convert GTF file to refFlat format.
     Args:
@@ -26,9 +26,9 @@ def convert_gtf_to_refflat(gtf_path: Path, output_path: Path):
         refflat_path (Path): Path to the output refFlat file.
     returns: pd.DataFrame the refFlat dataframe but without geneName column
     """
-    genepred_path = output_path.with_suffix('.genePred')
+    genepred_path = output_path.with_suffix('.genepred')
     genepred = pd.read_csv(genepred_path, sep="\t", header=None)
-    refflat_without_genesymbol = genepred.iloc[:, [12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]]
+    refflat_without_genesymbol = genepred.copy()
     # 染色体列の"chr"接頭辞を追加
     refflat_without_genesymbol[1] = "chr" + refflat_without_genesymbol[1].astype(str)
     return refflat_without_genesymbol
@@ -59,12 +59,19 @@ def add_genesymbol_to_imcomplete_refflat(refflat_without_genesymbol: pd.DataFram
                 gene_name = gene_name_match.group(1)
                 dict_transcript_id_to_gene[transcript_id] = gene_name
 
-    map_df = pd.DataFrame({
-        "transcript_id": list(dict_transcript_id_to_gene.keys()),
-        "geneName": list(dict_transcript_id_to_gene.values())
-    })
-
     transcript_col = refflat_without_genesymbol.columns[0]
-    merged = refflat_without_genesymbol.merge(map_df, left_on=transcript_col, right_on="transcript_id", how="left")
-    merged = merged.iloc[:, 13, :]  # geneName列を右端に移動
-    return merged
+    refflat = refflat_without_genesymbol.copy()
+    refflat[10] = refflat_without_genesymbol[transcript_col].map(dict_transcript_id_to_gene)
+    refflat = refflat.iloc[:, [10] + list(range(10))]  # geneName列を左端に移動
+    refflat.columns = range(refflat.shape[1])  # 列ラベルを連番に
+    return refflat
+
+def convert_gtf_to_refflat(gtf_path: Path, output_path: Path) -> pd.DataFrame:
+    """
+    GTFファイルをrefFlat形式に変換する。
+    このモジュールのラッパー関数。
+    """
+    run_gtf2genepred(gtf_path, output_path)
+    refflat_without_genesymbol = convert_gtf_to_refflat_format(output_path)
+    refflat = add_genesymbol_to_imcomplete_refflat(refflat_without_genesymbol, gtf_path)
+    return refflat
