@@ -128,7 +128,7 @@ def drop_abnormal_mapped_transcripts(refflat: pd.DataFrame) -> pd.DataFrame:
     return data_filtered.reset_index(drop=True)
 
 
-def annotate_cording_information(refflat: pd.DataFrame) -> pd.DataFrame:
+def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、コーディング情報を追加する。
@@ -139,14 +139,20 @@ def annotate_cording_information(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     # コーディングと非コーディングのトランスクリプトを識別するための正規表現パターン
     # NMはコーディング、NRは非コーディング
-    import re
-
     cording_pattern = re.compile(r"^NM")
     non_coding_pattern = re.compile(r"^NR")
     refflat["coding"] = ""
-    refflat.loc[refflat["name"].str.match(cording_pattern), "coding"] = "coding"
-    refflat.loc[refflat["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
-    refflat["coding"] = refflat["coding"].astype("category")
+    # 入力がgtfファイルの場合は、cdsStart=cdsEndとなっているものをnon-codingとする
+    if gtf_flag:
+        refflat["coding"] = refflat.apply(
+            lambda row: "non-coding" if row["cdsStart"] == row["cdsEnd"] else "coding",
+            axis=1,
+        )
+        refflat["coding"] = refflat["coding"].astype("category")
+    else:
+        refflat.loc[refflat["name"].str.match(cording_pattern), "coding"] = "coding"
+        refflat.loc[refflat["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
+        refflat["coding"] = refflat["coding"].astype("category")
     return refflat
 
 
