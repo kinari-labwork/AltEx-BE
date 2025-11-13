@@ -1,7 +1,4 @@
-import subprocess
 from pathlib import Path
-import pandas as pd
-import re
 import logging
 from . import logging_config  # noqa: F401
 
@@ -15,7 +12,28 @@ def parse_attr(attr_str):
     return attrs
 
 # もはやこれだけでいい
-def gtf_to_refflat(gtf_path, output_path):
+def gtf_to_refflat(gtf_path: Path, output_path: Path) -> None:
+    """
+    GTFファイルをrefflat形式に変換して保存する関数
+    GTFファイルのすべての行は、以下の構造になっている
+    chrom  source  feature  start  end  score  strand  frame  attributes
+    
+    GTFの全体構造は以下のようになっている
+    Gene A
+        transcript 1 # トランスクリプトの場合は、transcript列が存在し、startとendがそれぞれトランスクリプトの開始位置と終了位置を示す
+            exon 1
+            exon 2
+            CDS 1  #コーディングトランスクリプトの場合は、cds列が存在し、startとendがそれぞれCDSの開始位置と終了位置を示す
+        transcript 2
+            exon 1
+            exon 2
+            exon 3
+    Gene B
+        ...
+    
+    """
+
+    logging.info(f"Converting GTF {gtf_path} to refflat {output_path}")
     with open(gtf_path) as gtf, open(output_path, "w") as out:
         current_tx = None
         current_gene = None
@@ -46,7 +64,7 @@ def gtf_to_refflat(gtf_path, output_path):
                     current_strand,
                     str(tx_start - 1),  # UCSC: 0-based start
                     str(tx_end),
-                    str(cds_start - 1 if cds_start else tx_end), # CDSがない場合はCDS_start, endを両方tx_endにする
+                    str(cds_start - 1 if cds_start else tx_end), # CDSがない場合はCDS_start, endを両方tx_endにする (refflatはそうなっている)
                     str(cds_end if cds_end else tx_end),
                     str(len(exon_starts)),
                     ",".join(map(str, exon_starts)) + ",",
