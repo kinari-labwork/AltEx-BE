@@ -6,12 +6,15 @@ from .. import logging_config  # noqa: F401
 
 def is_input_output_directories(
     refflat_path: Path, 
+    gtf_path: Path,
     fasta_path: Path, 
     output_directory: Path, 
     parser: argparse.ArgumentParser
 ) -> None:
-    if not refflat_path.is_file():
-        parser.error(f"The provided refFlat file '{refflat_path}' does not exist.")
+    if not refflat_path.is_file() and not gtf_path.is_file():
+        parser.error(f"The provided refFlat file  '{refflat_path}' and GTF file '{gtf_path}' does not exist.")
+    if refflat_path.is_file() and gtf_path.is_file():
+        parser.error(f"Please provide either refFlat file '{refflat_path}' or GTF file '{gtf_path}', not both.")
     if not fasta_path.is_file():
         parser.error(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():

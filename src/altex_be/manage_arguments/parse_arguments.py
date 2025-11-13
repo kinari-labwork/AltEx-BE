@@ -158,8 +158,8 @@ def parse_arguments(
     """
     このモジュールに含まれるすべての関数のラッパー関数。
     """
-    refflat_path, fasta_path, output_directory = parse_path_from_args(args)
+    refflat_path, gtf_path, fasta_path, output_directory = parse_path_from_args(args)
     interest_gene_list = parse_genes_from_args(args, parser)
     base_editors = parse_base_editors_from_all_sources(args, parser)
     assembly_name = parse_assembly_name_from_args(args)
-    return refflat_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name
+    return refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name

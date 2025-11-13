@@ -4,6 +4,7 @@ from pathlib import Path
 import logging
 import datetime
 from . import (
+    gtf2refflat_converter,
     refflat_preprocessor,
     sequence_annotator,
     splicing_event_classifier,
@@ -27,10 +28,11 @@ def run_pipeline():
 
     args = parser.parse_args()
 
-    refflat_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args)
+    refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args)
 
     validate_arguments.validate_arguments(
         refflat_path,
+        gtf_path,
         fasta_path,
         output_directory,
         interest_gene_list,
@@ -38,8 +40,12 @@ def run_pipeline():
         assembly_name,
         parser
     )
-
-    refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
+    
+    if gtf_path is not None :
+        refflat = gtf2refflat_converter.convert_gtf_to_refflat(gtf_path)
+        refflat = loading_and_preprocess_refflat(refflat, interest_gene_list, parser)
+    elif refflat_path is not None :
+        refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
     logging.info("-" * 50)
     logging.info("Classifying splicing events...")
