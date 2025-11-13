@@ -42,8 +42,8 @@ def run_pipeline():
     )
     
     if gtf_path is not None :
-        refflat = gtf2refflat_converter.convert_gtf_to_refflat(gtf_path)
-        refflat = loading_and_preprocess_refflat(refflat, interest_gene_list, parser)
+        gtf2refflat_converter.gtf_to_refflat(gtf_path, output_directory / "converted_refflat.txt")
+        refflat = loading_and_preprocess_refflat(output_directory / "converted_refflat.txt", interest_gene_list, parser)
     elif refflat_path is not None :
         refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
 
