@@ -28,7 +28,7 @@ def run_pipeline():
 
     args = parser.parse_args()
 
-    refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args)
+    refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args, parser)
 
     validate_arguments.validate_arguments(
         refflat_path,
@@ -42,10 +42,12 @@ def run_pipeline():
     )
     
     if gtf_path is not None :
-        gtf2refflat_converter.gtf_to_refflat(gtf_path, output_directory / "converted_refflat.txt")
-        refflat = loading_and_preprocess_refflat(output_directory / "converted_refflat.txt", interest_gene_list, parser)
+        logging.info("-" * 50)
+        logging.info("Converting GTF to refFlat format...")
+        gtf2refflat_converter.gtf_to_refflat(gtf_path, output_directory, assembly_name)
+        refflat = loading_and_preprocess_refflat(output_directory / f"converted_refflat_{assembly_name}.txt", interest_gene_list, parser, gtf_flag=True)
     elif refflat_path is not None :
-        refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser)
+        refflat = loading_and_preprocess_refflat(refflat_path, interest_gene_list, parser, gtf_flag=False)
 
     logging.info("-" * 50)
     logging.info("Classifying splicing events...")
@@ -87,8 +89,7 @@ def run_pipeline():
     write_ucsc_custom_track(
         exploded_sgrna_with_offtarget_info,
         output_directory,
-        output_track_name,
-        assembly_name
+        output_track_name
     )
     
     logging.info("All AltEx-BE processes completed successfully.")
@@ -96,7 +97,7 @@ def run_pipeline():
     logging.info(f"Output directory: {output_directory}")
     return
 
-def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser) -> pd.DataFrame:
+def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[str], parser: argparse.ArgumentParser, gtf_flag: bool) -> pd.DataFrame:
     """
     データのロード、前処理から、興味のある遺伝子の抽出までを行う。
     """
@@ -123,7 +124,7 @@ def loading_and_preprocess_refflat(refflat_path: str, interest_gene_list: list[s
     
     logging.info("running processing of refFlat file...")
     refflat = refflat.drop_duplicates(subset=["name"], keep=False)
-    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list)
+    refflat = refflat_preprocessor.preprocess_refflat(refflat, interest_gene_list, gtf_flag)
     if refflat.empty :
         parser.error("No interest genes found in refFlat after preprocessing. Exiting...")
     # すべて constitutive exonでも設計対象とするが、exonが1つしかない遺伝子は対象外とする
