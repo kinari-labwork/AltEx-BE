@@ -256,7 +256,7 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     return refflat
 
-def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.DataFrame:
+def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_flag: bool) -> pd.DataFrame:
     """
     このモジュールの関数をwrapした関数
     """
@@ -266,7 +266,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str]) -> pd.D
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
-    refflat = annotate_cording_information(refflat)
+    refflat = annotate_cording_information(refflat, gtf_flag)
     refflat = annotate_flame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)
