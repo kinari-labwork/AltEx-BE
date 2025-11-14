@@ -1,5 +1,6 @@
 from pathlib import Path
 import logging
+import re
 from . import logging_config  # noqa: F401
 
 def parse_attr(attr_str):
@@ -12,7 +13,7 @@ def parse_attr(attr_str):
     return attrs
 
 # もはやこれだけでいい
-def gtf_to_refflat(gtf_path: Path, output_path: Path) -> None:
+def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> None:
     """
     GTFファイルをrefflat形式に変換して保存する関数
     GTFファイルのすべての行は、以下の構造になっている
@@ -32,77 +33,99 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path) -> None:
         ...
     
     """
+    output_refflat_path = output_path / f"converted_refflat_{assembly_name}.txt"
+    if output_refflat_path.exists():
+        logging.info(f"Converted refFlat file for {assembly_name} already exists. Skipping conversion.")
+        return
 
-    logging.info(f"Converting GTF {gtf_path} to refflat {output_path}")
-    with open(gtf_path) as gtf, open(output_path, "w") as out:
-        current_tx = None
-        current_gene = None
-        current_chrom = None
-        current_strand = None
-        exon_starts, exon_ends = [], []
-        tx_start, tx_end = None, None
-        cds_start, cds_end = None, None
+    transcripts: dict[str, dict] = {}
+    tid_re = re.compile(r'transcript_id "([^"]+)"')
+    gname_re = re.compile(r'gene_name "([^"]+)"')
 
-        for line in gtf:
+    with open(gtf_path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            # コメント行と空行をスキップ
             if line.startswith("#") or not line.strip():
                 continue
-            # 一応いらない列も取得（使わないけど）
-            chrom, source, feature, start, end, score, strand, frame, attr_str = line.strip().split("\t")
-            start, end = int(start), int(end)
-            attrs = parse_attr(attr_str)
+            cols = line.rstrip("\n").split("\t")
+            # GTFの列数チェック
+            if len(cols) < 9:
+                continue
+            # 列の展開
+            chrom, source, feature, start_s, end_s, score, strand, frame, attr_str = cols
+            start = int(start_s)
+            end = int(end_s)
+            tid_m = tid_re.search(attr_str)
+            # transcript_idが見つからない場合はスキップ
+            if not tid_m:
+                continue
+            tid = tid_m.group(1)
+            # gene_nameの取得（存在しない場合は空文字）
+            gname_m = gname_re.search(attr_str)
+            gname = gname_m.group(1) if gname_m else ""
 
-            gene_symbol = attrs.get("gene_name")
-            tx_id = attrs.get("transcript_id")
+            # トランスクリプト情報の初期化または取得
+            rec = transcripts.setdefault(
+                tid,
+                {
+                    "gene_name": gname,
+                    "chrom": chrom,
+                    "strand": strand,
+                    "tx_start": None,
+                    "tx_end": None,
+                    "cds_start": None,
+                    "cds_end": None,
+                    "exons": []
+                }
+            )
 
-            # transcript が変わったら出力
-            if tx_id != current_tx and current_tx is not None:
-                exon_starts, exon_ends = zip(*sorted(zip(exon_starts, exon_ends)))
-                out.write("\t".join([
-                    current_gene,
-                    current_tx,
-                    current_chrom,
-                    current_strand,
-                    str(tx_start - 1),  # UCSC: 0-based start
-                    str(tx_end),
-                    str(cds_start - 1 if cds_start else tx_end), # CDSがない場合はCDS_start, endを両方tx_endにする (refflatはそうなっている)
-                    str(cds_end if cds_end else tx_end),
-                    str(len(exon_starts)),
-                    ",".join(map(str, exon_starts)) + ",",
-                    ",".join(map(str, exon_ends)) + ","
-                ]) + "\n")
-                
-                # パラメータを初期化する
-                exon_starts, exon_ends = [], []
-                tx_start, tx_end, cds_start, cds_end = None, None, None, None
+            # 優先して最初に見つかった gene_name/chrom/strand を保持
+            if not rec["gene_name"] and gname:
+                rec["gene_name"] = gname
+            if not rec["chrom"]:
+                rec["chrom"] = chrom
+            if not rec["strand"]:
+                rec["strand"] = strand
 
-            current_tx = tx_id
-            current_gene = gene_symbol
-            current_chrom = "chr" + str(chrom) # 染色体列に"chr"接頭辞を追加
-            current_strand = strand
+            if feature.lower() == "transcript":
+                rec["tx_start"] = start if rec["tx_start"] is None else min(rec["tx_start"], start)
+                rec["tx_end"] = end if rec["tx_end"] is None else max(rec["tx_end"], end)
+            elif feature.lower() == "exon":
+                rec["exons"].append((start - 1, end))  # UCSC: exonStarts 0-based
+                rec["tx_start"] = start if rec["tx_start"] is None else min(rec["tx_start"], start)
+                rec["tx_end"] = end if rec["tx_end"] is None else max(rec["tx_end"], end)
+            elif feature.lower() == "cds":
+                rec["cds_start"] = start if rec["cds_start"] is None else min(rec["cds_start"], start)
+                rec["cds_end"] = end if rec["cds_end"] is None else max(rec["cds_end"], end)
 
-            if feature == "transcript":
-                tx_start = start
-                tx_end = end
-            elif feature == "exon":
-                exon_starts.append(start - 1)  # UCSC uses 0-based
-                exon_ends.append(end)
-            elif feature == "CDS":
-                cds_start = start if cds_start is None else min(cds_start, start)
-                cds_end = end if cds_end is None else max(cds_end, end)
+    # 書き出し（トランスクリプトごとに1行）
+    with open(output_refflat_path, "w", encoding="utf-8") as out:
+        for tid, rec in transcripts.items():
+            exons = sorted(rec["exons"], key=lambda x: x[0])
+            exon_count = len(exons)
+            exon_starts_s = ",".join(str(s) for s, e in exons) + ("," if exon_count else "")
+            exon_ends_s = ",".join(str(e) for s, e in exons) + ("," if exon_count else "")
 
-        # 最後の transcript を出力
-        if current_tx:
-            exon_starts, exon_ends = zip(*sorted(zip(exon_starts, exon_ends)))
+            chrom = rec["chrom"]
+            if chrom and not str(chrom).startswith("chr"):
+                chrom = f"chr{chrom}"
+
+            tx_start_s = str(rec["tx_start"] - 1) if rec["tx_start"] is not None else ""
+            tx_end_s = str(rec["tx_end"]) if rec["tx_end"] is not None else ""
+            cds_start_s = str(rec["cds_start"] - 1) if rec["cds_start"] is not None else (tx_start_s if tx_start_s else "")
+            cds_end_s = str(rec["cds_end"]) if rec["cds_end"] is not None else (tx_end_s if tx_end_s else "")
+
             out.write("\t".join([
-                current_gene,
-                current_tx,
-                current_chrom,
-                current_strand,
-                str(tx_start - 1),
-                str(tx_end),
-                str(cds_start - 1 if cds_start else tx_start - 1),
-                str(cds_end if cds_end else tx_end),
-                str(len(exon_starts)),
-                ",".join(map(str, exon_starts)) + ",",
-                ",".join(map(str, exon_ends)) + ","
+                rec["gene_name"] or "",
+                tid,
+                chrom or "",
+                rec["strand"] or "",
+                tx_start_s,
+                tx_end_s,
+                cds_start_s,
+                cds_end_s,
+                str(exon_count),
+                exon_starts_s,
+                exon_ends_s
             ]) + "\n")
+    return 
