@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path of refflat file"
     )
     dir_group.add_argument(
-        "-e", "--gtf-path",
+        "-g", "--gtf-path",
         help="Path of GTF file"
     )
     dir_group.add_argument(
