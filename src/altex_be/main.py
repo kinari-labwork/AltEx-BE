@@ -93,7 +93,6 @@ def run_pipeline():
     )
     
     logging.info("All AltEx-BE processes completed successfully.")
-    logging.info("Printing summary of output:")
     logging.info(f"Output directory: {output_directory}")
     return
 
