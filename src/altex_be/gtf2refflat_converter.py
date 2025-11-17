@@ -54,6 +54,10 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
             # gene_nameの取得（存在しない場合は空文字）
             gname_m = gname_re.search(attr_str)
             gname = gname_m.group("gene_name") if gname_m else ""
+
+            # chromに"chr"が付いていなければ付与
+            if chrom and not str(chrom).startswith("chr"):
+                chrom = f"chr{chrom}"
             
             # featureを小文字化しておく
             feature = feature.lower()
@@ -99,10 +103,7 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
             exon_count = len(exons)
             exon_starts_s = ",".join(str(s) for s, e in exons) + ("," if exon_count else "")
             exon_ends_s = ",".join(str(e) for s, e in exons) + ("," if exon_count else "")
-
             chrom = rec["chrom"]
-            if chrom and not str(chrom).startswith("chr"):
-                chrom = f"chr{chrom}"
 
             tx_start_s = str(rec["tx_start"] - 1) if rec["tx_start"] is not None else ""
             tx_end_s = str(rec["tx_end"]) if rec["tx_end"] is not None else ""
