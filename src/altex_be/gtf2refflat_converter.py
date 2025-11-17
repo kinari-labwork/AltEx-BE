@@ -54,6 +54,7 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
             # gene_nameの取得（存在しない場合は空文字）
             gname_m = gname_re.search(attr_str)
             gname = gname_m.group(1) if gname_m else ""
+            feature = feature.lower()
 
             # トランスクリプト情報の初期化または取得
             rec = transcripts.setdefault(
@@ -78,14 +79,14 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
             if not rec["strand"]:
                 rec["strand"] = strand
 
-            if feature.lower() == "transcript":
+            if feature == "transcript":
                 rec["tx_start"] = start if rec["tx_start"] is None else min(rec["tx_start"], start)
                 rec["tx_end"] = end if rec["tx_end"] is None else max(rec["tx_end"], end)
-            elif feature.lower() == "exon":
+            elif feature == "exon":
                 rec["exons"].append((start - 1, end))  # UCSC: exonStarts 0-based
                 rec["tx_start"] = start if rec["tx_start"] is None else min(rec["tx_start"], start)
                 rec["tx_end"] = end if rec["tx_end"] is None else max(rec["tx_end"], end)
-            elif feature.lower() == "cds":
+            elif feature == "cds":
                 rec["cds_start"] = start if rec["cds_start"] is None else min(rec["cds_start"], start)
                 rec["cds_end"] = end if rec["cds_end"] is None else max(rec["cds_end"], end)
 
