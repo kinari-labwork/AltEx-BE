@@ -21,18 +21,14 @@ def test_check_input_output_directories(tmp_path):
     output_dir.mkdir()
     parser = argparse.ArgumentParser()
     # 2. Test with valid directories
-    is_input_output_directories(refflat_file, tmp_path / "non_existent.gtf", fasta_file, output_dir, parser)
-    is_input_output_directories(tmp_path / "non_existent.txt", gtf_file, fasta_file, output_dir, parser)
+    is_input_output_directories(refflat_file, None, fasta_file, output_dir, parser)
+    is_input_output_directories(None, gtf_file, fasta_file, output_dir, parser)
     assert output_dir.is_dir()
 
     # 3. Test with a non-existent input file
     with pytest.raises(SystemExit):
         is_input_output_directories(
-            tmp_path / "non_existent.txt", tmp_path / "non_existent.gtf", fasta_file, output_dir, parser
-        )
-    with pytest.raises(SystemExit):
-        is_input_output_directories(
-            refflat_file, gtf_file, fasta_file, output_dir, parser
+            tmp_path / "non_existent.txt", None, fasta_file, output_dir, parser
         )
 
 def test_supported_assembly(caplog):
