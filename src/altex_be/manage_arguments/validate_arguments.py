@@ -6,12 +6,18 @@ from .. import logging_config  # noqa: F401
 
 def is_input_output_directories(
     refflat_path: Path, 
+    gtf_path: Path,
     fasta_path: Path, 
     output_directory: Path, 
     parser: argparse.ArgumentParser
 ) -> None:
-    if not refflat_path.is_file():
+    refflat = (refflat_path is not None) and not refflat_path.is_file()
+    gtf = (gtf_path is not None) and not gtf_path.is_file()
+
+    if refflat:
         parser.error(f"The provided refFlat file '{refflat_path}' does not exist.")
+    if gtf:
+        parser.error(f"The provided GTF file '{gtf_path}' does not exist.")
     if not fasta_path.is_file():
         parser.error(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():
@@ -51,6 +57,7 @@ def is_supported_assembly_name_in_crispr_direct(assembly_name:str) -> None:
 
 def validate_arguments(
     refflat_path: Path, 
+    gtf_path: Path,
     fasta_path: Path, 
     output_directory: Path, 
     interest_gene_list: list[str], 
@@ -62,7 +69,7 @@ def validate_arguments(
     引数の妥当性を検証するラッパー関数
     ここで検証が通らなかった場合、parser.errorで終了する
     """
-    is_input_output_directories(refflat_path, fasta_path, output_directory, parser)
+    is_input_output_directories(refflat_path, gtf_path, fasta_path, output_directory, parser)
     is_base_editors_provided(base_editors, parser)
     is_interest_genes_provided(interest_gene_list, parser)
     is_supported_assembly_name_in_crispr_direct(assembly_name)

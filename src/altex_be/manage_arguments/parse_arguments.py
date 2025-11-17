@@ -15,10 +15,11 @@ def parse_gene_file(gene_file: Path) -> list[str] | None:
     return genes_from_file
 
 def parse_path_from_args(args: argparse.Namespace):
-    refflat_path = Path(args.refflat_path)
+    refflat_path = Path(args.refflat_path)  if args.refflat_path else None
+    gtf_path = Path(args.gtf_path) if args.gtf_path else None
     fasta_path = Path(args.fasta_path)
     output_directory = Path(args.output_dir)
-    return refflat_path, fasta_path, output_directory
+    return refflat_path, gtf_path, fasta_path, output_directory
 
 def parse_assembly_name_from_args(args: argparse.Namespace) -> str:
     return str(args.assembly_name)
@@ -27,7 +28,8 @@ def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentPar
     genes_from_file = parse_gene_file(Path(args.gene_file)) if args.gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
-    interest_gene_list = gene_symbols + refseq_ids + genes_from_file
+    ensembl_ids = args.ensembl_ids if args.ensembl_ids is not None else []
+    interest_gene_list = gene_symbols + refseq_ids + ensembl_ids + genes_from_file
     return interest_gene_list
 
 def parse_base_editors_from_file(
@@ -106,23 +108,21 @@ def parse_base_editors_from_args(
     コマンドライン引数からBaseEditor情報を取得し、base_editorsに追加する。
     必要な情報が揃っていない場合はparser.errorで終了。
     """
-    required_fields = [
-        args.be_name,
-        args.be_pam,
-        args.be_window_start,
-        args.be_window_end,
-        args.be_type
-    ]
+    be_name = getattr(args, "be_name", None) or getattr(args, "base_editor_name", None)
+    be_pam = getattr(args, "be_pam", None) or getattr(args, "base_editor_pam", None)
+    be_window_start = getattr(args, "be_window_start", None) or getattr(args, "base_editor_window_start", None)
+    be_window_end = getattr(args, "be_window_end", None) or getattr(args, "base_editor_window_end", None)
+    be_type = getattr(args, "be_type", None) or getattr(args, "base_editor_type", None)
     # どれか一つでも指定されていれば、全て必須
-    if any([args.be_name, args.be_pam, args.be_window_start, args.be_window_end, args.be_type]):
-        if not all(required_fields):
+    if any([be_name, be_pam, be_window_start, be_window_end, be_type]):
+        if not all([be_name, be_pam, be_window_start, be_window_end, be_type]):
             parser.error("Base editor information is incomplete. Please provide all required parameters.")
-        base_editors[args.be_name] = BaseEditor(
-            base_editor_name=args.be_name,
-            pam_sequence=args.be_pam.upper(),
-            editing_window_start_in_grna=int(args.be_window_start),
-            editing_window_end_in_grna=int(args.be_window_end),
-            base_editor_type=args.be_type.lower(),
+        base_editors[be_name] = BaseEditor(
+            base_editor_name=be_name,
+            pam_sequence=be_pam.upper(),
+            editing_window_start_in_grna=int(be_window_start),
+            editing_window_end_in_grna=int(be_window_end),
+            base_editor_type=be_type.lower(),
         )
     return base_editors
 
@@ -156,8 +156,8 @@ def parse_arguments(
     """
     このモジュールに含まれるすべての関数のラッパー関数。
     """
-    refflat_path, fasta_path, output_directory = parse_path_from_args(args)
+    refflat_path, gtf_path, fasta_path, output_directory = parse_path_from_args(args)
     interest_gene_list = parse_genes_from_args(args, parser)
     base_editors = parse_base_editors_from_all_sources(args, parser)
     assembly_name = parse_assembly_name_from_args(args)
-    return refflat_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name
+    return refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name

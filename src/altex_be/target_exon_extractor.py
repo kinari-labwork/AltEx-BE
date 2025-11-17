@@ -7,7 +7,8 @@ from . import logging_config # noqa: F401
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: str = "all") -> pd.DataFrame:
-    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "flame", "cds_info"])
+    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "flame"])
+    classified_refflat["cds_info"] = classified_refflat["cds_info"].apply(lambda x: set(x))  # set型に変換
     classified_refflat = classified_refflat.drop(columns = ["exons"])
     classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
         int

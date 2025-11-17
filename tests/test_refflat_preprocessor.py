@@ -112,17 +112,23 @@ def test_cording_information_annotator():
     input_data = pd.DataFrame(
         {
             "name": ["NR_001", "NM_001", "NM_002", "NR_002"],
+            "cdsStart": [0, 100, 50, 0],
+            "cdsEnd": [0, 200, 450, 0],
         }
     )
     expected_output = pd.DataFrame(
         {
             "name": ["NR_001", "NM_001", "NM_002", "NR_002"],
+            "cdsStart": [0, 100, 50, 0],
+            "cdsEnd": [0, 200, 450, 0],
             "coding": ["non-coding", "coding", "coding", "non-coding"],
         }
     )
     expected_output["coding"] = expected_output["coding"].astype("category")
-    output_data = annotate_cording_information(input_data)
-    pd.testing.assert_frame_equal(output_data, expected_output)
+    output_data_refflat = annotate_cording_information(input_data, gtf_flag=False)
+    pd.testing.assert_frame_equal(output_data_refflat, expected_output)
+    output_data_gtf = annotate_cording_information(input_data, gtf_flag=True)
+    pd.testing.assert_frame_equal(output_data_gtf, expected_output)
 
 
 def test_flame_information_annotator():

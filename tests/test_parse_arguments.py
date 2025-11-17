@@ -15,15 +15,18 @@ def test_parse_path_from_args(tmp_path):
     refflat_file = tmp_path / "refflat.txt"
     fasta_file = tmp_path / "genome.fa"
     output_dir = tmp_path / "output"
+    gtf_file = tmp_path / "annotations.gtf"
 
     args = argparse.Namespace(
         refflat_path=str(refflat_file),
         fasta_path=str(fasta_file),
+        gtf_path=str(gtf_file),
         output_dir=str(output_dir)
     )
 
-    refflat_path, fasta_path, output_directory = parse_path_from_args(args)
+    refflat_path, gtf_path, fasta_path, output_directory = parse_path_from_args(args)
     assert refflat_path == refflat_file
+    assert gtf_path == gtf_file
     assert fasta_path == fasta_file
     assert output_directory == output_dir
 
@@ -93,6 +96,7 @@ def test_parse_genes_from_args():
     args = argparse.Namespace(
         gene_symbols=["GeneA", "GeneB"],
         refseq_ids=["NM_001", "NM_002"],
+        ensembl_ids=["ENST000003", "ENST000004"],
         gene_file=None
     )
     parser = argparse.ArgumentParser()
@@ -102,7 +106,9 @@ def test_parse_genes_from_args():
     assert "GeneB" in result
     assert "NM_001" in result
     assert "NM_002" in result
-    assert len(result) == 4
+    assert "ENST000003" in result
+    assert "ENST000004" in result
+    assert len(result) == 6
 
 def test_parse_base_editors_from_files(tmp_path):
     # ダミーのbase editorファイル作成
