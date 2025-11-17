@@ -15,11 +15,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     # コマンドライン引数を追加
     dir_group = parser.add_argument_group("Input/Output Options")
-    dir_group.add_argument(
+    transcript_group = parser.add_mutually_exclusive_group()
+    transcript_group.add_argument(
         "-r", "--refflat-path",
         help="Path of refflat file"
     )
-    dir_group.add_argument(
+    transcript_group.add_argument(
         "-g", "--gtf-path",
         help="Path of GTF file"
     )
