@@ -32,7 +32,7 @@ def run_with_all_genes(
     in_output_dir = f"data/{assembly_name}"
     print(f"Processing assembly: {assembly_name}")
 
-    out_file = Path(in_output_dir) / "sgrna_designed_all_genes.csv"
+    out_file = Path(in_output_dir) / "sgrna_designed_all_genes.pkl"
 
     if out_file.exists():
         print(f"Skipping {assembly_name}, output already exists: {out_file}")
@@ -62,7 +62,6 @@ def run_with_all_genes(
     refflat_classified = splicing_event_classifier.classify_splicing_events(refflat_preprocessed)
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(refflat_classified)
     splice_acceptor_single_exon_df =  splice_acceptor_single_exon_df[splice_acceptor_single_exon_df["chromStart"] > 0]
-    print(exploded_classified_refflat[exploded_classified_refflat["exonStarts"] == 0])
     sequence_annotated = sequence_annotator.annotate_sequence_to_splice_sites(
         exploded_classified_refflat,
         splice_acceptor_single_exon_df,
@@ -70,7 +69,7 @@ def run_with_all_genes(
         fasta_path=f"{in_output_dir}/{assembly_name}.fa",
     )
     sgrna_designed = sgrna_designer.design_sgrna_for_base_editors(sequence_annotated, base_editors)
-    sgrna_designed.to_csv(out_file, index=False)
+    sgrna_designed.to_pickle(out_file)
 
 if __name__ == "__main__":
     for assembly_name in assembly_names:
