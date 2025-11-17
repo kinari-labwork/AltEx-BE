@@ -3,15 +3,6 @@ import logging
 import re
 from . import logging_config  # noqa: F401
 
-def parse_attr(attr_str):
-    """GTF attribute列を辞書にパース"""
-    attrs = {}
-    for kv in attr_str.strip().split(";"):
-        if kv.strip():
-            key, val = kv.strip().split(" ", 1)
-            attrs[key] = val.strip('"')
-    return attrs
-
 # もはやこれだけでいい
 def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> None:
     """
