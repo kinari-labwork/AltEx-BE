@@ -30,8 +30,8 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
         return
 
     transcripts: dict[str, dict] = {}
-    tid_re = re.compile(r'transcript_id "([^"]+)"')
-    gname_re = re.compile(r'gene_name "([^"]+)"')
+    tid_re = re.compile(r'transcript_id "(?P<transcript_id>[^"]+)"')
+    gname_re = re.compile(r'gene_name "(?P<gene_name>[^"]+)"')
 
     with open(gtf_path, "r", encoding="utf-8") as fh:
         for line in fh:
@@ -50,10 +50,12 @@ def gtf_to_refflat(gtf_path: Path, output_path: Path, assembly_name: str) -> Non
             # transcript_idが見つからない場合はスキップ
             if not tid_m:
                 continue
-            tid = tid_m.group(1)
+            tid = tid_m.group("transcript_id")
             # gene_nameの取得（存在しない場合は空文字）
             gname_m = gname_re.search(attr_str)
-            gname = gname_m.group(1) if gname_m else ""
+            gname = gname_m.group("gene_name") if gname_m else ""
+            
+            # featureを小文字化しておく
             feature = feature.lower()
 
             # トランスクリプト情報の初期化または取得
