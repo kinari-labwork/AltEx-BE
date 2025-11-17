@@ -11,13 +11,13 @@ def is_input_output_directories(
     output_directory: Path, 
     parser: argparse.ArgumentParser
 ) -> None:
-    refflat_exists = (refflat_path is not None) and refflat_path.is_file()
-    gtf_exists = (gtf_path is not None) and gtf_path.is_file()
-    
-    if not refflat_exists and not gtf_exists:
-        parser.error(f"The provided refFlat file  '{refflat_path}' and GTF file '{gtf_path}' does not exist.")
-    if refflat_exists and gtf_exists:
-        parser.error(f"Please provide either refFlat file '{refflat_path}' or GTF file '{gtf_path}', not both.")
+    refflat = (refflat_path is not None) and not refflat_path.is_file()
+    gtf = (gtf_path is not None) and not gtf_path.is_file()
+
+    if refflat:
+        parser.error(f"The provided refFlat file '{refflat_path}' does not exist.")
+    if gtf:
+        parser.error(f"The provided GTF file '{gtf_path}' does not exist.")
     if not fasta_path.is_file():
         parser.error(f"The provided FASTA file '{fasta_path}' does not exist.")
     if not output_directory.is_dir():
