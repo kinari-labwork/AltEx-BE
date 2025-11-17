@@ -27,6 +27,8 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
             logging.info(f"Gene {gene} is found in refFlat.")
     
     refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
+    # ごくまれに存在する、exonのスタートが0のものを除外する
+    refFlat = refFlat[refFlat["exonStarts"].apply(lambda starts: all(s > 0 for s in starts))].reset_index(drop=True)
     return refFlat
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
