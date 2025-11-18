@@ -33,10 +33,6 @@ def run_with_all_genes(
     print(f"Processing assembly: {assembly_name}")
 
     out_file = Path(in_output_dir) / "sgrna_designed_all_genes.pkl"
-
-    if out_file.exists():
-        print(f"Skipping {assembly_name}, output already exists: {out_file}")
-        return
     
     base_editors = PRESET_BASE_EDITORS
 
