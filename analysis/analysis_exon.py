@@ -11,7 +11,7 @@ pd.set_option('display.max_columns', 20)
 pd.set_option('display.max_rows', 1000)
 
 # %%
-data = pd.read_pickle('../data/classified_exon_refflat.pkl')
+data = pd.read_pickle('../data/mm39/classified_refflat_all_genes.pkl')
 print(data.head())
 print(data.shape)
 
@@ -445,21 +445,22 @@ def count_genes_by_exon_type(data, exon_conditions):
 
 # 各エキソンタイプの条件を定義
 exon_conditions = [
-    ("skipped exon", lambda x: "skipped" in x),
-    ("unique exon", lambda x: "unique" in x),
-    ("skipped or unique exon", lambda x: "skipped" in x or "unique" in x),
-    ("alternative 3' splice site-long", lambda x: "a3ss-long" in x),
-    ("alternative 5' splice site-long", lambda x: "a5ss-long" in x),
-    ("alternative 3' splice site-short", lambda x: "a3ss-short" in x),
-    ("alternative 5' splice site-short", lambda x: "a5ss-short" in x),
-    ("overlapping exon", lambda x: "overlap" in x),
-    ("intron retention", lambda x: "intron_retention" in x),
-    ("targetable gene", lambda x: "skipped" in x or "unique" in x or "a3ss-long" in x  or "a5ss-long" in x)
+    (" alternative exon", lambda x: "alternative" in x),
+    ("Unique exon", lambda x: "unique" in x),
+    ("Skipped or unique exon", lambda x: "skipped" in x or "unique" in x),
+    ("Alternative 3' splice site-long", lambda x: "a3ss-long" in x),
+    ("Alternative 5' splice site-long", lambda x: "a5ss-long" in x),
+    ("Alternative 3' splice site-short", lambda x: "a3ss-short" in x),
+    ("Alternative 5' splice site-short", lambda x: "a5ss-short" in x),
+    ("Overlapping exon", lambda x: "overlap" in x),
+    ("Intron retention", lambda x: "intron_retention" in x),
+    ("Genes have targetable splicing events", lambda x: "skipped" in x or "unique" in x or "a3ss-long" in x  or "a5ss-long" in x)
 ]
 
 # 関数を呼び出して結果を取得
 result_df = count_genes_by_exon_type(data, exon_conditions)
 
+# %%
 # 結果を表示
 print(result_df)
 
@@ -468,16 +469,16 @@ print(result_df)
 result_df["Exon Type"] = pd.Categorical(
     result_df["Exon Type"],
     categories=[
-        "skipped exon", 
-        "unique exon", 
-        "skipped or unique exon", 
-        "alternative 3' splice site-long", 
-        "alternative 5' splice site-long", 
-        "alternative 3' splice site-short",
-        "alternative 5' splice site-short",
-        "overlapping exon", 
-        "intron retention",
-        "targetable gene"
+        "Skipped exon", 
+        "Unique exon", 
+        "Skipped or unique exon", 
+        "Alternative 3' splice site-long", 
+        "Alternative 5' splice site-long", 
+        "Alternative 3' splice site-short",
+        "Alternative 5' splice site-short",
+        "Overlapping exon", 
+        "Intron retention",
+        "Genes have targetable splicing events"
     ],  # 希望する順序を指定
     ordered=True
 )
@@ -559,16 +560,16 @@ print(result_df_based_on_theoretically_valid_conditions)
 result_df_based_on_theoretically_valid_conditions["Exon Type"] = pd.Categorical(
     result_df_based_on_theoretically_valid_conditions["Exon Type"],
     categories=[
-        "skipped exon", 
-        "unique exon", 
-        "skipped or unique exon", 
-        "alternative 3' splice site-long", 
-        "alternative 5' splice site-long", 
-        "alternative 3' splice site-short",
-        "alternative 5' splice site-short",
-        "overlapping exon", 
-        "intron retention",
-        "targetable gene"
+        "Skipped exon", 
+        "Unique exon", 
+        "Skipped or unique exon", 
+        "Alternative 3' splice site-long", 
+        "Alternative 5' splice site-long", 
+        "Alternative 3' splice site-short",
+        "Alternative 5' splice site-short",
+        "Overlapping exon", 
+        "Intron retention",
+        "Genes have targetable splicing events"
     ],  # 希望する順序を指定
     ordered=True
 )
@@ -637,6 +638,9 @@ print(f"最大エキソンが1つの遺伝子数: {len(genes_with_one_exon)}")
 genes_with_one_variant = data[data["variant_count"] == 1]["geneName"].unique()  
 print(f"transcript variantsが1つの遺伝子数: {len(genes_with_one_variant)}")
 
+
+
+# %%
 # エキソンが一つまたはtranscript variantsが一つの遺伝子をカウント
 genes_with_one_exon_or_one_variant = data[
     (data["max_exon_count"] == 1) | (data["variant_count"] == 1)

@@ -59,8 +59,13 @@ def run_with_all_genes(
         ],
     )
     refflat_preprocessed = preprocess_refflat_with_all_genes(refflat, gtf_flag=False)
+    refflat_preprocessed.to_pickle(f"{in_output_dir}/processed_refflat_all_genes.pkl")
     refflat_classified = splicing_event_classifier.classify_splicing_events(refflat_preprocessed)
+    refflat_classified.to_pickle(f"{in_output_dir}/classified_refflat_all_genes.pkl")
+
     splice_acceptor_single_exon_df, splice_donor_single_exon_df, exploded_classified_refflat = target_exon_extractor.wrap_extract_target_exon(refflat_classified)
+    exploded_classified_refflat.to_pickle(f"{in_output_dir}/exploded_classified_refflat_all_genes.pkl")
+
     splice_acceptor_single_exon_df =  splice_acceptor_single_exon_df[splice_acceptor_single_exon_df["chromStart"] > 0]
     sequence_annotated = sequence_annotator.annotate_sequence_to_splice_sites(
         exploded_classified_refflat,

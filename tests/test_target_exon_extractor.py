@@ -23,8 +23,8 @@ def test_extract_target_exon():
                 ["exon1"],
             ],
             "exontype": [
-                ["skipped", "constitutive", "skipped"],
-                ["skipped", "constitutive"],
+                ["alternative", "constitutive", "alternative"],
+                ["alternative", "constitutive"],
                 ["a3ss-long", "constitutive"],
                 ["a5ss-long", "constitutive"],
                 ["constitutive"],
@@ -71,7 +71,7 @@ def test_extract_target_exon():
             # ここでは、ダミーのUUIDを使用（テストではoutput, expected_outputからは除外して比較する）
             "name": ["UUID1", "UUID2", "UUID3", "UUID4"],
             "strand": ["+", "+", "-", "-"],
-            "exontype": ["skipped", "skipped", "a3ss-long", "a5ss-long"],
+            "exontype": ["alternative", "alternative", "a3ss-long", "a5ss-long"],
             "exon_position": ["first", "last", "first", "first"],
         }
     )
@@ -92,7 +92,7 @@ def test_extract_splice_acceptor_regions():
             "name" : ["UUID1", "UUID2"],
             "score": [0, 0],
             "strand": ["+", "-"],
-            "exontype": ["skipped", "unique"],
+            "exontype": ["alternative", "unique-alternative"],
             "exon_position": ["first", "last"],
         }
     )
@@ -122,7 +122,7 @@ def test_extract_splice_donor_regions():
             "name" : ["UUID1", "UUID2"],
             "score": [0, 0],
             "strand": ["+", "-"],
-            "exontype": ["skipped", "unique"],
+            "exontype": ["alternative", "unique-alternative"],
             "exon_position": ["first", "last"],
         }
     )

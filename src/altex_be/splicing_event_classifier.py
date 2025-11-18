@@ -63,7 +63,7 @@ def classify_splicing_event(
         and not has_end_match_only
         and not has_overlap_without_startend_match
     ):
-        return "skipped"  # 2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
+        return "alternative"  # 2つ以上のトランスクリプトに存在するが、全ての転写物には存在しないエキソン
     if has_start_match_only and not has_end_match_only and has_start_match_only_and_exist_later_end:
         return "a5ss-short" # ほかのエキソンとstartが一致するが、endはstartが一致する他のエキソンのendよりも小さい場合 例: [100,200],[100,300]の場合、[100,200]がa5ss-short, [100,300]がa5ss-long
     if has_start_match_only and not has_end_match_only and not has_start_match_only_and_exist_later_end:
@@ -77,7 +77,7 @@ def classify_splicing_event(
     if has_overlap_without_startend_match:
         return "overlap"
     if exact_match == 1 and exact_match != total:
-        return "unique"  # 他のトランスクリプトには全く見られないエキソン
+        return "unique-alternative"  # 他のトランスクリプトには全く見られないエキソン
     else:
         return "other"
 
