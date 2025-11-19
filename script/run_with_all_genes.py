@@ -55,6 +55,8 @@ def run_with_all_genes(
         ],
     )
     refflat_preprocessed = preprocess_refflat_with_all_genes(refflat, gtf_flag=False)
+    refflat_preprocessed = refflat_preprocessor.add_last_first_exon_position(refflat_preprocessed)
+    refflat_preprocessed = refflat_preprocessor.flag_upstream_artificial_alternative(refflat_preprocessed)
     refflat_preprocessed.to_pickle(f"{in_output_dir}/processed_refflat_all_genes.pkl")
     refflat_classified = splicing_event_classifier.classify_splicing_events(refflat_preprocessed)
     refflat_classified.to_pickle(f"{in_output_dir}/classified_refflat_all_genes.pkl")

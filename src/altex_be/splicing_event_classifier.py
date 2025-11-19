@@ -82,40 +82,6 @@ def classify_splicing_event(
         return "other"
     
 
-def add_last_first_exon_position(refflat: pd.DataFrame) -> pd.DataFrame:
-    """
-    遺伝子ごとに、各転写物の最初のエキソンの中で、最も3'側に位置するエキソンのstartをlast_exon_start列に追加する
-    """
-    # exons 列はすでに(start, end)のタプルのリストになっていることを前提とする
-    for gene, group in refflat.groupby("geneName"):
-        # + strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最初のエキソンのstartの最大値
-        if group["strand"].iloc[0] == "+": # 同じ遺伝子なら基本的にstrandは同じはず
-            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[0][0]).max()
-        # - strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最後のエキソンのendの最小値
-        else:
-            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
-
-    return refflat
-
-def flag_upstream_artificial_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
-    """
-    各 exon が構造上 alternative になっているだけかどうかを判定する。
-    """
-    def mark_row(row):
-        strand = row["strand"]
-        last_pos = row["last_first_exon_pos"]
-
-        flags = []
-        for (start, end) in row["exons"]:
-            if strand == "+":
-                flags.append(start < last_pos)
-            else:
-                flags.append(end > last_pos)
-        return flags
-
-    refflat["upstream_alternative"] = refflat.apply(mark_row, axis=1)
-    return refflat
-
 def classify_splicing_events_per_gene(refflat: pd.DataFrame) -> pd.DataFrame:
     result = []
 
