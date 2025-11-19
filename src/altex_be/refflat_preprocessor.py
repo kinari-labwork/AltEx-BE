@@ -159,7 +159,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
     return refflat
 
 
-def annotate_flame_information(refflat: pd.DataFrame) -> pd.DataFrame:
+def annotate_frame_information(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、フレーム情報を追加する。
@@ -169,11 +169,11 @@ def annotate_flame_information(refflat: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame, フレーム情報を追加したrefFlatのデータフレーム
     """
 
-    # exonlengths列（リスト）に対してmod3を計算し、0ならin-flame, それ以外はout-flame
-    def calc_flame(lengths):
-        return ["in-flame" if length % 3 == 0 else "out-flame" for length in lengths]
+    # exonlengths列（リスト）に対してmod3を計算し、0ならin-frame, それ以外はout-frame
+    def calc_frame(lengths):
+        return ["in-frame" if length % 3 == 0 else "out-frame" for length in lengths]
 
-    refflat["flame"] = refflat["exonlengths"].apply(calc_flame)
+    refflat["frame"] = refflat["exonlengths"].apply(calc_frame)
     return refflat
 
 
@@ -306,7 +306,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_fla
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
     refflat = annotate_cording_information(refflat, gtf_flag)
-    refflat = annotate_flame_information(refflat)
+    refflat = annotate_frame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)
 

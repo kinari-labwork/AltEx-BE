@@ -175,7 +175,7 @@ altex-be \
 |chrom|location of target gene|
 |exonstart, exonend, exonlength|general information of target exon|
 |coding|whether target gene is protein coding or non coding gene|
-|flame| mod3 of the length of target exon|0 = in-flame or 1,2 = out-flame |
+|frame| mod3 of the length of target exon|0 = in-frame or 1,2 = out-frame |
 |exon_position|relative location of target exon in target gene|"first" or "internal" or "last"|
 |uuid|the unique id for each sgRNAs|changes in every run|
 |exon_intron_boundary+-25bp_sequence| sequence around SA or SD |

@@ -4,7 +4,7 @@ import pandas as pd
 from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
     annotate_cording_information,
-    annotate_flame_information,
+    annotate_frame_information,
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
     parse_exon_coordinates,
@@ -49,10 +49,10 @@ refflat = drop_abnormal_mapped_transcripts(refflat)
 refflat = annotate_cording_information(refflat)
 
 # フレーム情報を追加
-refflat = annotate_flame_information(refflat)
+refflat = annotate_frame_information(refflat)
 
 # デバッグ用に、strではなく、modの結果を列として加えておく
-refflat["flame_mod"] = refflat["exonlengths"].apply(lambda x: [length % 3 for length in x])
+refflat["frame_mod"] = refflat["exonlengths"].apply(lambda x: [length % 3 for length in x])
 
 # エキソンの位置を示す列を追加
 refflat = add_exon_position_flags(refflat)

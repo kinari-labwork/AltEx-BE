@@ -36,12 +36,12 @@ def test_extract_target_exon():
                 [100, 100],
                 [1000],
             ],
-            "flame":[
-                ["in-flame", "in-flame", "out-flame"],
-                ["in-flame", "out-flame"],
-                ["in-flame", "out-flame"],
-                ["in-flame", "out-flame"],
-                ["in-flame"],
+            "frame":[
+                ["in-frame", "in-frame", "out-frame"],
+                ["in-frame", "out-frame"],
+                ["in-frame", "out-frame"],
+                ["in-frame", "out-frame"],
+                ["in-frame"],
             ],
             "cds_info": [
                 ["cds_start", "cds_end", "cds_start"],

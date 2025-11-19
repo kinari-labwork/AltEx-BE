@@ -484,7 +484,7 @@ def design_sgrna_for_base_editors(
         "strand",
         "exonlengths",
         "coding",
-        "flame",
+        "frame",
         "exontype",
         "exon_position",
         "acceptor_exon_intron_boundary_±25bp_sequence",
