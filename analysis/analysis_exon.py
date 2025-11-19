@@ -211,6 +211,16 @@ last_a3ss_short_exon = last_target_exon[last_target_exon["exontype"] == "a3ss-sh
 print(internal_skipped_exon["cds_info"].value_counts())
 
 # %%
+alternative_exon = exon_df[exon_df["exontype"] == "alternative"]
+unique_alternative_exon = exon_df[exon_df["exontype"] == "unique-alternative"]
+a5ss_long_exon = exon_df[exon_df["exontype"] == "a5ss-long"]
+a3ss_long_exon = exon_df[exon_df["exontype"] == "a3ss-long"]
+a5ss_short_exon = exon_df[exon_df["exontype"] == "a5ss-short"]
+a3ss_short_exon = exon_df[exon_df["exontype"] == "a3ss-short"]
+constitutive_exon = exon_df[exon_df["exontype"] == "constitutive"]
+
+
+# %%
 # cds_info のvalueごとに in-flame 割合を計算し棒グラフ化
 def calc_in_flame_ratio(df):
     if len(df) == 0:
@@ -219,24 +229,13 @@ def calc_in_flame_ratio(df):
 
 # 対象リスト
 exon_sets = [
-    ("internal_unique_alternative_exon", internal_unique_exon),
-    ("first_unique_alternative_exon", first_unique_exon),
-    ("last_unique_alternative_exon", last_unique_exon),
-    ("internal_alternative_exon", internal_skipped_exon),
-    ("first_alternative_exon", first_skipped_exon),
-    ("last_alternative_exon", last_skipped_exon),
-    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
-    ("first_a5ss_long_exon", first_a5ss_long_exon),
-    ("last_a5ss_long_exon", last_a5ss_long_exon),
-    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
-    ("first_a3ss_long_exon", first_a3ss_long_exon),
-    ("last_a3ss_long_exon", last_a3ss_long_exon),
-    ("internal_a5ss_short_exon", internal_a5ss_short_exon),
-    ("first_a5ss_short_exon", first_a5ss_short_exon),
-    ("last_a5ss_short_exon", last_a5ss_short_exon),
-    ("internal_a3ss_short_exon", internal_a3ss_short_exon),
-    ("first_a3ss_short_exon", first_a3ss_short_exon),
-    ("last_a3ss_short_exon", last_a3ss_short_exon)
+    ("unique_alternative_exon", unique_alternative_exon),
+    ("alternative_exon", alternative_exon),
+    ("a5ss_long_exon", a5ss_long_exon),
+    ("a3ss_long_exon", a3ss_long_exon),
+    ("a5ss_short_exon", a5ss_short_exon),
+    ("a3ss_short_exon", a3ss_short_exon),
+    ("constitutive_exon", constitutive_exon)
 ]
 
 # 結果格納用
@@ -266,30 +265,46 @@ for name, df in exon_sets:
             "ExonCount": exon_count
         })
 
-
 df_in_flame = pd.DataFrame(results)
+print(df_in_flame.head())
+
+# カテゴリの順序を定義
+base_categories = ["constitutive_exon", "unique_alternative_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"]
+full_categories = [f"{prefix}{cat}" for prefix in ["internal_", "first_", "last_"] for cat in base_categories]
+
+df_in_flame["Category"] = pd.Categorical(df_in_flame["Category"], categories=["constitutive_exon", "unique_alternative_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
+df_in_flame["cording_status"] = pd.Categorical(df_in_flame["cording_status"], categories=["cds_exon","cds_edge_exon","utr_exon"], ordered=True)
+
 df_in_flame["label"] = df_in_flame.apply(
-    lambda row: f"{row['InFlameRatio']:.1f}%\n(n={int(row['ExonCount'])})", axis=1
+    lambda row: f"({int(row['ExonCount'])})", axis=1
 )
 exon_counts_df = df_in_flame[df_in_flame["cording_status"].isin(["cds_exon","utr_exon","cds_edge_exon"])]
-internal_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("internal")]
-first_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("first")]
-last_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("last")]
 
-for df in [internal_exon_df, first_exon_df, last_exon_df]:
+for df in [exon_counts_df]:
     plot = (
         ggplot(df, aes(x="Category", y="InFlameRatio", fill="cording_status")) +
         geom_bar(stat="identity", position="dodge") +
         geom_text(
             aes(label="label"),
-        position=position_dodge(width=0.9),
-        va="bottom",
-        size=9,
-        color="black"
-    ) +
-    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(17,10))
+            position=position_dodge(width=0.9),
+            va="bottom",
+            size=11,
+            color="black"
+        ) +
+        labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
+        coord_cartesian(ylim=(0, 100)) +
+        scale_fill_manual(values={
+            "cds_exon": "#56B4E9", #blue
+            "utr_exon": "#009E73", #green
+            "cds_edge_exon": "#E69F00", #orange
+        }) +
+        theme(
+            axis_text_x=element_text(rotation=90, hjust=0.5, size=15),
+            axis_title_y=element_text(size=15),
+            legend_title=element_text(size=15),
+            legend_text=element_text(size=12),
+            figure_size=(17,10)
+        )
     )
     display(plot)
 
@@ -342,6 +357,7 @@ plot = (
     coord_cartesian(ylim=(0, 100)) +
     theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(12,5))
 )
+plot.save("../data/in_flame_ratio.png", dpi=600)
 display(plot)
 
 # %%
