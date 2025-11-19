@@ -28,7 +28,8 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     
     refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
     # ごくまれに存在する、exonのスタートが0のものを除外する
-    refFlat = refFlat[refFlat["exonStarts"].apply(lambda starts: all(s > 0 for s in starts))].reset_index(drop=True)
+    # exonStarts を文字列のまま扱い、0 が含まれているかを確認
+    refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
     return refFlat
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
