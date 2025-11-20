@@ -7,7 +7,7 @@ from plotnine import*
 
 # %%
 pd.set_option('display.width', 200) 
-pd.set_option('display.max_columns', 20)
+pd.set_option('display.max_columns', 1000)
 pd.set_option('display.max_rows', 1000)
 
 # %%
@@ -66,56 +66,6 @@ data = add_variant_count(data)
 print(data.columns)
 
 # %%
-maxcount = data.groupby("geneName")["max_exon_count"].first().values
-mincount = data.groupby("geneName")["min_exon_count"].first().values
-ange_exon_counts = maxcount - mincount
-
-plt.figure(figsize= (8,5))
-sns.histplot(maxcount, bins=50, kde=False, color="skyblue")
-plt.xlabel("Number of maximum exons per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Maximum Exon Counts per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize= (8,5))
-sns.histplot(data["min_exon_count"], bins=50, kde=False, color="#D55E00")
-plt.xlabel("Number of minimum exons per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Minimum Exon Counts per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-range_exon_counts = data.groupby("geneName")["exonCount"].apply(lambda x: max(x) - min(x)).values
-
-plt.figure(figsize=(8, 5))
-sns.histplot(range_exon_counts, bins=50, kde=False, color="lightgreen")
-plt.xlabel("Range of Exon Counts per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Exon Count Range per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-# %% [markdown]
-# - エキソン数がtop5の遺伝子の中身を確認する
-
-# %%
-top_5_exon_counts = data.nlargest(5, "max_exon_count")
-print(top_5_exon_counts)
-
-# %% [markdown]
-# - 最大エキソン数 vs バリアント数の散布図を作成するためのdfを作成
-
-# %% [markdown]
-# - skipped exon, unique exon, a3ss, a5ss, overlapを持つ遺伝子の数を計算
-
-# %%
 total_genes = data["geneName"].nunique()
 print(f"全遺伝子数: {total_genes}")
 
@@ -167,8 +117,8 @@ print(f"intron_retentionを持つ遺伝子の割合: {len(genes_have_intron_rete
 print(data.head(2))
 
 # %%
-data2 = data[["geneName","exontype", "chrom", "exons", "coding","exonlengths", "flame", "exon_position", "cds_info"]]
-exon_df = data2.explode(["exontype", "exons", "flame", "exonlengths", "exon_position", "cds_info"])
+data2 = data[["geneName","exontype", "chrom", "exons", "coding","exonlengths", "frame", "exon_position", "cds_info"]]
+exon_df = data2.explode(["exontype", "exons", "frame", "exonlengths", "exon_position", "cds_info"])
 exon_df = exon_df.drop_duplicates(subset=["chrom","exons"])
 print(exon_df.head())
 
@@ -221,11 +171,11 @@ constitutive_exon = exon_df[exon_df["exontype"] == "constitutive"]
 
 
 # %%
-# cds_info のvalueごとに in-flame 割合を計算し棒グラフ化
-def calc_in_flame_ratio(df):
+# cds_info のvalueごとに in-frame 割合を計算し棒グラフ化
+def calc_in_frame_ratio(df):
     if len(df) == 0:
         return 0.0
-    return (df["flame"] == "in-flame").sum() / len(df)
+    return (df["frame"] == "in-frame").sum() / len(df)
 
 # 対象リスト
 exon_sets = [
@@ -251,38 +201,38 @@ for name, df in exon_sets:
     for cds_status in ["cds_exon", "utr_exon", "cds_edge_exon"]:
         sub = df[df["cds_info_grouped"] == cds_status]
         total_count = sub.shape[0]
-        in_flame_count = (sub["flame"] == "in-flame").sum()
-        out_flame_count = (sub["flame"] == "out-flame").sum()
-        ratio = calc_in_flame_ratio(sub)
+        in_frame_count = (sub["frame"] == "in-frame").sum()
+        out_frame_count = (sub["frame"] == "out-frame").sum()
+        ratio = calc_in_frame_ratio(sub)
         exon_count = sub.shape[0]
         results.append({
             "Category": name,
             "cording_status": cds_status,
             "total_exon_count": total_count,
-            "in_flame_count": in_flame_count,
-            "out_flame_count": out_flame_count,
-            "InFlameRatio": ratio * 100,
+            "in_frame_count": in_frame_count,
+            "out_frame_count": out_frame_count,
+            "InframeRatio": ratio * 100,
             "ExonCount": exon_count
         })
 
-df_in_flame = pd.DataFrame(results)
-print(df_in_flame.head())
+df_in_frame = pd.DataFrame(results)
+print(df_in_frame)
 
 # カテゴリの順序を定義
 base_categories = ["constitutive_exon", "unique_alternative_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"]
 full_categories = [f"{prefix}{cat}" for prefix in ["internal_", "first_", "last_"] for cat in base_categories]
 
-df_in_flame["Category"] = pd.Categorical(df_in_flame["Category"], categories=["constitutive_exon", "unique_alternative_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
-df_in_flame["cording_status"] = pd.Categorical(df_in_flame["cording_status"], categories=["cds_exon","cds_edge_exon","utr_exon"], ordered=True)
+df_in_frame["Category"] = pd.Categorical(df_in_frame["Category"], categories=["constitutive_exon", "unique_alternative_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
+df_in_frame["cording_status"] = pd.Categorical(df_in_frame["cording_status"], categories=["cds_exon","cds_edge_exon","utr_exon"], ordered=True)
 
-df_in_flame["label"] = df_in_flame.apply(
+df_in_frame["label"] = df_in_frame.apply(
     lambda row: f"({int(row['ExonCount'])})", axis=1
 )
-exon_counts_df = df_in_flame[df_in_flame["cording_status"].isin(["cds_exon","utr_exon","cds_edge_exon"])]
+exon_counts_df = df_in_frame[df_in_frame["cording_status"].isin(["cds_exon","utr_exon","cds_edge_exon"])]
 
 for df in [exon_counts_df]:
     plot = (
-        ggplot(df, aes(x="Category", y="InFlameRatio", fill="cording_status")) +
+        ggplot(df, aes(x="Category", y="InframeRatio", fill="cording_status")) +
         geom_bar(stat="identity", position="dodge") +
         geom_text(
             aes(label="label"),
@@ -291,7 +241,7 @@ for df in [exon_counts_df]:
             size=11,
             color="black"
         ) +
-        labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
+        labs(title="Percentage of in-frame exon in splicing categories", x="Exon Category", y="percentage of in-frame exon (%)") +
         coord_cartesian(ylim=(0, 100)) +
         scale_fill_manual(values={
             "cds_exon": "#56B4E9", #blue
@@ -302,97 +252,74 @@ for df in [exon_counts_df]:
             axis_text_x=element_text(rotation=90, hjust=0.5, size=15),
             axis_title_y=element_text(size=15),
             legend_title=element_text(size=15),
-            legend_text=element_text(size=12),
+            legend_text=element_text(size=15),
             figure_size=(17,10)
         )
     )
-    display(plot)
-
-# %%
-# coding列が "coding" または "non-coding" の場合の in-flame割合を計算し棒グラフ化
-
-def calc_in_flame_ratio(df):
-    if len(df) == 0:
-        return 0.0
-    return (df["flame"] == "in-flame").sum() / len(df)
-
-# 対象リスト
-exon_sets = [
-    ("internal_unique_alternative_exon", internal_unique_exon),
-    ("first_unique_alternative_exon", first_unique_exon),
-    ("last_unique_alternative_exon", last_unique_exon),
-    ("internal_alternative_exon", internal_skipped_exon),
-    ("first_alternative_exon", first_skipped_exon),
-    ("last_alternative_exon", last_skipped_exon),
-    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
-    ("first_a5ss_long_exon", first_a5ss_long_exon),
-    ("last_a5ss_long_exon", last_a5ss_long_exon),
-    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
-    ("first_a3ss_long_exon", first_a3ss_long_exon),
-    ("last_a3ss_long_exon", last_a3ss_long_exon),
-]
-
-# 結果格納用
-results = []
-for name, df in exon_sets:
-    for coding_status in ["coding", "non-coding"]:
-        sub = df[df["coding"] == coding_status]
-        ratio = calc_in_flame_ratio(sub)
-        results.append({"Category": name, "Coding": coding_status, "InFlameRatio": ratio * 100})
-
-df_in_flame = pd.DataFrame(results)
-
-# 棒グラフ
-plot = (
-    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio", fill="Coding")) +
-    geom_bar(stat="identity", position="dodge") +
-    geom_text(
-        aes(label="InFlameRatio.round(1).astype(str) + '%'"),
-        position=position_dodge(width=0.9),
-        va="bottom",
-        size=9,
-        color="black"
-    ) +
-    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(12,5))
-)
-plot.save("../data/in_flame_ratio.png", dpi=600)
 display(plot)
 
+plot.save("../data/exon_inframe_ratio_by_coding_status.png", dpi=600)
+
+
 # %%
-# 各項目のin-flame割合をまとめる
-in_flame_ratios = {
-    "internal_unique_exon": calc_in_flame_ratio(internal_unique_exon),
-    "first_unique_exon": calc_in_flame_ratio(first_unique_exon),
-    "last_unique_exon": calc_in_flame_ratio(last_unique_exon),
-    "internal_skipped_exon": calc_in_flame_ratio(internal_skipped_exon),
-    "first_skipped_exon": calc_in_flame_ratio(first_skipped_exon),
-    "last_skipped_exon": calc_in_flame_ratio(last_skipped_exon),
-    "internal_a5ss_long_exon": calc_in_flame_ratio(internal_a5ss_long_exon),
-    "first_a5ss_long_exon": calc_in_flame_ratio(first_a5ss_long_exon),
-    "last_a5ss_long_exon": calc_in_flame_ratio(last_a5ss_long_exon),
-    "internal_a3ss_long_exon": calc_in_flame_ratio(internal_a3ss_long_exon),
-    "first_a3ss_long_exon": calc_in_flame_ratio(first_a3ss_long_exon),
-    "last_a3ss_long_exon": calc_in_flame_ratio(last_a3ss_long_exon),
-}
+def summarize_coding_vs_noncoding_with_upstream(df: pd.DataFrame):
+    """
+    CDS alternative exon の out-frame のみ抽出し、
+    coding / non-coding inclusion と upstream_alternative を同時に保持した pivot を作る
+    """
+    # explode して exon 単位に展開
+    df_exp = df.explode(["exons", "exontype", "cds_info","frame", "upstream_alternative"]).reset_index(drop=True)
+    df_exp = df_exp[["geneName", "chrom", "exons", "coding", "cds_info", "frame", "exontype","upstream_alternative"]]
+    # exonsでgroupby して、cds_info を集約
+    df_exp["cds_info_contains_cds_exon"] = df_exp.groupby(["geneName", "exons"])["cds_info"].transform(lambda x: x.str.contains("cds_exon").any())
+    # CDS exon かつ alternative exon & out-frame のみ抽出
+    df_alt_cds = df_exp[
+        (df_exp["cds_info_contains_cds_exon"]) &
+        (df_exp["exontype"].isin(["alternative", "unique-alternative"])) &
+        (df_exp["frame"] == "out-frame")
+    ]
 
-# データフレーム化
-df_in_flame = pd.DataFrame({
-    "Category": list(in_flame_ratios.keys()),
-    "InFlameRatio": [v * 100 for v in in_flame_ratios.values()]
-})
+    # coding / non-coding inclusion 集計
+    coding_summary = (
+        df_alt_cds.groupby(["geneName", "chrom", "exons", "coding", "upstream_alternative"])
+        .size()
+        .reset_index(name="count")
+    )
+    print(coding_summary["coding"].value_counts())
 
-# 棒グラフ
-plot = (
-    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio")) +
-    geom_bar(stat="identity", fill="#56B4E9") +
-    geom_text(aes(label="InFlameRatio.round(2).astype(str) + '%'"), va="bottom", size=9, color="black") +
-    labs(title="Percentage of in-flame Exons", x="Exon Category", y="Percentage of in-flame exons (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(10,5))
-)
-display(plot)
+    # pivot
+    pivot = coding_summary.pivot_table(
+        index=["geneName", "chrom","exons", "upstream_alternative"],
+        columns="coding",
+        values="count",
+        fill_value=0
+    ).reset_index()
+
+    pivot.columns.name = None
+
+    # 列名統一
+    cols = pivot.columns.tolist()
+    if "coding" in cols:
+        pivot = pivot.rename(columns={"coding": "coding_count"})
+    if "non-coding" in cols:
+        pivot = pivot.rename(columns={"non-coding": "noncoding_count"})
+
+    # フラグ追加
+    pivot["only_in_coding"] = (pivot.get("coding", pivot.get("coding_count", 0)) > 0) & \
+                              (pivot.get("non-coding", pivot.get("noncoding_count", 0)) == 0)
+    pivot["only_in_noncoding"] = (pivot.get("coding", pivot.get("coding_count", 0)) == 0) & \
+                                 (pivot.get("non-coding", pivot.get("noncoding_count", 0)) > 0)
+
+    return pivot
+# 使用例
+pivot = summarize_coding_vs_noncoding_with_upstream(data)
+print(pivot.head())
+print(len(pivot))
+print(len(pivot[(pivot["upstream_alternative"] == True) & (pivot["only_in_coding"] == True)]))
+print(len(pivot[(pivot["upstream_alternative"] == True) & (pivot["only_in_noncoding"] == True)]))
+print(len(pivot[(pivot["upstream_alternative"] == False) & (pivot["only_in_coding"] == True)]))
+print(len(pivot[(pivot["upstream_alternative"] == False) & (pivot["only_in_noncoding"] == True)]))
+print(len(pivot[(pivot["upstream_alternative"] == False) & (pivot["only_in_coding"] == False) & (pivot["only_in_noncoding"] == False)]))
 
 # %%
 def count_genes_by_exon_type(data, exon_conditions):
