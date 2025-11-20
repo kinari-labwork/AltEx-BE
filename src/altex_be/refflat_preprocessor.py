@@ -285,14 +285,15 @@ def flag_upstream_artificial_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     def mark_row(row):
         strand = row["strand"]
-        last_pos = row["last_first_exon_start"]
+        last_first_pos = row["last_first_exon_start"]
+        first_last_pos = row["first_last_exon_end"]
 
         flags = []
         for (start, end) in row["exons"]:
             if strand == "+":
-                flags.append(start < last_pos)
+                flags.append((start < last_first_pos) or (start > first_last_pos))
             else:
-                flags.append(end > last_pos)
+                flags.append((end > first_last_pos) or (end < last_first_pos))
         return flags
 
     refflat["upstream_alternative"] = refflat.apply(mark_row, axis=1)
