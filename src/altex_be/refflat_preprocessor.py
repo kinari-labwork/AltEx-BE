@@ -268,11 +268,14 @@ def add_last_first_exon_position(refflat: pd.DataFrame) -> pd.DataFrame:
         # + strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最初のエキソンのstartの最大値
         if group["strand"].iloc[0] == "+": # 同じ遺伝子なら基本的にstrandは同じはず
             group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[0][0]).max()
+            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
         # - strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最後のエキソンのendの最小値
         else:
             group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
+            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[0][0]).max()
 
         refflat.loc[group.index, "last_first_exon_start"] = group["last_first_exon_start"]
+        refflat.loc[group.index, "first_last_exon_end"] = group["first_last_exon_end"]
 
     return refflat
 
