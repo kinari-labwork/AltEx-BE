@@ -296,7 +296,7 @@ def flag_upstream_artificial_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
                 flags.append((end > first_last_pos) or (end < last_first_pos))
         return flags
 
-    refflat["upstream_alternative"] = refflat.apply(mark_row, axis=1)
+    refflat["structural_alternative"] = refflat.apply(mark_row, axis=1)
     return refflat
 
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_flag: bool) -> pd.DataFrame:
