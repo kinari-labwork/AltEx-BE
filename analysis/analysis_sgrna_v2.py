@@ -83,7 +83,7 @@ def create_df_for_plotting(assembly_input_dir, base_editors):
     return plot_data
 
 # %%
-assembly_list = ["hg38", "mm39", "rn6", "danRer11"]
+assembly_list = ["hg38", "mm39", "rn7", "danRer11"]
 base_editors = ["target_aid_ngg", "be4max_ngg", "abe8e_ngg", "target_aid_ng", "be4max_ng", "abe8e_ng"]
 
 # %%
@@ -211,7 +211,7 @@ plot = (
         values={
             "hg38": "#56B4E9",  # 青
             "mm39": "#E69F00",  # オレンジ
-            "rn6": "#009E73",   # 緑
+            "rn7": "#009E73",   # 緑
             "danRer11": "#CC79A7"  # ピンク
         }
     ) +
@@ -221,7 +221,7 @@ plot = (
             "  ",
             "mm39-target aid ngg", "mm39-target aid ng", "mm39-be4max ngg", "mm39-be4max ng", "mm39-abe8e ngg", "mm39-abe8e ng",
             "   ",
-            "rn6-target aid ngg", "rn6-target aid ng", "rn6-be4max ngg", "rn6-be4max ng", "rn6-abe8e ngg", "rn6-abe8e ng",
+            "rn7-target aid ngg", "rn7-target aid ng", "rn7-be4max ngg", "rn7-be4max ng", "rn7-abe8e ngg", "rn7-abe8e ng",
             "    ",
             "danRer11-target aid ngg", "danRer11-target aid ng", "danRer11-be4max ngg", "danRer11-be4max ng", "danRer11-abe8e ngg", "danRer11-abe8e ng"
         ],
@@ -239,12 +239,12 @@ plot = (
             "mm39-be4max ng": "BE4max NG",
             "mm39-abe8e ngg": "ABE8e NGG",
             "mm39-abe8e ng": "ABE8e NG",
-            "rn6-target aid ngg": "Target-AID NGG",
-            "rn6-target aid ng": "Target-AID NG",
-            "rn6-be4max ngg": "BE4max NGG",
-            "rn6-be4max ng": "BE4max NG",
-            "rn6-abe8e ngg": "ABE8e NGG",
-            "rn6-abe8e ng": "ABE8e NG",
+            "rn7-target aid ngg": "Target-AID NGG",
+            "rn7-target aid ng": "Target-AID NG",
+            "rn7-be4max ngg": "BE4max NGG",
+            "rn7-be4max ng": "BE4max NG",
+            "rn7-abe8e ngg": "ABE8e NGG",
+            "rn7-abe8e ng": "ABE8e NG",
             "danRer11-target aid ngg": "Target-AID NGG",
             "danRer11-target aid ng": "Target-AID NG",
             "danRer11-be4max ngg": "BE4max NGG",

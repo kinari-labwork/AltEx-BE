@@ -6,7 +6,7 @@ from altex_be.class_def.base_editors import PRESET_BASE_EDITORS
 assembly_names = [
     "hg38", # human
     "mm39", # mouse
-    "rn6",  # rat
+    "rn7",  # rat
     "danRer11" # zebrafish
 ]
 
