@@ -119,11 +119,12 @@ plot = (
     labs(
         title=f"Designable exons in mm39 across Base Editors and Splicing events",
         x="Exon Category",
-        y="Percentage of Designable Exons (%)",
+        y="% of Designable Exons",
         fill="Base Editor"
     ) +
     theme(
         axis_text_x=element_text(size=10, rotation=90, hjust=0.5),
+        axis_title_y=element_text(size=14),
         figure_size=(8, 6),
     ) +
     scale_fill_manual(
@@ -179,6 +180,7 @@ plot = (
     )
 )
 display(plot)
+plot.save(filename="../data/mm39/designable_exons_base_editors_splicing_events_mm39.png", dpi=300)
 
 # %%
 ## アセンブリごとに、デザイン可能なすべてのエキソンを足す
@@ -200,11 +202,12 @@ plot = (
     labs(
         title=f"Designable alternative-spliced exons across species and Base Editors",
         x="Exon Category",
-        y="Percentage of Designable Exons (%)",
+        y="% of Designable Exons",
         fill="Assembly"
     ) +
     theme(
         axis_text_x=element_text(size=11, rotation=90, hjust=0.5),
+        axis_title_y=element_text(size=14),
         figure_size=(8, 6),
     ) +
     scale_fill_manual(
