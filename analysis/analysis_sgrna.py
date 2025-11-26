@@ -13,9 +13,6 @@ P = print
 data = pd.read_pickle("../data/target_exons_with_sgrna.pkl")
 
 # %%
-data = data.drop(columns=["name","score"])
-
-# %%
 print(data.columns)
 
 # %%
@@ -40,7 +37,7 @@ print(designable_exons.head())
 print("Matching columns:", matching_columns)
 
 # %%
-internal_exons_editable_both_sasd = data[(data["exon_position"] == "internal") & (data["exontype"].isin(["skipped", "unique"]))]
+internal_exons_editable_both_sasd = data[(data["exon_position"] == "internal") & (data["exontype"].isin(["alternative", "unique-alternative"]))]
 designable_internal_exons_editable_both_sasd = internal_exons_editable_both_sasd[
     internal_exons_editable_both_sasd[matching_columns].apply(
         lambda row: any(isinstance(x, list) and len(x) > 0 for x in row), axis=1
@@ -62,7 +59,7 @@ print(len(designable_internal_exons_editable_only_sasd))
 print(f'{len(designable_internal_exons_editable_only_sasd) / len(internal_exons_editable_only_sasd) * 100} % of exons are designable')
 
 # %%
-first_exon_editable_sd = data[(data["exon_position"] == "first") & (data["exontype"].isin(["a5ss-long", "skipped", "unique"]))]
+first_exon_editable_sd = data[(data["exon_position"] == "first") & (data["exontype"].isin(["a5ss-long", "alternative", "unique-alternative"]))]
 designable_first_exon_editable_sd = first_exon_editable_sd[
     first_exon_editable_sd[matching_columns].apply(
         lambda row: any(isinstance(x, list) and len(x) > 0 for x in row), axis=1
@@ -73,7 +70,7 @@ print(len(designable_first_exon_editable_sd))
 print(f'{len(designable_first_exon_editable_sd) / len(first_exon_editable_sd) * 100} % of exons are designable')
 
 # %%
-last_exon_editable_sa = data[(data["exon_position"] == "last") & (data["exontype"].isin(["a3ss-long", "skipped", "unique"]))]
+last_exon_editable_sa = data[(data["exon_position"] == "last") & (data["exontype"].isin(["a3ss-long", "alternative", "unique-alternative"]))]
 designable_last_exon_editable_sa = last_exon_editable_sa[
     last_exon_editable_sa[matching_columns].apply(
         lambda row: any(isinstance(x, list) and len(x) > 0 for x in row), axis=1

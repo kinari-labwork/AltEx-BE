@@ -3,7 +3,7 @@ import pandas as pd
 from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
     annotate_cording_information,
-    annotate_flame_information,
+    annotate_frame_information,
     annotate_variant_count,
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
@@ -131,16 +131,16 @@ def test_cording_information_annotator():
     pd.testing.assert_frame_equal(output_data_gtf, expected_output)
 
 
-def test_flame_information_annotator():
-    # exonの長さに基づいて、in-flame(mod3=0)かout-flame(mod3=1.2)かを判定する
+def test_frame_information_annotator():
+    # exonの長さに基づいて、in-frame(mod3=0)かout-frame(mod3=1.2)かを判定する
     input_data = pd.DataFrame({"exonlengths": [[120, 200], [150, 250, 300]]})
     expected_output = pd.DataFrame(
         {
             "exonlengths": [[120, 200], [150, 250, 300]],
-            "flame": [["in-flame", "out-flame"], ["in-flame", "out-flame", "in-flame"]],
+            "frame": [["in-frame", "out-frame"], ["in-frame", "out-frame", "in-frame"]],
         }
     )
-    output_data = annotate_flame_information(input_data)
+    output_data = annotate_frame_information(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 

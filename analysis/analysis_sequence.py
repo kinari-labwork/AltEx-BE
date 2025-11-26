@@ -58,10 +58,10 @@ print("Percentage of target exons with AG or ag acceptor sequence:", (is_AG | is
 print("Percentage of target exons with GT or gt donor sequence:", (is_GT | is_gt).sum() / target_donor_regions.sum() * 100)
 
 # %%
-is_AG_plus = data.loc[internal_plus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_plus = data.loc[internal_plus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_plus = data.loc[internal_plus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_plus = data.loc[internal_plus_exons, "donor_sequence"].str[25:27] == "gt"
+is_AG_plus = data.loc[internal_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_plus = data.loc[internal_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_plus = data.loc[internal_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_plus = data.loc[internal_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 
 print("\n--- internal plus exons ---\n")
 print("Number of internal plus exons:", internal_plus_exons.sum())
@@ -75,11 +75,10 @@ print("Percentage of internal plus exons with AG acceptor sequence:", (is_AG_plu
 print("Percentage of internal plus exons with GT donor sequence:", (is_GT_plus | is_gt_plus).sum() / internal_plus_exons.sum() * 100)
 
 # %%
-is_AG_minus = data.loc[internal_minus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_minus = data.loc[internal_minus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_minus = data.loc[internal_minus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_minus = data.loc[internal_minus_exons, "donor_sequence"].str[25:27] == "gt"
-
+is_AG_minus = data.loc[internal_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_minus = data.loc[internal_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_minus = data.loc[internal_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_minus = data.loc[internal_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 print("\n--- Internal Minus Exons ---\n")
 print("Number of internal minus exons:", internal_minus_exons.sum())
 print("Number of internal minus exons with AG acceptor sequence:", is_AG_minus.sum())
@@ -92,11 +91,10 @@ print("Percentage of internal minus exons with AG acceptor sequence:", (is_AG_mi
 print("Percentage of internal minus exons with GT donor sequence:", (is_GT_minus | is_gt_minus).sum() / internal_minus_exons.sum() * 100)
 
 # %%
-is_AG_plus = data.loc[first_plus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_plus = data.loc[first_plus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_plus = data.loc[first_plus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_plus = data.loc[first_plus_exons, "donor_sequence"].str[25:27] == "gt"
-
+is_AG_plus = data.loc[first_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_plus = data.loc[first_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_plus = data.loc[first_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_plus = data.loc[first_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 print("\n--- first plus exons ---\n")
 print("Number of first plus exons:", first_plus_exons.sum())
 print("Number of first plus exons with AG acceptor sequence:", is_AG_plus.sum())
@@ -126,10 +124,10 @@ print("Percentage of first minus exons with AG acceptor sequence:", (is_AG_minus
 print("Percentage of first minus exons with GT donor sequence:", (is_GT_minus | is_gt_minus).sum() / first_minus_exons.sum() * 100)
 
 # %%
-is_AG_plus = data.loc[last_plus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_plus = data.loc[last_plus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_plus = data.loc[last_plus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_plus = data.loc[last_plus_exons, "donor_sequence"].str[25:27] == "gt"
+is_AG_plus = data.loc[last_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_plus = data.loc[last_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_plus = data.loc[last_plus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_plus = data.loc[last_plus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 print("\n--- last plus exons ---\n")
 print("Number of last plus exons:", last_plus_exons.sum())
 print("Number of last plus exons with AG acceptor sequence:", is_AG_plus.sum())
@@ -143,10 +141,10 @@ print("Percentage of last plus exons with GT donor sequence:", (is_GT_plus | is_
 
 
 # %%
-is_AG_minus = data.loc[last_minus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_minus = data.loc[last_minus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_minus = data.loc[last_minus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_minus = data.loc[last_minus_exons, "donor_sequence"].str[25:27] == "gt"
+is_AG_minus = data.loc[last_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_minus = data.loc[last_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_minus = data.loc[last_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_minus = data.loc[last_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 print("\n--- last minus exons ---\n")
 print("Number of last minus exons:", last_minus_exons.sum())
 print("Number of last minus exons with AG acceptor sequence:", is_AG_minus.sum())
@@ -160,9 +158,9 @@ print("Percentage of last minus exons with GT donor sequence:", (is_GT_minus | i
 
 # %%
 # 配列データを取得
-internal_exons = data.loc[internal_exons,"acceptor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
-first_exons = data.loc[first_exons, "acceptor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
-last_exons = data.loc[last_exons, "acceptor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+internal_exons = data.loc[internal_exons,"acceptor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+first_exons = data.loc[first_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+last_exons = data.loc[last_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
 
 seq_list = [internal_exons, first_exons, last_exons]
 
@@ -186,11 +184,11 @@ for i, seq in enumerate(seq_list):
 # %%
 # 配列データを取得
 internal_exons = (data["exon_position"] == "internal") & (data["strand"].isin(["+", "-"]))
-internal_exons = data.loc[internal_exons,"donor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+internal_exons = data.loc[internal_exons,"donor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
 first_exons = (data["exon_position"] == "first") & (data["strand"].isin(["+", "-"]))
-first_exons = data.loc[first_exons, "donor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+first_exons = data.loc[first_exons, "donor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
 last_exons = (data["exon_position"] == "last") & (data["strand"].isin(["+", "-"]))
-last_exons = data.loc[last_exons, "donor_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
+last_exons = data.loc[last_exons, "donor_exon_intron_boundary_±25bp_sequence"].dropna().str.upper()  # 欠損値を除去し、大文字に変換
 
 seq_list = [internal_exons, first_exons, last_exons]
 
@@ -212,3 +210,5 @@ for i, seq in enumerate(seq_list):
     plt.show()
 
 
+
+# %%

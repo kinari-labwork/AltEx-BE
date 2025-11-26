@@ -26,7 +26,7 @@ class TestClassifyExonType:
     def test_cassette_exact(self):
         # (150, 200) は transcript1にだけ存在、他では flanking されている
         label = classify_splicing_event((150, 200), self.transcripts)
-        assert label == "skipped"
+        assert label == "alternative"
 
     def test_alt_3ss_short(self):
         # (150, 200) が存在し、(155,200)はstartがずれている。 しかし、end を共有する(150,200)のほうが長いため a3ss-short を拾いたい
@@ -55,7 +55,7 @@ class TestClassifyExonType:
     def test_unique(self):
         # (180, 220) はどこにも含まれない
         label = classify_splicing_event((110, 120), self.transcripts)
-        assert label == "unique"
+        assert label == "unique-alternative"
 
     def test_overlap(self):
         # (151, 199)は(150,200)とオーバーラップしている
@@ -131,9 +131,9 @@ def test_classify_exons_per_gene():
                 ],  # gene2のtranscript2 (250,350のa5ssが生じている)
             ],
             "exontype": [
-                ["constitutive", "skipped", "constitutive"],
+                ["constitutive", "alternative", "constitutive"],
                 ["constitutive", "constitutive"],
-                ["constitutive", "unique", "skipped", "constitutive"],
+                ["constitutive", "unique-alternative", "alternative", "constitutive"],
                 ["constitutive", "a5ss-short"],
                 ["constitutive", "a5ss-long"],
             ],
@@ -149,9 +149,9 @@ def test_flip_a3ss_a5ss_in_minus_strand():
         {
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "skipped", "a5ss-long"],
+                ["constitutive", "alternative", "a5ss-long"],
                 ["constitutive", "overlap", "a3ss-short"],
-                ["constitutive", "unique", "a5ss-short"],
+                ["constitutive", "unique-alternative", "a5ss-short"],
                 ["constitutive", "cassette", "a3ss-long"],
             ],
         }
@@ -160,9 +160,9 @@ def test_flip_a3ss_a5ss_in_minus_strand():
         {
             "strand": ["+", "+", "-", "-"],
             "exontype": [
-                ["constitutive", "skipped", "a5ss-long"],  # plus strandは変化なし
+                ["constitutive", "alternative", "a5ss-long"],  # plus strandは変化なし
                 ["constitutive", "overlap", "a3ss-short"],
-                ["constitutive","unique","a3ss-short",],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
+                ["constitutive","unique-alternative","a3ss-short",],  # minus strandでだけ、a3ssとa5ssが入れ替わっている
                 ["constitutive", "cassette", "a5ss-long"],
             ],
         }

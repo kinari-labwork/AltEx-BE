@@ -29,7 +29,7 @@ def prepare_melted_df(target_exon_with_sgrna_df: pd.DataFrame) -> pd.DataFrame:
         "strand",
         "exonlengths",
         "coding",
-        "flame",
+        "frame",
         "exontype",
         "exon_position",
         "cds_info",

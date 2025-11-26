@@ -27,6 +27,9 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
             logging.info(f"Gene {gene} is found in refFlat.")
     
     refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
+    # ごくまれに存在する、exonのスタートが0のものを除外する
+    # exonStarts を文字列のまま扱い、0 が含まれているかを確認
+    refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
     return refFlat
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
@@ -156,7 +159,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
     return refflat
 
 
-def annotate_flame_information(refflat: pd.DataFrame) -> pd.DataFrame:
+def annotate_frame_information(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、フレーム情報を追加する。
@@ -166,11 +169,11 @@ def annotate_flame_information(refflat: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame, フレーム情報を追加したrefFlatのデータフレーム
     """
 
-    # exonlengths列（リスト）に対してmod3を計算し、0ならin-flame, それ以外はout-flame
-    def calc_flame(lengths):
-        return ["in-flame" if length % 3 == 0 else "out-flame" for length in lengths]
+    # exonlengths列（リスト）に対してmod3を計算し、0ならin-frame, それ以外はout-frame
+    def calc_frame(lengths):
+        return ["in-frame" if length % 3 == 0 else "out-frame" for length in lengths]
 
-    refflat["flame"] = refflat["exonlengths"].apply(calc_flame)
+    refflat["frame"] = refflat["exonlengths"].apply(calc_frame)
     return refflat
 
 
@@ -256,6 +259,46 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     return refflat
 
+def add_last_first_exon_position(refflat: pd.DataFrame) -> pd.DataFrame:
+    """
+    遺伝子ごとに、各転写物の最初のエキソンの中で、最も3'側に位置するエキソンのstartをlast_exon_start列に追加する
+    """
+    # exons 列はすでに(start, end)のタプルのリストになっていることを前提とする
+    for gene, group in refflat.groupby("geneName"):
+        # + strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最初のエキソンのstartの最大値
+        if group["strand"].iloc[0] == "+": # 同じ遺伝子なら基本的にstrandは同じはず
+            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[0][0]).max()
+            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
+        # - strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最後のエキソンのendの最小値
+        else:
+            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
+            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[0][0]).max()
+
+        refflat.loc[group.index, "last_first_exon_start"] = group["last_first_exon_start"]
+        refflat.loc[group.index, "first_last_exon_end"] = group["first_last_exon_end"]
+
+    return refflat
+
+def flag_upstream_artificial_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
+    """
+    各 exon が構造上 alternative になっているだけかどうかを判定する。
+    """
+    def mark_row(row):
+        strand = row["strand"]
+        last_first_pos = row["last_first_exon_start"]
+        first_last_pos = row["first_last_exon_end"]
+
+        flags = []
+        for (start, end) in row["exons"]:
+            if strand == "+":
+                flags.append((start < last_first_pos) or (start > first_last_pos))
+            else:
+                flags.append((end > first_last_pos) or (end < last_first_pos))
+        return flags
+
+    refflat["structural_alternative"] = refflat.apply(mark_row, axis=1)
+    return refflat
+
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_flag: bool) -> pd.DataFrame:
     """
     このモジュールの関数をwrapした関数
@@ -267,7 +310,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_fla
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
     refflat = annotate_cording_information(refflat, gtf_flag)
-    refflat = annotate_flame_information(refflat)
+    refflat = annotate_frame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)
 

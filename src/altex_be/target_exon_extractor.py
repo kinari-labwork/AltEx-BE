@@ -7,15 +7,15 @@ from . import logging_config # noqa: F401
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: str = "all") -> pd.DataFrame:
-    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "flame"])
+    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "frame"])
     classified_refflat["cds_info"] = classified_refflat["cds_info"].apply(lambda x: set(x))  # set型に変換
     classified_refflat = classified_refflat.drop(columns = ["exons"])
     classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
         int
     )  # int型に変換
-    # exontypeがskippedまたはuniqueのエキソンだけを抽出
+    # exontypeがalternativeまたはunique-alternativeのエキソンだけを抽出
     if target_exon == "alternative_exons":
-        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long"))]
+        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("alternative", "unique-alternative","a3ss-long","a5ss-long"))]
     elif target_exon == "all":
         # exon数が2以下かつ、すべてのエキソンがconstitutiveである遺伝子は、スプライシング操作をしても意味がないため除外する
         def filter_genes(group):
@@ -25,7 +25,7 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: st
                 return False
             return True
         classified_refflat = classified_refflat.groupby('geneName').filter(filter_genes)
-        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("skipped", "unique","a3ss-long","a5ss-long","constitutive"))]
+        classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("alternative", "unique-alternative","a3ss-long","a5ss-long","constitutive"))]
     # 重複を削除し一方だけ残す
     classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
     classified_refflat['uuid'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
@@ -62,7 +62,7 @@ def format_classified_refflat_to_bed(exploded_classified_refflat: pd.DataFrame) 
 def extract_splice_acceptor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
     """
     Purpose :
-        抜き出したskipped or unique exonのexonStart/Endから、SA部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
+        抜き出したexonのexonStart/Endから、SA部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonStartがSplice Acceptor, -の時はその逆でexonEndがSAになる
     """
     splice_acceptor_single_exon_df = target_exon_df.copy()
@@ -84,7 +84,7 @@ def extract_splice_acceptor_regions(target_exon_df: pd.DataFrame, window: int) -
 def extract_splice_donor_regions(target_exon_df: pd.DataFrame, window: int) -> pd.DataFrame:
     """
     Purpose :
-        抜き出したskipped or unique exonのexonStart/Endから、SD部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
+        抜き出したexonのexonStart/Endから、SD部位周辺の、windowで指定した幅の座位を示すDataFrameを作成する
         strandが+の時はexonEndがSplice Donor, -の時はその逆でexonStartがSDになる
     """
     splice_donor_single_exon_df = target_exon_df.copy()

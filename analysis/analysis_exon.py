@@ -7,11 +7,11 @@ from plotnine import*
 
 # %%
 pd.set_option('display.width', 200) 
-pd.set_option('display.max_columns', 20)
+pd.set_option('display.max_columns', 1000)
 pd.set_option('display.max_rows', 1000)
 
 # %%
-data = pd.read_pickle('../data/classified_exon_refflat.pkl')
+data = pd.read_pickle('../data/mm39/classified_refflat_all_genes.pkl')
 print(data.head())
 print(data.shape)
 
@@ -66,75 +66,25 @@ data = add_variant_count(data)
 print(data.columns)
 
 # %%
-maxcount = data.groupby("geneName")["max_exon_count"].first().values
-mincount = data.groupby("geneName")["min_exon_count"].first().values
-ange_exon_counts = maxcount - mincount
-
-plt.figure(figsize= (8,5))
-sns.histplot(maxcount, bins=50, kde=False, color="skyblue")
-plt.xlabel("Number of maximum exons per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Maximum Exon Counts per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize= (8,5))
-sns.histplot(data["min_exon_count"], bins=50, kde=False, color="#D55E00")
-plt.xlabel("Number of minimum exons per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Minimum Exon Counts per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-range_exon_counts = data.groupby("geneName")["exonCount"].apply(lambda x: max(x) - min(x)).values
-
-plt.figure(figsize=(8, 5))
-sns.histplot(range_exon_counts, bins=50, kde=False, color="lightgreen")
-plt.xlabel("Range of Exon Counts per Gene")
-plt.ylabel("Number of Genes")
-plt.title("Distribution of Exon Count Range per Gene")
-plt.grid(True)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-
-# %% [markdown]
-# - エキソン数がtop5の遺伝子の中身を確認する
-
-# %%
-top_5_exon_counts = data.nlargest(5, "max_exon_count")
-print(top_5_exon_counts)
-
-# %% [markdown]
-# - 最大エキソン数 vs バリアント数の散布図を作成するためのdfを作成
-
-# %% [markdown]
-# - skipped exon, unique exon, a3ss, a5ss, overlapを持つ遺伝子の数を計算
-
-# %%
 total_genes = data["geneName"].nunique()
 print(f"全遺伝子数: {total_genes}")
 
 # （skipped exon）を持つ遺伝子の数をカウント
-genes_have_skipped_exon = data[data["exontype"].apply(lambda x: "skipped" in x)]["geneName"].unique()
+genes_have_alternative_exon = data[data["exontype"].apply(lambda x: "alternative" in x)]["geneName"].unique()
 
-print(f"skipped exonを持つ遺伝子数: {len(genes_have_skipped_exon)}")
-print(f"skipped exonを持たない遺伝子数: {total_genes - len(genes_have_skipped_exon)}")
-print(f"skipped exonを持つ遺伝子の割合: {len(genes_have_skipped_exon) / total_genes:.2%}")
+print(f"alternative exonを持つ遺伝子数: {len(genes_have_alternative_exon)}")
+print(f"skipped exonを持たない遺伝子数: {total_genes - len(genes_have_alternative_exon)}")
+print(f"skipped exonを持つ遺伝子の割合: {len(genes_have_alternative_exon) / total_genes:.2%}")
 
 #  （unique exon）を持つ遺伝子の数をカウント
-genes_have_unique_exon = data[data["exontype"].apply(lambda x: "unique" in x)]["geneName"].unique()
-print(f"unique exonを持つ遺伝子数: {len(genes_have_unique_exon)}")
-print(f"unique exonを持たない遺伝子数: {total_genes - len(genes_have_unique_exon)}")
-print(f"unique exonを持つ遺伝子の割合: {len(genes_have_unique_exon) / total_genes:.2%}")
+genes_have_unique_exon = data[data["exontype"].apply(lambda x: "unique-alternative" in x)]["geneName"].unique()
+print(f"unique-alternative exonを持つ遺伝子数: {len(genes_have_unique_exon)}")
+print(f"unique-alternative exonを持たない遺伝子数: {total_genes - len(genes_have_unique_exon)}")
+print(f"unique-alternative exonを持つ遺伝子の割合: {len(genes_have_unique_exon) / total_genes:.2%}")
 
 # 少なくとも（skipped exon）と（unique exon）のいずれかを持つ遺伝子の数をカウント
 genes_have_skipped_or_unique_exon = data[
-    data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]["geneName"].unique()
+    data["exontype"].apply(lambda x: "alternative" in x or "unique-alternative" in x)]["geneName"].unique()
 print(f"skipped exonまたはunique exonを持つ遺伝子数: {len(genes_have_skipped_or_unique_exon)}")
 print(f"skipped exonとunique exonの両方を持たない遺伝子数: {total_genes - len(genes_have_skipped_or_unique_exon)}")
 print(f"skipped exonまたはunique exonを持つ遺伝子の割合: {len(genes_have_skipped_or_unique_exon) / total_genes:.2%}")
@@ -163,47 +113,12 @@ print(f"intron_retentionを持つ遺伝子数: {len(genes_have_intron_retention)
 print(f"intron_retentionを持たない遺伝子数: {total_genes - len(genes_have_intron_retention)}")
 print(f"intron_retentionを持つ遺伝子の割合: {len(genes_have_intron_retention) / total_genes:.2%}")
 
-
 # %%
-# CDS start, end を加味して、exonにutr_exon, cds_edge_exonを追加する
-def annotate_utr_and_cds_exons(data):
-    """
-    各エキソンごとに 'cds_exon', 'cds_edge_exon', 'utr_exon' のラベルを付与し、cds_infoカラムに格納する。
-    """
-    def label_exons(row):
-        # non-coding遺伝子はすべてutr_exon
-        if row["coding"] == "non-coding":
-            return ["utr_exon" for _ in row["exons"]]
-        cds_start = row["cdsStart"]
-        cds_end = row["cdsEnd"]
-        exon_starts = row["exonStarts"]
-        exon_ends = row["exonEnds"]
-        labels = []
-        for start, end in zip(exon_starts, exon_ends):
-            if end <= cds_start or start >= cds_end:
-                label = "utr_exon"
-            elif (start < cds_start < end) and (start < cds_end < end):
-                label = "cds_edge_exon_start_end"
-            elif start < cds_start < end:
-                label = "cds_edge_exon_start"
-            elif start < cds_end < end:
-                label = "cds_edge_exon_end"
-            else:
-                label = "cds_exon"
-            labels.append(label)
-        return labels
-
-    data["cds_info"] = data.apply(label_exons, axis=1)
-    return data
-
-
-# %%
-data = annotate_utr_and_cds_exons(data)
 print(data.head(2))
 
 # %%
-data2 = data[["geneName","exontype", "chrom", "exons", "coding","exonlengths", "flame", "exon_position", "cds_info"]]
-exon_df = data2.explode(["exontype", "exons", "flame", "exonlengths", "exon_position", "cds_info"])
+data2 = data[["geneName","exontype", "chrom", "exons", "coding","exonlengths", "frame", "exon_position", "cds_info"]]
+exon_df = data2.explode(["exontype", "exons", "frame", "exonlengths", "exon_position", "cds_info"])
 exon_df = exon_df.drop_duplicates(subset=["chrom","exons"])
 print(exon_df.head())
 
@@ -214,18 +129,18 @@ print(exon_df["coding"].value_counts())
 print(exon_df["cds_info"].value_counts())
 
 # %%
-target_exon = exon_df[exon_df["exontype"].isin(["skipped", "unique", "a5ss-long", "a3ss-long", "a5ss-short", "a3ss-short"])]
+target_exon = exon_df[exon_df["exontype"].isin(["alternative", "unique-alternative", "a5ss-long", "a3ss-long", "a5ss-short", "a3ss-short"])]
 internal_target_exon = target_exon[target_exon["exon_position"] == "internal"]
 first_target_exon = target_exon[target_exon["exon_position"] == "first"]
 last_target_exon = target_exon[target_exon["exon_position"] == "last"]
 
-internal_unique_exon = internal_target_exon[internal_target_exon["exontype"] == "unique"]
-first_unique_exon = first_target_exon[first_target_exon["exontype"] == "unique"]
-last_unique_exon = last_target_exon[last_target_exon["exontype"] == "unique"]
+internal_unique_exon = internal_target_exon[internal_target_exon["exontype"] == "unique-alternative"]
+first_unique_exon = first_target_exon[first_target_exon["exontype"] == "unique-alternative"]
+last_unique_exon = last_target_exon[last_target_exon["exontype"] == "unique-alternative"]
 
-internal_skipped_exon = internal_target_exon[internal_target_exon["exontype"] == "skipped"]
-first_skipped_exon = first_target_exon[first_target_exon["exontype"] == "skipped"]
-last_skipped_exon = last_target_exon[last_target_exon["exontype"] == "skipped"]
+internal_skipped_exon = internal_target_exon[internal_target_exon["exontype"] == "alternative"]
+first_skipped_exon = first_target_exon[first_target_exon["exontype"] == "alternative"]
+last_skipped_exon = last_target_exon[last_target_exon["exontype"] == "alternative"]
 
 internal_a5ss_long_exon = internal_target_exon[internal_target_exon["exontype"] == "a5ss-long"]
 first_a5ss_long_exon = first_target_exon[first_target_exon["exontype"] == "a5ss-long"]
@@ -246,32 +161,31 @@ last_a3ss_short_exon = last_target_exon[last_target_exon["exontype"] == "a3ss-sh
 print(internal_skipped_exon["cds_info"].value_counts())
 
 # %%
-# cds_info のvalueごとに in-flame 割合を計算し棒グラフ化
-def calc_in_flame_ratio(df):
+alternative_exon = exon_df[exon_df["exontype"] == "alternative"]
+unique_alternative_exon = exon_df[exon_df["exontype"] == "unique-alternative"]
+alternative_or_unique_alternative_exon = exon_df[exon_df["exontype"].isin(["alternative", "unique-alternative"])]
+a5ss_long_exon = exon_df[exon_df["exontype"] == "a5ss-long"]
+a3ss_long_exon = exon_df[exon_df["exontype"] == "a3ss-long"]
+a5ss_short_exon = exon_df[exon_df["exontype"] == "a5ss-short"]
+a3ss_short_exon = exon_df[exon_df["exontype"] == "a3ss-short"]
+constitutive_exon = exon_df[exon_df["exontype"] == "constitutive"]
+
+
+# %%
+# cds_info のvalueごとに in-frame 割合を計算し棒グラフ化
+def calc_in_frame_ratio(df):
     if len(df) == 0:
         return 0.0
-    return (df["flame"] == "in-flame").sum() / len(df)
+    return (df["frame"] == "in-frame").sum() / len(df)
 
 # 対象リスト
 exon_sets = [
-    ("internal_unique_exon", internal_unique_exon),
-    ("first_unique_exon", first_unique_exon),
-    ("last_unique_exon", last_unique_exon),
-    ("internal_skipped_exon", internal_skipped_exon),
-    ("first_skipped_exon", first_skipped_exon),
-    ("last_skipped_exon", last_skipped_exon),
-    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
-    ("first_a5ss_long_exon", first_a5ss_long_exon),
-    ("last_a5ss_long_exon", last_a5ss_long_exon),
-    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
-    ("first_a3ss_long_exon", first_a3ss_long_exon),
-    ("last_a3ss_long_exon", last_a3ss_long_exon),
-    ("internal_a5ss_short_exon", internal_a5ss_short_exon),
-    ("first_a5ss_short_exon", first_a5ss_short_exon),
-    ("last_a5ss_short_exon", last_a5ss_short_exon),
-    ("internal_a3ss_short_exon", internal_a3ss_short_exon),
-    ("first_a3ss_short_exon", first_a3ss_short_exon),
-    ("last_a3ss_short_exon", last_a3ss_short_exon)
+    ("alternative_exon", alternative_or_unique_alternative_exon),
+    ("a5ss_long_exon", a5ss_long_exon),
+    ("a3ss_long_exon", a3ss_long_exon),
+    ("a5ss_short_exon", a5ss_short_exon),
+    ("a3ss_short_exon", a3ss_short_exon),
+    ("constitutive_exon", constitutive_exon)
 ]
 
 # 結果格納用
@@ -280,138 +194,199 @@ for name, df in exon_sets:
     # "cds_edge_exon_start_end", "cds_edge_exon_start", "cds_edge_exon_end" をまとめて "cds_edge_exon" に
     df = df.copy()
     df["cds_info_grouped"] = df["cds_info"].replace({
-        "cds_edge_exon_start_end": "cds_edge_exon",
-        "cds_edge_exon_start": "cds_edge_exon",
-        "cds_edge_exon_end": "cds_edge_exon"
+        "cds_edge_exon_start_end": "utr_containing_exon",
+        "cds_edge_exon_start": "utr_containing_exon",
+        "cds_edge_exon_end": "utr_containing_exon",
+        "utr_exon": "utr_containing_exon"
     })
-    for cds_status in ["cds_exon", "utr_exon", "cds_edge_exon"]:
+    for cds_status in ["cds_exon", "utr_containing_exon"]:
         sub = df[df["cds_info_grouped"] == cds_status]
         total_count = sub.shape[0]
-        in_flame_count = (sub["flame"] == "in-flame").sum()
-        out_flame_count = (sub["flame"] == "out-flame").sum()
-        ratio = calc_in_flame_ratio(sub)
+        in_frame_count = (sub["frame"] == "in-frame").sum()
+        out_frame_count = (sub["frame"] == "out-frame").sum()
+        ratio = calc_in_frame_ratio(sub)
         exon_count = sub.shape[0]
         results.append({
             "Category": name,
             "cording_status": cds_status,
             "total_exon_count": total_count,
-            "in_flame_count": in_flame_count,
-            "out_flame_count": out_flame_count,
-            "InFlameRatio": ratio * 100,
+            "in_frame_count": in_frame_count,
+            "out_frame_count": out_frame_count,
+            "InframeRatio": ratio * 100,
             "ExonCount": exon_count
         })
 
+df_in_frame = pd.DataFrame(results)
+print(df_in_frame)
 
-df_in_flame = pd.DataFrame(results)
-df_in_flame["label"] = df_in_flame.apply(
-    lambda row: f"{row['InFlameRatio']:.1f}%\n(n={int(row['ExonCount'])})", axis=1
+# カテゴリの順序を定義
+base_categories = ["alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"]
+full_categories = [f"{prefix}{cat}" for prefix in ["internal_", "first_", "last_"] for cat in base_categories]
+
+df_in_frame["Category"] = pd.Categorical(df_in_frame["Category"], categories=["alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
+df_in_frame = df_in_frame.dropna(subset=["Category"])
+df_in_frame["cording_status"] = pd.Categorical(df_in_frame["cording_status"], categories=["cds_exon","utr_containing_exon"], ordered=True)
+
+
+df_in_frame["label"] = df_in_frame.apply(
+    lambda row: f"({int(row['ExonCount'])})", axis=1
 )
-exon_counts_df = df_in_flame[df_in_flame["cording_status"].isin(["cds_exon","utr_exon","cds_edge_exon"])]
-internal_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("internal")]
-first_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("first")]
-last_exon_df = exon_counts_df[exon_counts_df["Category"].str.startswith("last")]
+exon_counts_df = df_in_frame[df_in_frame["cording_status"].isin(["cds_exon","utr_containing_exon"])]
 
-for df in [internal_exon_df, first_exon_df, last_exon_df]:
+for df in [exon_counts_df]:
     plot = (
-        ggplot(df, aes(x="Category", y="InFlameRatio", fill="cording_status")) +
+        ggplot(df, aes(x="Category", y="InframeRatio", fill="cording_status")) +
         geom_bar(stat="identity", position="dodge") +
-        geom_text(
-            aes(label="label"),
-        position=position_dodge(width=0.9),
-        va="bottom",
-        size=9,
-        color="black"
-    ) +
-    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(17,10))
+        labs(title="% of in-frame exon in splicing categories", x="Exon Category", y="% of in-frame exon") +
+        scale_fill_manual(values={
+            "cds_exon": "#E69F00", #orange
+            "utr_containing_exon": "#009E73" #green
+        }) +
+        theme(
+            axis_text_x=element_text(rotation=0, hjust=0.5, size=10),
+            axis_title_y=element_text(size=10),
+            axis_title_x=element_text(size=12),
+            legend_title=element_text(size=10),
+            legend_text=element_text(size=10),
+            figure_size=(8,6)
+        ) +
+        scale_x_discrete(
+            limits=[
+                "alternative_exon",
+                "a5ss_short_exon",
+                "a3ss_short_exon",
+                "a5ss_long_exon",
+                "a3ss_long_exon",
+            ],
+            labels={
+            "alternative_exon": "Alternative exon",
+            "a5ss_long_exon": "A5SS-long",
+            "a3ss_long_exon": "A3SS-long",
+            "a5ss_short_exon": "A5SS-short",
+            "a3ss_short_exon": "A3SS-short",
+        }) +
+        scale_y_continuous(limits=(0, 100)) +
+        coord_flip()
     )
-    display(plot)
-
-# %%
-# coding列が "coding" または "non-coding" の場合の in-flame割合を計算し棒グラフ化
-
-def calc_in_flame_ratio(df):
-    if len(df) == 0:
-        return 0.0
-    return (df["flame"] == "in-flame").sum() / len(df)
-
-# 対象リスト
-exon_sets = [
-    ("internal_unique_exon", internal_unique_exon),
-    ("first_unique_exon", first_unique_exon),
-    ("last_unique_exon", last_unique_exon),
-    ("internal_skipped_exon", internal_skipped_exon),
-    ("first_skipped_exon", first_skipped_exon),
-    ("last_skipped_exon", last_skipped_exon),
-    ("internal_a5ss_long_exon", internal_a5ss_long_exon),
-    ("first_a5ss_long_exon", first_a5ss_long_exon),
-    ("last_a5ss_long_exon", last_a5ss_long_exon),
-    ("internal_a3ss_long_exon", internal_a3ss_long_exon),
-    ("first_a3ss_long_exon", first_a3ss_long_exon),
-    ("last_a3ss_long_exon", last_a3ss_long_exon),
-]
-
-# 結果格納用
-results = []
-for name, df in exon_sets:
-    for coding_status in ["coding", "non-coding"]:
-        sub = df[df["coding"] == coding_status]
-        ratio = calc_in_flame_ratio(sub)
-        results.append({"Category": name, "Coding": coding_status, "InFlameRatio": ratio * 100})
-
-df_in_flame = pd.DataFrame(results)
-
-# 棒グラフ
-plot = (
-    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio", fill="Coding")) +
-    geom_bar(stat="identity", position="dodge") +
-    geom_text(
-        aes(label="InFlameRatio.round(1).astype(str) + '%'"),
-        position=position_dodge(width=0.9),
-        va="bottom",
-        size=9,
-        color="black"
-    ) +
-    labs(title="Percentage of in-flame exon in splicing categories", x="Exon Category", y="percentage of in-flame exon (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(12,5))
-)
 display(plot)
 
-# %%
-# 各項目のin-flame割合をまとめる
-in_flame_ratios = {
-    "internal_unique_exon": calc_in_flame_ratio(internal_unique_exon),
-    "first_unique_exon": calc_in_flame_ratio(first_unique_exon),
-    "last_unique_exon": calc_in_flame_ratio(last_unique_exon),
-    "internal_skipped_exon": calc_in_flame_ratio(internal_skipped_exon),
-    "first_skipped_exon": calc_in_flame_ratio(first_skipped_exon),
-    "last_skipped_exon": calc_in_flame_ratio(last_skipped_exon),
-    "internal_a5ss_long_exon": calc_in_flame_ratio(internal_a5ss_long_exon),
-    "first_a5ss_long_exon": calc_in_flame_ratio(first_a5ss_long_exon),
-    "last_a5ss_long_exon": calc_in_flame_ratio(last_a5ss_long_exon),
-    "internal_a3ss_long_exon": calc_in_flame_ratio(internal_a3ss_long_exon),
-    "first_a3ss_long_exon": calc_in_flame_ratio(first_a3ss_long_exon),
-    "last_a3ss_long_exon": calc_in_flame_ratio(last_a3ss_long_exon),
-}
+plot.save("../data/exon_inframe_ratio_by_coding_status.png", dpi=600)
 
-# データフレーム化
-df_in_flame = pd.DataFrame({
-    "Category": list(in_flame_ratios.keys()),
-    "InFlameRatio": [v * 100 for v in in_flame_ratios.values()]
+
+# %%
+def summarize_coding_vs_noncoding_with_upstream(df: pd.DataFrame):
+    """
+    CDS alternative exon の out-frame のみ抽出し、
+    coding / non-coding inclusion と upstream_alternative を同時に保持した pivot を作る
+    """
+    # explode して exon 単位に展開
+    df_exp = df.explode(["exons", "exontype", "cds_info","frame", "structural_alternative"]).reset_index(drop=True)
+    df_exp = df_exp[["geneName", "chrom", "exons", "coding", "cds_info", "frame", "exontype","structural_alternative"]]
+    # exonsでgroupby して、cds_info を集約
+    df_exp["cds_info_contains_cds_exon"] = df_exp.groupby(["geneName", "exons"])["cds_info"].transform(lambda x: x.str.contains("cds_exon").any())
+    # CDS exon かつ alternative exon & out-frame のみ抽出
+    df_alt_cds = df_exp[
+        (df_exp["cds_info_contains_cds_exon"]) &
+        (df_exp["exontype"].isin(["alternative", "unique-alternative"])) &
+        (df_exp["frame"] == "out-frame")
+    ]
+
+    # coding / non-coding inclusion 集計
+    coding_summary = (
+        df_alt_cds.groupby(["geneName", "chrom", "exons", "coding", "structural_alternative"])
+        .size()
+        .reset_index(name="count")
+    )
+    print(coding_summary["coding"].value_counts())
+
+    # pivot
+    pivot = coding_summary.pivot_table(
+        index=["geneName", "chrom","exons", "structural_alternative"],
+        columns="coding",
+        values="count",
+        fill_value=0
+    ).reset_index()
+
+    pivot.columns.name = None
+
+    # 列名統一
+    cols = pivot.columns.tolist()
+    if "coding" in cols:
+        pivot = pivot.rename(columns={"coding": "coding_count"})
+    if "non-coding" in cols:
+        pivot = pivot.rename(columns={"non-coding": "noncoding_count"})
+
+    # フラグ追加
+    pivot["only_in_coding"] = (pivot.get("coding", pivot.get("coding_count", 0)) > 0) & \
+                              (pivot.get("non-coding", pivot.get("noncoding_count", 0)) == 0)
+    pivot["only_in_noncoding"] = (pivot.get("coding", pivot.get("coding_count", 0)) == 0) & \
+                                 (pivot.get("non-coding", pivot.get("noncoding_count", 0)) > 0)
+
+    return pivot
+# 使用例
+pivot = summarize_coding_vs_noncoding_with_upstream(data)
+
+# %%
+print(len(pivot))
+print(len(pivot[(pivot["structural_alternative"] == True) & (pivot["only_in_coding"] == False) & (pivot["only_in_noncoding"] == False)]))
+print(len(pivot[(pivot["structural_alternative"] == True) & (pivot["only_in_coding"] == True) & (pivot["only_in_noncoding"] == False)]))
+print(len(pivot[(pivot["structural_alternative"] == True) & (pivot["only_in_noncoding"] == True) & (pivot["only_in_coding"] == False)]))
+print(len(pivot[(pivot["structural_alternative"] == False) & (pivot["only_in_coding"] == True)]))
+print(len(pivot[(pivot["structural_alternative"] == False) & (pivot["only_in_noncoding"] == True)]))
+print(len(pivot[(pivot["structural_alternative"] == False) & (pivot["only_in_coding"] == False) & (pivot["only_in_noncoding"] == False)]))
+
+print(pivot[(pivot["structural_alternative"] == False) & (pivot["only_in_coding"] == False) & (pivot["only_in_noncoding"] == False)].head(10))
+
+# %%
+plot_data = pd.DataFrame({
+    "total_out_frame_exons": [len(pivot)],
+    "structural_alternative_exons": [len(pivot[pivot["structural_alternative"] == True])],
+    "only_in_coding_transcripts": [len(pivot[(pivot["only_in_coding"] == True) & (pivot["structural_alternative"] == False)])],
+    "other_types": [len(pivot[(pivot["structural_alternative"] == False) & (pivot["only_in_coding"] == False)])]
 })
 
-# 棒グラフ
-plot = (
-    ggplot(df_in_flame, aes(x="Category", y="InFlameRatio")) +
-    geom_bar(stat="identity", fill="#56B4E9") +
-    geom_text(aes(label="InFlameRatio.round(2).astype(str) + '%'"), va="bottom", size=9, color="black") +
-    labs(title="Percentage of in-flame Exons", x="Exon Category", y="Percentage of in-flame exons (%)") +
-    coord_cartesian(ylim=(0, 100)) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1), figure_size=(10,5))
+# total を除いたデータを取得
+plot_data_no_total = plot_data.drop(columns=["total_out_frame_exons"])
+
+# 各値の割合を計算
+sizes = plot_data_no_total.iloc[0]
+percentages = sizes / sizes.sum() * 100
+
+# 値が大きい順に並べ替え
+sorted_data = pd.DataFrame({
+    "Category": plot_data_no_total.columns,
+    "Size": sizes,
+    "Percentage": percentages
+}).sort_values(by="Size", ascending=False)
+
+# 円グラフを作成
+labels = sorted_data["Category"]  # 並べ替えたラベル
+sizes = sorted_data["Size"]       # 並べ替えた値
+
+# パーセンテージと値を表示する関数
+def autopct_with_count(pct, all_vals):
+    absolute = int(round(pct / 100. * sum(all_vals)))
+    return f"{pct:.1f}%\n(n={absolute})"
+
+# プロット
+# 新しいカラーパレット（オレンジ、淡いオレンジ、グレー）
+colors = ['#E69F00', '#F0E68C', '#D3D3D3']  # オレンジ、淡いオレンジ、グレー
+
+# プロット
+plt.figure(figsize=(8, 8))
+plt.pie(
+    sizes, 
+    labels=labels, 
+    autopct=lambda pct: autopct_with_count(pct, sizes), 
+    startangle=90,  # 時計回りに開始
+    counterclock=False,  # 時計回りに描画
+    colors=colors,  # 新しいカラーパレット
+    textprops={'fontsize': 15},
 )
-display(plot)
+plt.title("Distribution of Out-Frame Exons \n CDS-Alternative-exon (Percentage of Total)", fontsize=16, pad=20)
+plt.axis('equal')  # 円を丸く表示
+plt.savefig("../data/out_frame_exon_distribution_sorted.png", dpi=600)
+plt.show()
 
 # %%
 def count_genes_by_exon_type(data, exon_conditions):
@@ -445,21 +420,22 @@ def count_genes_by_exon_type(data, exon_conditions):
 
 # 各エキソンタイプの条件を定義
 exon_conditions = [
-    ("skipped exon", lambda x: "skipped" in x),
-    ("unique exon", lambda x: "unique" in x),
-    ("skipped or unique exon", lambda x: "skipped" in x or "unique" in x),
-    ("alternative 3' splice site-long", lambda x: "a3ss-long" in x),
-    ("alternative 5' splice site-long", lambda x: "a5ss-long" in x),
-    ("alternative 3' splice site-short", lambda x: "a3ss-short" in x),
-    ("alternative 5' splice site-short", lambda x: "a5ss-short" in x),
-    ("overlapping exon", lambda x: "overlap" in x),
-    ("intron retention", lambda x: "intron_retention" in x),
-    ("targetable gene", lambda x: "skipped" in x or "unique" in x or "a3ss-long" in x  or "a5ss-long" in x)
+    ("Alternative exon", lambda x: "alternative" in x),
+    ("Unique-Alternative exon", lambda x: "unique-alternative" in x),
+    ("Alternative or unique-alternative exon", lambda x: "alternative" in x or "unique-alternative" in x),
+    ("Alternative 3' splice site-long", lambda x: "a3ss-long" in x),
+    ("Alternative 5' splice site-long", lambda x: "a5ss-long" in x),
+    ("Alternative 3' splice site-short", lambda x: "a3ss-short" in x),
+    ("Alternative 5' splice site-short", lambda x: "a5ss-short" in x),
+    ("Overlapping exon", lambda x: "overlap" in x),
+    ("Intron retention", lambda x: "intron_retention" in x),
+    ("Genes have targetable splicing events", lambda x: "alternative" in x or "unique-alternative" in x or "a3ss-long" in x  or "a5ss-long" in x)
 ]
 
 # 関数を呼び出して結果を取得
 result_df = count_genes_by_exon_type(data, exon_conditions)
 
+# %%
 # 結果を表示
 print(result_df)
 
@@ -468,16 +444,16 @@ print(result_df)
 result_df["Exon Type"] = pd.Categorical(
     result_df["Exon Type"],
     categories=[
-        "skipped exon", 
-        "unique exon", 
-        "skipped or unique exon", 
-        "alternative 3' splice site-long", 
-        "alternative 5' splice site-long", 
-        "alternative 3' splice site-short",
-        "alternative 5' splice site-short",
-        "overlapping exon", 
-        "intron retention",
-        "targetable gene"
+        "Alternative exon", 
+        "Unique-Alternative exon", 
+        "Alternative or unique-alternative exon", 
+        "Alternative 3' splice site-long", 
+        "Alternative 5' splice site-long", 
+        "Alternative 3' splice site-short",
+        "Alternative 5' splice site-short",
+        "Overlapping exon", 
+        "Intron retention",
+        "Genes have targetable splicing events"
     ],  # 希望する順序を指定
     ordered=True
 )
@@ -492,13 +468,13 @@ plot_df = pd.melt(
 )
 # カテゴリ名をわかりやすく
 plot_df["Category"] = plot_df["Category"].replace({
-    "Genes with Exon": "Genes With Applicable Type Exon",
-    "Genes without Exon": "Genes Without Applicable Type Exon"
+    "Genes with Exon": "Genes With Splicing Event",
+    "Genes without Exon": "Genes Without Splicing Event"
 })
 
 plot_df["Category"] = pd.Categorical(
     plot_df["Category"],
-    categories=["Genes Without Applicable Type Exon", "Genes With Applicable Type Exon"],  # 希望する順序を指定
+    categories=["Genes Without Splicing Event", "Genes With Splicing Event"],  # 希望する順序を指定
     ordered=True
 )
 
@@ -514,7 +490,7 @@ plot = (
     geom_bar(stat="identity", position="stack") +
     geom_text(
         aes(label="Percentage"),
-        data=plot_df[plot_df["Category"] == "Genes With Applicable Type Exon"],  # "With Exon" のみラベルを表示
+        data=plot_df[plot_df["Category"] == "Genes With Splicing Event"],  # "With Exon" のみラベルを表示
         position="stack",
         va="bottom",  # バーの上に配置
         size=10,
@@ -523,8 +499,8 @@ plot = (
     ) +
     scale_fill_manual(
         values={
-            "Genes With Applicable Type Exon": "#56B4E9",  # 青
-            "Genes Without Applicable Type Exon": "#E69F00"  # オレンジ
+            "Genes With Splicing Event": "#56B4E9",  # 青
+            "Genes Without Splicing Event": "#E69F00"  # オレンジ
         }
     ) +
     labs(
@@ -541,38 +517,87 @@ plot = (
 
 display(plot)  # Jupyter Notebookでの表示用
 
-# %% [markdown]
-# - 全遺伝子ではなく、skipped exonが生じうる可能性のある条件を満たすエキソンだけを分母としてみる
-
 # %%
 genes_not_one_exon_or_one_variant = data[
     (data["max_exon_count"] != 1) & (data["variant_count"] != 1)
-]
+    ]
+genes_one_exon = data[data["max_exon_count"] == 1]
+genes_not_one_exon_but_one_variant = data[(data["variant_count"] == 1) & (data["max_exon_count"] != 1)]
 
+def autopct_with_count(pct, all_vals):
+    absolute = int(round(pct / 100. * sum(all_vals)))
+    return f"{pct:.1f}%\n(n={absolute})"
+
+# 原理的にsplice event が生じうる遺伝子の割合を円グラフで表示
+total_genes = data["geneName"].nunique()
+valid_genes = genes_not_one_exon_or_one_variant["geneName"].nunique()
+genes_one_exon_count = genes_one_exon["geneName"].nunique()
+genes_not_one_exon_but_one_variant_count = genes_not_one_exon_but_one_variant["geneName"].nunique()
+
+labels = ['Genes have one exon', 'Genes have a single isoform', 'Genes have multiple isoforms']
+sizes = [ genes_one_exon_count, genes_not_one_exon_but_one_variant_count, valid_genes]
+colors = ['#D3D3D3', '#66CDAA', '#009E73']
+plt.figure(figsize=(6, 6))
+plt.pie(
+    sizes, 
+    labels=labels, 
+    colors=colors, 
+    autopct=lambda pct: autopct_with_count(pct, sizes), 
+    startangle=90,
+    textprops={'fontsize': '14'},
+    wedgeprops={'edgecolor': 'black', 'linewidth': 1}  # 枠線の設定
+)
+plt.title('Proportion of genes that can theoretically have splicing events (mm39)', pad=20)
+plt.axis('equal')  # 円を丸く表示
+plt.savefig('../data/mm39/proportion_of_genes_mm39_with_borders.png', dpi=300)
+plt.show()
+
+
+# %%
 # 関数を呼び出して結果を取得
 result_df_based_on_theoretically_valid_conditions = count_genes_by_exon_type(genes_not_one_exon_or_one_variant, exon_conditions)
 # 結果を表示
 print(result_df_based_on_theoretically_valid_conditions)
 
-# %%
+result_df_based_on_theoretically_valid_conditions = result_df_based_on_theoretically_valid_conditions[
+    result_df_based_on_theoretically_valid_conditions["Exon Type"].isin([
+        "Alternative or unique-alternative exon",
+        "Alternative 3' splice site-long",
+        "Alternative 5' splice site-long",
+        "Alternative 3' splice site-short",
+        "Alternative 5' splice site-short",
+        "Overlapping exon",
+        "Intron retention"
+    ])
+]
+
+print(result_df_based_on_theoretically_valid_conditions)
+
+result_df_based_on_theoretically_valid_conditions["Exon Type"] = result_df_based_on_theoretically_valid_conditions["Exon Type"].replace({
+    "Overlapping exon": "Overlapping exon",
+    "Intron retention": "Intron retention",
+    "Alternative 3' splice site-short": "A3SS-short",
+    "Alternative 5' splice site-short": "A5SS-short",
+    "Alternative 3' splice site-long": "A3SS-long",
+    "Alternative 5' splice site-long": "A5SS-long",
+    "Alternative or unique-alternative exon": "Alternative exon"
+})
+
 # Exon Type列の順序を明示的に指定
 result_df_based_on_theoretically_valid_conditions["Exon Type"] = pd.Categorical(
     result_df_based_on_theoretically_valid_conditions["Exon Type"],
     categories=[
-        "skipped exon", 
-        "unique exon", 
-        "skipped or unique exon", 
-        "alternative 3' splice site-long", 
-        "alternative 5' splice site-long", 
-        "alternative 3' splice site-short",
-        "alternative 5' splice site-short",
-        "overlapping exon", 
-        "intron retention",
-        "targetable gene"
+        "Overlapping exon", 
+        "Intron retention",
+        "A5SS-short",
+        "A3SS-short",
+        "A5SS-long",
+        "A3SS-long",
+        "Alternative exon"
     ],  # 希望する順序を指定
     ordered=True
 )
-
+result_df_based_on_theoretically_valid_conditions = result_df_based_on_theoretically_valid_conditions.dropna(subset=["Exon Type"])
 # データをlong形式に変換
 plot_df = pd.melt(
     result_df_based_on_theoretically_valid_conditions,
@@ -583,51 +608,53 @@ plot_df = pd.melt(
 )
 # カテゴリ名をわかりやすく
 plot_df["Category"] = plot_df["Category"].replace({
-    "Genes with Exon": "Genes With Applicable Type Exon",
-    "Genes without Exon": "Genes Without Applicable Type Exon"
+    "Genes with Exon": "Genes With Splicing Event",
+    "Genes without Exon": "Genes Without Splicing Event"
 })
 
 plot_df["Category"] = pd.Categorical(
     plot_df["Category"],
-    categories=["Genes Without Applicable Type Exon", "Genes With Applicable Type Exon"],  # 希望する順序を指定
+    categories=["Genes Without Splicing Event", "Genes With Splicing Event"],  # 希望する順序を指定
     ordered=True
 )
 
 # Percentage列を数値型に変換
 plot_df["Percentage"] = plot_df["Percentage"].str.rstrip('%').astype(float)
 
+plotdf = plot_df[plot_df["Category"] == "Genes With Splicing Event"]
 # プロット
 plot = (
-    ggplot(plot_df, aes(x="Exon Type", y="Count", fill="Category")) +
-    geom_bar(stat="identity", position="stack") +
-    geom_text(
-        aes(label="Percentage"),
-        data=plot_df[plot_df["Category"] == "Genes With Applicable Type Exon"],  # "With Exon" のみラベルを表示
-        position="stack",
-        va="bottom",  # バーの上に配置
-        size=10,
-        color="black",
-        format_string="{:.1f}%"  # パーセンテージを表示
-    ) +
+    ggplot(plot_df, aes(x="Exon Type", y="Percentage", fill="Exon Type")) +
+    geom_bar(stat="identity", position="dodge") +
     scale_fill_manual(
         values={
-            "Genes With Applicable Type Exon": "#56B4E9",  # 青
-            "Genes Without Applicable Type Exon": "#E69F00"  # オレンジ
+            "Alternative exon": "#CC79A7",  # ピンク
+            "A3SS-long": "#CC79A7",  # オレンジ
+            "A5SS-long": "#CC79A7",  # オレンジ
+            "A3SS-short": "#56B4E9",  # 青
+            "A5SS-short": "#56B4E9",  # 青
+            "Overlapping exon": "#56B4E9",  # 青
+            "Intron retention": "#56B4E9",  # 青
+            "Genes have targetable splicing events": "#009E73"  # 緑
         }
     ) +
     labs(
-        title="Percentage of Genes by Exon Type (Denominator: theoretically Valid Genes)",
+        title="% of Genes containing splicing events \n(Denominator: Genes have multiple isoforms)",
         x="Exon Type",
-        y="Number of Genes",
+        y="% of Genes have each splicing event",
         fill="Category"
     ) +
     theme(
-        axis_text_x=element_text(size=11, rotation=90, hjust=1),
-        figure_size=(10, 6),
-    )
+        axis_text_x=element_text(size=11, rotation=0, hjust=0.5),
+        axis_text_y=element_text(size=11, rotation=0, hjust=1),
+        figure_size=(8, 6),
+    ) + 
+    scale_y_continuous(limits=(0, 100)) +
+    coord_flip()
 )
 
 display(plot)  # Jupyter Notebookでの表示用
+plot.save("../data/mm39/percentage_genes_has_splicing_events_mm39.png", dpi=300)
 
 # %%
 # 最大エキソンが1つの遺伝子をカウント
@@ -637,6 +664,9 @@ print(f"最大エキソンが1つの遺伝子数: {len(genes_with_one_exon)}")
 genes_with_one_variant = data[data["variant_count"] == 1]["geneName"].unique()  
 print(f"transcript variantsが1つの遺伝子数: {len(genes_with_one_variant)}")
 
+
+
+# %%
 # エキソンが一つまたはtranscript variantsが一つの遺伝子をカウント
 genes_with_one_exon_or_one_variant = data[
     (data["max_exon_count"] == 1) | (data["variant_count"] == 1)
