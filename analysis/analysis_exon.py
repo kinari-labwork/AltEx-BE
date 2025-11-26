@@ -220,11 +220,13 @@ df_in_frame = pd.DataFrame(results)
 print(df_in_frame)
 
 # カテゴリの順序を定義
-base_categories = ["constitutive_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"]
+base_categories = ["alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"]
 full_categories = [f"{prefix}{cat}" for prefix in ["internal_", "first_", "last_"] for cat in base_categories]
 
-df_in_frame["Category"] = pd.Categorical(df_in_frame["Category"], categories=["constitutive_exon", "alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
+df_in_frame["Category"] = pd.Categorical(df_in_frame["Category"], categories=["alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
+df_in_frame = df_in_frame.dropna(subset=["Category"])
 df_in_frame["cording_status"] = pd.Categorical(df_in_frame["cording_status"], categories=["cds_exon","utr_containing_exon"], ordered=True)
+
 
 df_in_frame["label"] = df_in_frame.apply(
     lambda row: f"({int(row['ExonCount'])})", axis=1
@@ -248,6 +250,21 @@ for df in [exon_counts_df]:
             legend_text=element_text(size=10),
             figure_size=(8,6)
         ) +
+        scale_x_discrete(
+            limits=[
+                "alternative_exon",
+                "a5ss_short_exon",
+                "a3ss_short_exon",
+                "a5ss_long_exon",
+                "a3ss_long_exon",
+            ],
+            labels={
+            "alternative_exon": "Alternative exon",
+            "a5ss_long_exon": "A5SS-long",
+            "a3ss_long_exon": "A3SS-long",
+            "a5ss_short_exon": "A5SS-short",
+            "a3ss_short_exon": "A3SS-short",
+        }) +
         scale_y_continuous(limits=(0, 100)) +
         coord_flip()
     )
@@ -517,9 +534,9 @@ valid_genes = genes_not_one_exon_or_one_variant["geneName"].nunique()
 genes_one_exon_count = genes_one_exon["geneName"].nunique()
 genes_not_one_exon_but_one_variant_count = genes_not_one_exon_but_one_variant["geneName"].nunique()
 
-labels = ['Genes have multiple isoforms', 'Genes have a single isoform', 'Genes have one exon']
-sizes = [valid_genes, genes_not_one_exon_but_one_variant_count, genes_one_exon_count,]
-colors = ['#009E73', '#66CDAA', '#D3D3D3']
+labels = ['Genes have one exon', 'Genes have a single isoform', 'Genes have multiple isoforms']
+sizes = [ genes_one_exon_count, genes_not_one_exon_but_one_variant_count, valid_genes]
+colors = ['#D3D3D3', '#66CDAA', '#009E73']
 plt.figure(figsize=(6, 6))
 plt.pie(
     sizes, 
@@ -611,9 +628,9 @@ plot = (
     geom_bar(stat="identity", position="dodge") +
     scale_fill_manual(
         values={
-            "Alternative exon": "#E69F00",  # オレンジ
-            "A3SS-long": "#E69F00",  # オレンジ
-            "A5SS-long": "#E69F00",  # オレンジ
+            "Alternative exon": "#CC79A7",  # ピンク
+            "A3SS-long": "#CC79A7",  # オレンジ
+            "A5SS-long": "#CC79A7",  # オレンジ
             "A3SS-short": "#56B4E9",  # 青
             "A5SS-short": "#56B4E9",  # 青
             "Overlapping exon": "#56B4E9",  # 青
