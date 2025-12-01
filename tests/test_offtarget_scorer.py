@@ -35,7 +35,7 @@ def test_calculate_offtarget_site_count():
     >chr1_test
     CCCCCGGGGATTACAGATTACAGATTACAGGGGGGATTACAGATTACAGATTACACCCCC
     >chr2_test
-    AAAAAGCTAGCTAGCTAGCTAGCTATTTTTGGGGATTACAGATTACAGATTACA
+    AAAAAGCTAGCTAGCTAGCTAGCTATTTTTGGGGATTACAGATTATCGATACA
     """
 
     fasta_path = Path("tests/data/test2.fa")
@@ -44,10 +44,10 @@ def test_calculate_offtarget_site_count():
         "strand": ["+", "+", "+", "-"],
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GGG+GATTACAGATTACAGATTACA",      # 23-mer, 3回出現
-            "AAA+AAAAAAAAAAAAAAAAAAAAA",      # 23-mer, 0回出現
-            "ggg+gattacagattacagattaca",      # 小文字にした場合のテストケース
-            "TGTAATCTGTAATCTGTAAT+CCC"       # 23-mer, 逆相補化したもの。 3回出現
+            "GGG+GATTACAGATTACAGATTAC",      # 20-mer, 2回出現, 12-merは3回出現
+            "AAA+AAAAAAAAAAAAAAAAAAAA",      # 20-mer, 0回出現
+            "ggg+gattacagattacagattac",      # 小文字にした場合のテストケース
+            "GTAATCTGTAATCTGTAATC+CCC"       # 20-mer, 逆相補化したもの。 2回出現, 12-merは3回出現
         ]
     })
     
@@ -55,12 +55,14 @@ def test_calculate_offtarget_site_count():
         "strand": ["+", "+", "+", "-"],
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
         "sgrna_target_sequence": [
-            "GGG+GATTACAGATTACAGATTACA",
-            "AAA+AAAAAAAAAAAAAAAAAAAAA",
-            "ggg+gattacagattacagattaca",
-            "TGTAATCTGTAATCTGTAAT+CCC" 
+            "GGG+GATTACAGATTACAGATTAC",
+            "AAA+AAAAAAAAAAAAAAAAAAAA",
+            "ggg+gattacagattacagattac",
+            "GTAATCTGTAATCTGTAATC+CCC" 
         ],
-        "pam+20bp_exact_match_count": [3, 0, 3, 3]
+        "pam+20bp_exact_match_count": [2, 0, 2, 2],
+        "pam+12bp_exact_match_count": [3, 0, 3, 3]
+
     })
 
     input_df = add_reversed_complement_sgrna_column(input_df)
