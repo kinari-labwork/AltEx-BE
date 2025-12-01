@@ -97,12 +97,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Choose the type of base editor, this tool supports ABE and CBE",
     )
     base_editors.add_argument(
-        "--be-preset",
-        default=None,
-        required=False,
-        help="Preset for the base editor",
-    )
-    base_editors.add_argument(
         "--be-files",
         default=None,
         required=False,
