@@ -15,9 +15,9 @@
   - [Installation](#installation)
   - [Required dataset](#required-dataset)
   - [Usage \& Quick example](#usage--quick-example)
-      - [1. Input Base Editor Information in the Command Line:](#1-input-base-editor-information-in-the-command-line)
-      - [2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#2-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
-      - [3. Using a Preset Editor:](#3-using-a-preset-editor)
+      - [1. Using a Preset Editor:](#1-using-a-preset-editor)
+      - [2. Input Base Editor Information in the Command Line:](#2-input-base-editor-information-in-the-command-line)
+      - [3. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#3-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
   - [List of command line options](#list-of-command-line-options)
   - [Format of AltEx-BE output](#format-of-altex-be-output)
 - [License](#license)
@@ -64,9 +64,11 @@ pip install AltEx-BE
 ```
 ## Required dataset
 To use AltEx-BE, you should prepare 2 input files in your computer
-- refFlat file of your interest species   
+- refFlat file or gtf file of your interest species   
     - refflat file contains Refseq infomations: explanation of refFlat format is [here](https://genome.bio.fsu.edu/cgi-bin/hgTables?hgsid=235697_cnEhDmy3qVsShD0gwzprkJveBQah&hgta_doSchemaDb=mm39&hgta_doSchemaTable=refFlat)   
     - you can download refflat files from  UCSC goldenpath: refflat files of mm39 is [here](https://hgdownload.cse.ucsc.edu/goldenpath/mm39/database/)
+    - also you can use GTF file as a input
+      - If you use GTF, AltEx-BE automatically convert GTF into refflat format and generate them into output directory
 - Fasta files contain all chromosome sequence of your interest species
     - you can download Fasta file also from UCSC goldenpath
     - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
@@ -83,7 +85,28 @@ To use AltEx-BE, you should prepare 2 input files in your computer
 
 AltEx-BE is operated via the `altex-be` command.
 
-#### 1. Input Base Editor Information in the Command Line:
+#### 1. Using a Preset Editor:
+- By default, AltEx-BE design sgRNAs for below 6 Base Editing Tools
+
+> [!NOTE]
+> **Preset Base Editors:**
+>
+> | base_editor_name | pam_sequence | editing_window_start | editing_window_end | base_editor_type |
+> |:-----------------|:-------------|:---------------------|:-------------------|:-----------------|
+> | target-AID       | NGG          | 17                   | 19                 | cbe              |
+> | BE4max           | NGG          | 12                   | 17                 | cbe              |
+> | ABE8e            | NGG          | 12                   | 17                 | abe              |
+
+```sh
+altex-be \
+    --refflat-path /path/to/your/refFlat.txt \
+    --fasta-path /path/to/your/genome.fa \
+    --output-dir /path/to/output_directory \
+    --gene-symbols MYGENE \
+    --assembly-name hg38
+```
+
+#### 2. Input Base Editor Information in the Command Line:
 
 ```sh
 altex-be \
@@ -102,7 +125,7 @@ altex-be \
 > [!CAUTION]
 > `--be-start` and `--be-end` specify the editing window of your base editor. The location of the editing window is counted from the base next to the PAM (1-indexed).
 
-#### 2. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:
+#### 3. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:
 
 You can provide a file containing the information for one or more base editors. This is useful when you want to design sgRNAs for multiple editors at once.
 
@@ -118,36 +141,14 @@ altex-be \
     --assembly-name hg38 \
     --be-files /path/to/your/base_editor_info.csv
 ```
-
-#### 3. Using a Preset Editor:
-
-You can use a pre-configured base editor with the `--be-preset` flag.
-
-> [!NOTE]
-> **Preset Base Editors:**
->
-> | base_editor_name | pam_sequence | editing_window_start | editing_window_end | base_editor_type |
-> |:-----------------|:-------------|:---------------------|:-------------------|:-----------------|
-> | target-AID       | NGG          | 17                   | 19                 | cbe              |
-> | BE4max           | NGG          | 12                   | 17                 | cbe              |
-> | ABE8e            | NGG          | 12                   | 17                 | abe              |
-
-```sh
-altex-be \
-    --refflat-path /path/to/your/refFlat.txt \
-    --fasta-path /path/to/your/genome.fa \
-    --output-dir /path/to/output_directory \
-    --gene-symbols MYGENE \
-    --assembly-name hg38 \
-    --be-preset ABE8e
-```
 ## List of command line options
 
 | Short Option | Long Option | Argument | Explanation |
 | :--- | :--- | :--- | :--- |
 | -h | --help | | Show the help message and exit. |
 | -v | --version | | Show the version of Altex BE. |
-| -r | --refflat-path | FILE | (Required) Path to the refFlat file. |
+| -r | --refflat-path | FILE | (Mutually Required -r or -g) Path to the refFlat file. |
+| -g | --gtf-path | FILE | (Mutually Required with -r or -g) Path to the GTF file. |
 | -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
 | -o | --output-dir | DIR | (Required) Directory for the output files. |
 | | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
@@ -159,7 +160,6 @@ altex-be \
 | -s | --be-start | INTEGER | The start of the editing window for the base editor (1-indexed from the base next to the PAM). |
 | -e | --be-end | INTEGER | The end of the editing window for the base editor (1-indexed from the base next to the PAM). |
 | -t | --be-type | TYPE | The type of base editor (ABE or CBE). |
-| | --be-preset | PRESET | Use a preset base editor (target-AID, BE4max, or ABE8e). |
 | | --be-files | FILE | Path to a CSV or TXT file containing information about one or more base editors. |
 
 ## Format of AltEx-BE output
