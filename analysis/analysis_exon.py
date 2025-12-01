@@ -381,7 +381,7 @@ plt.pie(
     startangle=90,  # 時計回りに開始
     counterclock=False,  # 時計回りに描画
     colors=colors,  # 新しいカラーパレット
-    textprops={'fontsize': 15},
+    textprops={'fontsize': 18},
 )
 plt.title("Distribution of Out-Frame Exons \n CDS-Alternative-exon (Percentage of Total)", fontsize=16, pad=20)
 plt.axis('equal')  # 円を丸く表示
@@ -544,7 +544,7 @@ plt.pie(
     colors=colors, 
     autopct=lambda pct: autopct_with_count(pct, sizes), 
     startangle=90,
-    textprops={'fontsize': '14'},
+    textprops={'fontsize': '16'},
     wedgeprops={'edgecolor': 'black', 'linewidth': 1}  # 枠線の設定
 )
 plt.title('Proportion of genes that can theoretically have splicing events (mm39)', pad=20)
