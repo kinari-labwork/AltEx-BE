@@ -89,10 +89,10 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     # まず最初にAho-CorasickのAutomatonを構築
     automaton = ahocorasick.Automaton()
 
-    for idx, seq in enumerate(full_sequences):
+    for seq in full_sequences:
         automaton.add_word(seq, ("full", seq))
 
-    for idx, seq in enumerate(seed_sequences):
+    for seq in seed_sequences:
         automaton.add_word(seq, ("seed", seq))
 
     automaton.make_automaton()
