@@ -138,15 +138,15 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     # 順配列、逆相補配列の両方のカウントを合計して新しい列に追加
     exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
         lambda row: (
-            offtarget_count_dict_full.get(row["sgrna_target_sequence"].replace('+', '').upper(), 0)
-            + offtarget_count_dict_full.get(row["reversed_sgrna_target_sequence"].replace('+', '').upper(), 0)
+            offtarget_count_dict_full[row["sgrna_target_sequence"].replace('+', '').upper(), None]
+            + offtarget_count_dict_full[row["reversed_sgrna_target_sequence"].replace('+', '').upper(), None]
         ),
         axis=1
     )
     exploded_sgrna_df["pam+12bp_exact_match_count"] = exploded_sgrna_df.apply(
         lambda row: (
-            offtarget_count_dict_seed.get(row["seed_target_sequence"].replace('+', '').upper(), 0)
-            + offtarget_count_dict_seed.get(row["reversed_seed_target_sequence"].replace('+', '').upper(), 0)
+            offtarget_count_dict_seed[row["seed_target_sequence"].replace('+', '').upper(), None]
+            + offtarget_count_dict_seed[row["reversed_seed_target_sequence"].replace('+', '').upper(), None]
         ),
         axis=1
     )
