@@ -68,7 +68,7 @@ To use AltEx-BE, you should prepare 2 input files in your computer
     - refflat file contains Refseq infomations: explanation of refFlat format is [here](https://genome.bio.fsu.edu/cgi-bin/hgTables?hgsid=235697_cnEhDmy3qVsShD0gwzprkJveBQah&hgta_doSchemaDb=mm39&hgta_doSchemaTable=refFlat)   
     - you can download refflat files from  UCSC goldenpath: refflat files of mm39 is [here](https://hgdownload.cse.ucsc.edu/goldenpath/mm39/database/)
     - also you can use GTF file as a input
-      - If you use GTF, AltEx-BE automatically convert GTF into refflat format and generate them into output directory
+      - If you use GTF, AltEx-BE automatically converts GTF into refflat format and generate them into output directory
 - Fasta files contain all chromosome sequence of your interest species
     - you can download Fasta file also from UCSC goldenpath
     - please comfirm your .fa files contain all of chromosome. if not, AltEx-BE process will fail
