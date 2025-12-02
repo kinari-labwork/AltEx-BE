@@ -57,7 +57,7 @@ def parse_base_editors_from_file(
     if ext in [".csv"]:
         be_df = pd.read_csv(args.be_files, header=0)
     elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.be_files, sep=None, engine="python", header=0)
+        be_df = pd.read_csv(args.be_files, sep="/t", header=0)
 
     # 列名が期待通りかチェック、違うならエラーを投げる
     if set(be_df.columns) != set(expected_columns):
