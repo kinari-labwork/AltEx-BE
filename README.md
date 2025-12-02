@@ -91,11 +91,14 @@ AltEx-BE is operated via the `altex-be` command.
 > [!NOTE]
 > **Preset Base Editors:**
 >
-> | base_editor_name | pam_sequence | editing_window_start | editing_window_end | base_editor_type |
-> |:-----------------|:-------------|:---------------------|:-------------------|:-----------------|
-> | target-AID       | NGG          | 17                   | 19                 | cbe              |
-> | BE4max           | NGG          | 12                   | 17                 | cbe              |
-> | ABE8e            | NGG          | 12                   | 17                 | abe              |
+> | base_editor_name   | pam_sequence | editing_window_start | editing_window_end | base_editor_type |
+> |:------------------|:-------------|:---------------------|:-------------------|:-----------------|
+> | target_aid_ngg     | NGG          | 17                   | 19                 | cbe              |
+> | be4max_ngg         | NGG          | 12                   | 17                 | cbe              |
+> | abe8e_ngg          | NGG          | 12                   | 17                 | abe              |
+> | target_aid_ng      | NG           | 17                   | 19                 | cbe              |
+> | be4max_ng          | NG           | 12                   | 17                 | cbe              |
+> | abe8e_ng           | NG           | 12                   | 17                 | abe              |
 
 ```sh
 altex-be \
