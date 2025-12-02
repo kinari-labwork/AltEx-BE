@@ -5,6 +5,8 @@ from tqdm import tqdm
 import ahocorasick
 from . import logging_config # noqa: F401
 
+SEED_LENGTH = 12
+
 def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
     Purpose: exploded_sgrna_dfにCRISPRdirectのURLを追加する
@@ -42,6 +44,28 @@ def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.
     )
     return exploded_sgrna_df
 
+def get_seed_sequence(sequence_with_plus: str, seed_len: int = SEED_LENGTH) -> str:
+    """
+    Purpose:
+        PAM+Target配列（'+'区切り）から、PAM + Seed領域（PAM隣接領域）のみを抽出する。
+        PAMの位置（前方か後方か）は'+'の位置で自動判定する。
+    Parameters:
+        sequence_with_plus: "NGG+ATGC..." (PAM+Spacer) or "...ATGC+NGG" (Spacer+PAM)
+        seed_len: Seed領域の長さ (default: 12)
+    Returns:
+        str: PAMとSeed領域を含む配列（'+'を含む）
+    """
+    parts = sequence_with_plus.split('+')
+    part0, part1 = parts[0], parts[1]
+    
+    # 短い方がPAM、長い方がSpacerなので、それに基づいてSeed領域を抽出
+    if len(part0) < len(part1):
+        # SeedはSpacerの先頭
+        return f"{part0}+{part1[:seed_len]}"
+    else:
+        # SeedはSpacerの末尾
+        return f"{part0[-seed_len:]}+{part1}"
+
 def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
     Purpose : ahocorasick法を用いて PAM+20bpのオフターゲットサイト数を計算する
@@ -51,18 +75,31 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     """
     # 遺伝子が - strandの場合、出力されている配列は - strandの配列である。しかし、検索対象は+ strandであるため、逆相補に変換する必要がある。
     # 重複しないようにセットに追加
-    unique_sequences = set()
-    unique_sequences.update(exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '').str.upper())
-    unique_sequences.update(exploded_sgrna_df["reversed_sgrna_target_sequence"].str.replace('+', '').str.upper())
+    full_sequences = set()
+    full_sequences.update(exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '').str.upper())
+    full_sequences.update(exploded_sgrna_df["reversed_sgrna_target_sequence"].str.replace('+', '').str.upper())
+
+    exploded_sgrna_df["seed_target_sequence"] = exploded_sgrna_df["sgrna_target_sequence"].apply(get_seed_sequence)
+    exploded_sgrna_df["reversed_seed_target_sequence"] = exploded_sgrna_df["reversed_sgrna_target_sequence"].apply(get_seed_sequence)
+
+    seed_sequences = set()
+    seed_sequences.update(exploded_sgrna_df["seed_target_sequence"].str.replace('+', '').str.upper())
+    seed_sequences.update(exploded_sgrna_df["reversed_seed_target_sequence"].str.replace('+', '').str.upper())
 
     # まず最初にAho-CorasickのAutomatonを構築
     automaton = ahocorasick.Automaton()
-    for idx, seq in enumerate(unique_sequences):
-        automaton.add_word(seq, (idx, seq))
+
+    for seq in full_sequences:
+        automaton.add_word(seq, ("full", seq))
+
+    for seq in seed_sequences:
+        automaton.add_word(seq, ("seed", seq))
+
     automaton.make_automaton()
 
     # sgRNAごとのカウント辞書
-    offtarget_count_dict = {seq: 0 for seq in unique_sequences}
+    offtarget_count_dict_full = {seq: 0 for seq in full_sequences}
+    offtarget_count_dict_seed = {seq: 0 for seq in seed_sequences}
 
     with open(fasta_path, 'r') as fasta_file:
         header_count = sum(1 for line in fasta_file if line.startswith(">"))
@@ -70,14 +107,23 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
         pbar = tqdm(total=header_count, desc="Calculating off-target counts", unit="chromosome")
         fasta_file.seek(0)
         chrom_seq = ""
+
+        def process_chrom_seq(sequence):
+            sequence = sequence.upper()
+            # automaton.iter はマッチした箇所の (end_index, value) を返す
+            for end_idx, (kind, seq) in automaton.iter(sequence):
+                if kind == "full":
+                    offtarget_count_dict_full[seq] += 1
+                elif kind == "seed":
+                    offtarget_count_dict_seed[seq] += 1
+
         for line in fasta_file:
             if line.startswith(">"):
                 # 新しい染色体に切り替え
                 if chrom_seq:
                     chrom_seq = chrom_seq.upper()
                     #automaton.iter は (end_idx, (idx, seq)) を持っていて、そこに含まれるseqが見つかったらカウントを増やす
-                    for end_idx, (idx, seq) in automaton.iter(chrom_seq):
-                        offtarget_count_dict[seq] += 1 
+                    process_chrom_seq(chrom_seq)
                     chrom_seq = ""
                     pbar.update(1)
             else:
@@ -85,21 +131,28 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
         # 最後の染色体も処理
         if chrom_seq:
             chrom_seq = chrom_seq.upper()
-            for end_idx, (idx, seq) in automaton.iter(chrom_seq):
-                offtarget_count_dict[seq] += 1
+            process_chrom_seq(chrom_seq)
             pbar.update(1)
             pbar.close()
     
     # 順配列、逆相補配列の両方のカウントを合計して新しい列に追加
     exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
         lambda row: (
-            offtarget_count_dict.get(row["sgrna_target_sequence"].replace('+', '').upper(), 0)
-            + offtarget_count_dict.get(row["reversed_sgrna_target_sequence"].replace('+', '').upper(), 0)
+            offtarget_count_dict_full[row["sgrna_target_sequence"].replace('+', '').upper()]
+            + offtarget_count_dict_full[row["reversed_sgrna_target_sequence"].replace('+', '').upper()]
         ),
         axis=1
     )
-    # 逆相補配列の列は不要なので削除
-    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence"])
+    exploded_sgrna_df["pam+12bp_exact_match_count"] = exploded_sgrna_df.apply(
+        lambda row: (
+            offtarget_count_dict_seed[row["seed_target_sequence"].replace('+', '').upper()]
+            + offtarget_count_dict_seed[row["reversed_seed_target_sequence"].replace('+', '').upper()]
+        ),
+        axis=1
+    )
+
+    # 逆相補配列の列とseed配列の列は不要なので削除
+    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence", "seed_target_sequence", "reversed_seed_target_sequence"])
     return exploded_sgrna_df
 
 def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_path: Path) -> pd.DataFrame:

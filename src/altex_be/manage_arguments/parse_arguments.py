@@ -47,17 +47,17 @@ def parse_base_editors_from_file(
     "editing_window_end",
     "base_editor_type"
     ]
-    if not args.base_editor_files:
+    if not args.be_files:
         return None
     else:
-        ext = Path(args.base_editor_files).suffix.lower()
+        ext = Path(args.be_files).suffix.lower()
 
     if ext not in [".csv", ".tsv", ".txt"]:
         raise ValueError("Unsupported file extension for base editor file. Use .csv, .tsv, or .txt")
     if ext in [".csv"]:
-        be_df = pd.read_csv(args.base_editor_files, header=0)
+        be_df = pd.read_csv(args.be_files, header=0)
     elif ext in [".tsv", ".txt"]:
-        be_df = pd.read_csv(args.base_editor_files, sep=None, engine="python", header=0)
+        be_df = pd.read_csv(args.be_files, sep="/t", header=0)
 
     # 列名が期待通りかチェック、違うならエラーを投げる
     if set(be_df.columns) != set(expected_columns):
@@ -76,20 +76,6 @@ def parse_base_editors_from_file(
             )
             for _, row in be_df.iterrows()
         }
-
-def parse_base_editors_from_presets(
-    args: argparse.Namespace, 
-    parser: argparse.ArgumentParser, 
-    base_editors: dict[str, BaseEditor]
-) -> dict[str, BaseEditor] | None:
-    preset_base_editors = PRESET_BASE_EDITORS # 事前定義されたBaseEditorの辞書
-    if args.be_preset is not None:
-        if args.be_preset not in preset_base_editors:
-            parser.error(f"Invalid base editor preset: {args.be_preset}. Available presets are: {list(preset_base_editors.keys())}")
-        else:
-            base_editor = preset_base_editors[args.be_preset]
-            base_editors[base_editor.base_editor_name] = base_editor
-    return base_editors
 
 def show_base_editors_info(base_editors: dict[str, BaseEditor], parser: argparse.ArgumentParser):
     if base_editors is None:
@@ -134,14 +120,13 @@ def parse_base_editors_from_all_sources(
     コマンドライン引数からBaseEditor情報を取得し、BaseEditorの辞書を返す。
     ファイル、プリセット、個別指定の順で情報を取得する。
     """
-    base_editors = {}
+    # デフォルトですべてのプリセットを使うことにする
+    base_editors = PRESET_BASE_EDITORS.copy()
     # ファイルからの読み込み
     if args.be_files:
         base_editors.update(
             parse_base_editors_from_file(args, parser) or {}
         )
-    # プリセットからの読み込み
-    base_editors = parse_base_editors_from_presets(args, parser, base_editors) or base_editors
     # 個別指定からの読み込み
     base_editors = parse_base_editors_from_args(args, parser, base_editors) or base_editors
     # 選択されたbase editorの情報を表示

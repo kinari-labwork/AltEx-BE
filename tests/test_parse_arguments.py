@@ -7,7 +7,7 @@ from altex_be.manage_arguments.parse_arguments import (
     parse_genes_from_args,
     parse_base_editors_from_args,
     parse_base_editors_from_file,
-    parse_base_editors_from_presets,
+    parse_base_editors_from_all_sources,
 )
 from altex_be.sgrna_designer import BaseEditor
 
@@ -70,16 +70,6 @@ def test_parse_base_editors_from_args_invalid():
     with pytest.raises(SystemExit):
         parse_base_editors_from_args(args, parser, base_editors)
 
-def test_parse_base_editors_from_presets():
-    args = argparse.Namespace(be_preset="abe8e_ngg")
-    parser = argparse.ArgumentParser()
-    result = parse_base_editors_from_presets(args, parser, {})
-    assert isinstance(result, dict)
-    print(result)
-    be = result["abe8e_ngg"]
-    assert isinstance(be, BaseEditor)
-    assert be.base_editor_name == "abe8e_ngg"
-
 def test_parse_gene_file(tmp_path):
     # ダミーの遺伝子ファイル作成
     gene_file = tmp_path / "genes.txt"
@@ -118,7 +108,7 @@ def test_parse_base_editors_from_files(tmp_path):
         "TestBE,NGG,10,15,cbe\n"
     )
     parser = argparse.ArgumentParser()
-    args = argparse.Namespace(base_editor_files=str(be_file))
+    args = argparse.Namespace(be_files=str(be_file))
     result = parse_base_editors_from_file(args, parser)
     assert isinstance(result, dict)
     assert "TestBE" in result
@@ -133,7 +123,41 @@ def test_get_base_editors_from_args_invalid(tmp_path):
         "base_editor_name,editing_window_start,editing_window_end,base_editor_type\n"
         "TestBE,10,15,cbe\n"
     )
-    args = argparse.Namespace(base_editor_files=str(be_file))
+    args = argparse.Namespace(be_files=str(be_file))
     parser = argparse.ArgumentParser()
     with pytest.raises(SystemExit):
         parse_base_editors_from_file(args, parser)
+
+def test_parse_base_editors_from_all_sources(tmp_path):
+    # ダミーのbase editorファイル作成
+    be_file = tmp_path / "editors.csv"
+    be_file.write_text(
+        "base_editor_name,pam_sequence,editing_window_start,editing_window_end,base_editor_type\n"
+        "FileBE,NGG,10,15,cbe\n"
+    )
+    args = argparse.Namespace(
+        be_files=str(be_file),
+        be_name="ArgBE",
+        be_pam="NGA",
+        be_window_start="12",
+        be_window_end="16",
+        be_type="abe"
+    )
+    parser = argparse.ArgumentParser()
+    result = parse_base_editors_from_all_sources(args, parser)
+    assert isinstance(result, dict)
+    # ファイル由来のBaseEditorが含まれていることを確認
+    assert "FileBE" in result
+    file_be = result["FileBE"]
+    assert isinstance(file_be, BaseEditor)
+    assert file_be.base_editor_name == "FileBE"
+    # 引数由来のBaseEditorが含まれていることを確認
+    assert "ArgBE" in result
+    arg_be = result["ArgBE"]
+    assert isinstance(arg_be, BaseEditor)
+    assert arg_be.base_editor_name == "ArgBE"
+    # プリセット由来のBaseEditorが含まれていることを確認
+    assert "be4max_ng" in result
+    preset_be = result["be4max_ng"]
+    assert isinstance(preset_be, BaseEditor)
+    assert preset_be.base_editor_name == "be4max_ng"
