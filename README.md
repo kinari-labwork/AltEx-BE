@@ -191,6 +191,7 @@ altex-be \
 |base_editor_name/pam_sequence/window_start or end / base editor type| infomation of BE to design sgRNA|
 |crispr_direct_url| link to CRISPR direct|
 |pam+20bp exact match| pam+20bp (23-mer) exact match in all chromosome|
+|pam+12bp exact match| pam+12bp (12-mer) exact match in all chromosome|
 
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
