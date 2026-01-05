@@ -74,6 +74,17 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
     exploded_sgrna_df = pd.concat(exploded_dfs, ignore_index=True)
     return exploded_sgrna_df
 
+def add_sgrna_strand_to_df(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Purpose: exploded_sgrna_dfのstrand情報は、標的遺伝子のstrand情報であるため、sgRNAのstrand情報を追加する
+    sgrna_target_sequenceの、+ で区切られる末尾または先頭の文字がPAM配列に対応している。
+    そのため、sgRNAのstrand情報は、sgrna_target_sequenceの中のどこに+があるかで判定できる。
+    """
+    exploded_sgrna_df["sgrna_strand"] = exploded_sgrna_df["sgrna_target_sequence"].apply(
+        lambda x: "-" if len(x.split('+')[0]) < len(x.split('+')[1]) else "+" 
+    )
+    return exploded_sgrna_df
+
 def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
     """
     Purpose: exploded_sgrna_dfにBaseEditorの情報を追加する
@@ -116,6 +127,9 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
     # exploded_sgrna_dfの検証
     if not is_sgrna_designed(exploded_sgrna_df):
         return pd.DataFrame()  # 空のDataFrameを返す
+    
+    # sgRNA の strand情報を追加
+    exploded_sgrna_df = add_sgrna_strand_to_df(exploded_sgrna_df)
 
     # BaseEditorの情報を追加
     exploded_sgrna_df = add_base_editor_info_to_df(exploded_sgrna_df, base_editors)

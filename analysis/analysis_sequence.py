@@ -40,10 +40,10 @@ print("Number of last exons:", last_exons.sum())
 # %%
 target_acceptor_regions = data["exon_position"].isin(["internal", "last"])
 target_donor_regions = data["exon_position"].isin(["internal", "first"])
-is_AG = data.loc[target_acceptor_regions, "acceptor_sequence"].str[23:25] == "AG"
-is_ag = data.loc[target_acceptor_regions, "acceptor_sequence"].str[23:25] == "ag"
-is_GT = data.loc[target_donor_regions, "donor_sequence"].str[25:27] == "GT"
-is_gt = data.loc[target_donor_regions, "donor_sequence"].str[25:27] == "gt"
+is_AG = data.loc[target_acceptor_regions, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_ag = data.loc[target_acceptor_regions, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_GT = data.loc[target_donor_regions, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_gt = data.loc[target_donor_regions, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 
 print("\n--- integrated information ---\n")
 print("Number of target exons with acceptor sequence:", target_acceptor_regions.sum())
@@ -107,10 +107,10 @@ print("Percentage of first plus exons with AG acceptor sequence:", (is_AG_plus |
 print("Percentage of first plus exons with GT donor sequence:", (is_GT_plus | is_gt_plus).sum() / first_plus_exons.sum() * 100) 
 
 # %%
-is_AG_minus = data.loc[first_minus_exons, "acceptor_sequence"].str[23:25] == "AG"
-is_GT_minus = data.loc[first_minus_exons, "donor_sequence"].str[25:27] == "GT"
-is_ag_minus = data.loc[first_minus_exons, "acceptor_sequence"].str[23:25] == "ag"
-is_gt_minus = data.loc[first_minus_exons, "donor_sequence"].str[25:27] == "gt"
+is_AG_minus = data.loc[first_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "AG"
+is_GT_minus = data.loc[first_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "GT"
+is_ag_minus = data.loc[first_minus_exons, "acceptor_exon_intron_boundary_±25bp_sequence"].str[23:25] == "ag"
+is_gt_minus = data.loc[first_minus_exons, "donor_exon_intron_boundary_±25bp_sequence"].str[25:27] == "gt"
 
 print("\n--- first minus exons ---\n")
 print("Number of first minus exons:", first_minus_exons.sum())

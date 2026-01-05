@@ -176,6 +176,7 @@ altex-be \
 |:-----------|:-------------------|--|
 |geneName|gene symbol of target gene|
 |chrom|location of target gene|
+|strand|strand of target gene|
 |exonstart, exonend, exonlength|general information of target exon|
 |coding|whether target gene is protein coding or non coding gene|
 |frame| mod3 of the length of target exon|0 = in-frame or 1,2 = out-frame |
@@ -188,9 +189,11 @@ altex-be \
 |sgrna_unintended_edited_base_count| number of possible being edited bases (A or C) in cds|
 |sgrna_start/end_in_genome| location of sgrna|
 |site type| target splicing site of sgRNA | acceptor or donor|
+|sgrna_strand|strand of sgRNA |
 |base_editor_name/pam_sequence/window_start or end / base editor type| infomation of BE to design sgRNA|
 |crispr_direct_url| link to CRISPR direct|
 |pam+20bp exact match| pam+20bp (23-mer) exact match in all chromosome|
+|pam+12bp exact match| pam+12bp (12-mer) exact match in all chromosome|
 
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)

@@ -12,6 +12,7 @@ def test_format_sgrna_for_ucsc_custom_track():
         'sgrna_sequence': ['ATGCATGCATGCATGCATGC'],
         'pam+20bp_exact_match_count': [1],
         'strand': ['+'],
+        'sgrna_strand': ['-'],
         'sgrna_start_in_genome': [100],
         'sgrna_end_in_genome': [120],
         'chrom': ['chr1']
@@ -32,7 +33,7 @@ def test_format_sgrna_for_ucsc_custom_track():
     assert output_df['chromEnd'].iloc[0] == 120
     assert output_df['name'].iloc[0] == 'MYGENE_donor_ABE8e_1234-5678'
     assert output_df['score'].iloc[0] == 1
-    assert output_df['strand'].iloc[0] == '+'
+    assert output_df['strand'].iloc[0] == '-'
 
 def test_format_sgrna_for_ucsc_custom_track_edge_case():
     # 1. Create a sample input DataFrame
@@ -45,6 +46,7 @@ def test_format_sgrna_for_ucsc_custom_track_edge_case():
         'sgrna_sequence': ['ATGCATGCATGCATGCATGC'],
         'pam+20bp_exact_match_count': [1001],
         'strand': ['+'],
+        'sgrna_strand': ['-'],
         'sgrna_start_in_genome': [100],
         'sgrna_end_in_genome': [120],
         'chrom': ['chr1']
@@ -65,4 +67,4 @@ def test_format_sgrna_for_ucsc_custom_track_edge_case():
     assert output_df['chromEnd'].iloc[0] == 120
     assert output_df['name'].iloc[0] == 'MYGENE_donor_ABE8e_1234-5678'
     assert output_df['score'].iloc[0] == 1000
-    assert output_df['strand'].iloc[0] == '+'
+    assert output_df['strand'].iloc[0] == '-'
