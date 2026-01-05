@@ -128,7 +128,7 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
     if not is_sgrna_designed(exploded_sgrna_df):
         return pd.DataFrame()  # 空のDataFrameを返す
     
-    # sgRNA の　strand情報を追加
+    # sgRNA の strand情報を追加
     exploded_sgrna_df = add_sgrna_strand_to_df(exploded_sgrna_df)
 
     # BaseEditorの情報を追加
