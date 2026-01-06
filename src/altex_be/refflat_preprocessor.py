@@ -276,7 +276,7 @@ def add_common_exon_window(refflat: pd.DataFrame) -> pd.DataFrame:
         common_end = transcript_ends.min()
 
         refflat.loc[group.index, "common_exon_space_start"] = common_start
-        refflat.loc[group.index, "common_exon_end"] = common_end
+        refflat.loc[group.index, "common_exon_space_end"] = common_end
 
     return refflat
 
