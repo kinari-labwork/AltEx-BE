@@ -293,7 +293,7 @@ def flag_structural_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
             for start, end in row["exons"]
         ]
 
-    refflat["structural_alternative"] = refflat.apply(mark_row, axis=1)
+    refflat["is_outside_common_exon_space"] = refflat.apply(mark_row, axis=1)
     return refflat
 
 
