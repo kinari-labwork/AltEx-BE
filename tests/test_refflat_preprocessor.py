@@ -8,6 +8,8 @@ from altex_be.refflat_preprocessor import (
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
     parse_exon_coordinates,
+    add_common_exon_window,
+    flag_outside_common_exon_space
 )
 
 
@@ -185,3 +187,69 @@ def test_add_exon_position_flags():
     )
     output_data = add_exon_position_flags(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output)
+
+def test_common_exon_window():
+    test_df = pd.DataFrame({
+        "geneName": ["GENE1", "GENE1"],
+        "strand": ["+", "-"],
+        "exons": [
+            # transcript 1
+            [
+                (100, 200),   # first
+                (300, 400),   # internal (common)
+                (500, 600),   # last
+            ],
+            # transcript 2 (first/last exon が common space 外)
+            [
+                (0, 50),    # first (outside)
+                (300, 400),   # internal (common)
+                (700, 800),   # last (outside)
+            ],
+        ],
+    })
+    test_df = add_common_exon_window(test_df)
+
+    # transcript ごとの exon span
+    # tx1: 100–600
+    # tx2: 0–800
+    # common_space → 100–600
+    assert (test_df["common_exon_space_start"] == 100).all()
+    assert (test_df["common_exon_space_end"] == 600).all()
+
+def test_outside_common_exon_space():
+    test_df = pd.DataFrame({
+        "geneName": ["GENE1", "GENE1"],
+        "strand": ["+", "-"],
+        "exons": [
+            # transcript 1
+            [
+                (100, 200),   # first
+                (300, 400),   # internal (common)
+                (500, 600),   # last
+            ],
+            # transcript 2 (first/last exon が common space 外)
+            [
+                (0, 50),    # first (outside)
+                (300, 400),   # internal (common)
+                (700, 800),   # last (outside)
+            ],
+        ],
+    })
+    test_df = add_common_exon_window(test_df)
+    test_df = flag_outside_common_exon_space(test_df)
+
+    flags_tx1 = test_df.loc[0, "is_outside_common_exon_space"]
+    flags_tx2 = test_df.loc[1, "is_outside_common_exon_space"]
+
+    # exon index:
+    # 0 = first, 1 = internal, 2 = last
+
+    # internal exon は common space 内
+    assert flags_tx1[1] is False
+    assert flags_tx2[1] is False
+
+    # tx1 はすべて common space 内
+    assert flags_tx1 == [False, False, False]
+
+    # tx2 は first と last が outside
+    assert flags_tx2 == [True, False, True]
