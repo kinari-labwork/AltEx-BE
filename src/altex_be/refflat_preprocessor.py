@@ -280,7 +280,7 @@ def add_common_exon_window(refflat: pd.DataFrame) -> pd.DataFrame:
 
     return refflat
 
-def flag_structural_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
+def flag_outside_common_exon_space(refflat: pd.DataFrame) -> pd.DataFrame:
     """
     共通 exon window の外にある exon を structural alternative と判定
     """
