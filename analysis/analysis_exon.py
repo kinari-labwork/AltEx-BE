@@ -295,10 +295,10 @@ plot = (
     geom_bar(stat="identity") +
     labs(title="% of in-frame exon by exon category in alternative coding exons", x="Exon Category", y="% of in-frame exon") +
     scale_fill_manual(values={
-        "outside_exon": "#E69F00", #orange
-        "skipped_in_coding": "#E69F00", #orange 
-        "skipped_only_in_noncoding": "#E69F00", #orange
-        "overall_alternative_coding_exons": "#009E73", #green
+        "outside_exon": "#D55E00", #vermilion
+        "skipped_in_coding": "#D55E00", #vermilion 
+        "skipped_only_in_noncoding": "#D55E00", #vermilion
+        "overall_alternative_coding_exons": "#CA931D", #orange
     }) +
     theme(
         axis_text_x=element_text(rotation=0, hjust=0.5, size=10),
