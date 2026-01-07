@@ -2,7 +2,7 @@ import pandas as pd
 
 from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
-    annotate_cording_information,
+    annotate_coding_information,
     annotate_frame_information,
     annotate_variant_count,
     calculate_exon_lengths,
@@ -109,8 +109,8 @@ def test_drop_abnormal_mapped_transcripts():
     pd.testing.assert_frame_equal(output_data, expected_output)
 
 
-def test_cording_information_annotator():
-    # 遺伝子がcordingかnon-codingかを判定する
+def test_coding_information_annotator():
+    # 遺伝子がcodingかnon-codingかを判定する
     input_data = pd.DataFrame(
         {
             "name": ["NR_001", "NM_001", "NM_002", "NR_002"],
@@ -127,9 +127,9 @@ def test_cording_information_annotator():
         }
     )
     expected_output["coding"] = expected_output["coding"].astype("category")
-    output_data_refflat = annotate_cording_information(input_data, gtf_flag=False)
+    output_data_refflat = annotate_coding_information(input_data, gtf_flag=False)
     pd.testing.assert_frame_equal(output_data_refflat, expected_output)
-    output_data_gtf = annotate_cording_information(input_data, gtf_flag=True)
+    output_data_gtf = annotate_coding_information(input_data, gtf_flag=True)
     pd.testing.assert_frame_equal(output_data_gtf, expected_output)
 
 

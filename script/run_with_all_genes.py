@@ -19,7 +19,7 @@ def preprocess_refflat_with_all_genes(refflat: pd.DataFrame, gtf_flag: bool) -> 
     refflat = refflat_preprocessor.parse_exon_coordinates(refflat)
     refflat = refflat_preprocessor.calculate_exon_lengths(refflat)
     refflat = refflat_preprocessor.drop_abnormal_mapped_transcripts(refflat)
-    refflat = refflat_preprocessor.annotate_cording_information(refflat, gtf_flag)
+    refflat = refflat_preprocessor.annotate_coding_information(refflat, gtf_flag)
     refflat = refflat_preprocessor.annotate_frame_information(refflat)
     refflat = refflat_preprocessor.add_exon_position_flags(refflat)
     refflat = refflat_preprocessor.annotate_utr_and_cds_exons(refflat)

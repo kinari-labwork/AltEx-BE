@@ -44,7 +44,7 @@ geneName name(=transcript id) chrom strand  txStart txEnd  cdsStart cdsEnd exonC
 ## フレームやコーディングなどのアノテーションを付加する
 - [x] 常染色体または性染色体だけにマッピングされている遺伝子を残し、そうでないものは削除する
 - [x] エキソン長が3の倍数かどうかのアノテーションを"frame" 列に追加する（out-frameまたはin-frame)
-- [x] その遺伝子がタンパク質をコードするかの情報を"cording"列に追加する（cordingまたはnoncording）
+- [x] その遺伝子がタンパク質をコードするかの情報を"coding"列に追加する（codingまたはnoncoding）
 - [x] エキソンの位置を"exon_position"列に追加する(first, internal, last) →　ある時はfirst, ある時はinternal のような場合は存在するのか？
 
 ## データ解析

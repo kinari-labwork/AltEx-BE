@@ -94,7 +94,7 @@ for name, df in exon_sets:
         exon_count = sub.shape[0]
         results.append({
             "Category": name,
-            "cording_status": cds_status,
+            "coding_status": cds_status,
             "total_exon_count": total_count,
             "in_frame_count": in_frame_count,
             "out_frame_count": out_frame_count,
@@ -111,17 +111,17 @@ full_categories = [f"{prefix}{cat}" for prefix in ["internal_", "first_", "last_
 
 df_in_frame["Category"] = pd.Categorical(df_in_frame["Category"], categories=["alternative_exon", "a5ss_long_exon", "a3ss_long_exon", "a5ss_short_exon", "a3ss_short_exon"], ordered=True)
 df_in_frame = df_in_frame.dropna(subset=["Category"])
-df_in_frame["cording_status"] = pd.Categorical(df_in_frame["cording_status"], categories=["cds_exon","utr_containing_exon"], ordered=True)
+df_in_frame["coding_status"] = pd.Categorical(df_in_frame["coding_status"], categories=["cds_exon","utr_containing_exon"], ordered=True)
 
 
 df_in_frame["label"] = df_in_frame.apply(
     lambda row: f"({int(row['ExonCount'])})", axis=1
 )
-exon_counts_df = df_in_frame[df_in_frame["cording_status"].isin(["cds_exon","utr_containing_exon"])]
+exon_counts_df = df_in_frame[df_in_frame["coding_status"].isin(["cds_exon","utr_containing_exon"])]
 
 for df in [exon_counts_df]:
     plot = (
-        ggplot(df, aes(x="Category", y="InframeRatio", fill="cording_status")) +
+        ggplot(df, aes(x="Category", y="InframeRatio", fill="coding_status")) +
         geom_bar(stat="identity", position="dodge") +
         labs(title="% of in-frame exon in splicing categories", x="Exon Category", y="% of in-frame exon") +
         scale_fill_manual(values={

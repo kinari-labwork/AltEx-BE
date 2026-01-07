@@ -131,7 +131,7 @@ def drop_abnormal_mapped_transcripts(refflat: pd.DataFrame) -> pd.DataFrame:
     return data_filtered.reset_index(drop=True)
 
 
-def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFrame:
+def annotate_coding_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、コーディング情報を追加する。
@@ -142,7 +142,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
     """
     # コーディングと非コーディングのトランスクリプトを識別するための正規表現パターン
     # NMはコーディング、NRは非コーディング
-    cording_pattern = re.compile(r"^NM")
+    coding_pattern = re.compile(r"^NM")
     non_coding_pattern = re.compile(r"^NR")
     refflat["coding"] = ""
     # 入力がgtfファイルの場合は、cdsStart=cdsEndとなっているものをnon-codingとする
@@ -153,7 +153,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
         )
         refflat["coding"] = refflat["coding"].astype("category")
     else:
-        refflat.loc[refflat["name"].str.match(cording_pattern), "coding"] = "coding"
+        refflat.loc[refflat["name"].str.match(coding_pattern), "coding"] = "coding"
         refflat.loc[refflat["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
         refflat["coding"] = refflat["coding"].astype("category")
     return refflat
@@ -307,7 +307,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_fla
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
-    refflat = annotate_cording_information(refflat, gtf_flag)
+    refflat = annotate_coding_information(refflat, gtf_flag)
     refflat = annotate_frame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)
