@@ -158,6 +158,7 @@ display(plot)
 
 plot.save("../data/exon_inframe_ratio_by_coding_status.png", dpi=600)
 # %%
+# alternative かつ 少なくとも 1回 CDS exon となる exon を再分類し、 in-frame 割合を計算する
 def extract_alternative_coding_exons(df_exp: pd.DataFrame) -> pd.DataFrame:
     """ alternative かつ 少なくとも 1回 CDS exon となるexonを抽出する関数。 """
     df_exp["cds_exon_any_coding"] = df_exp.groupby(["geneName", "exons"])["cds_info"].transform(
