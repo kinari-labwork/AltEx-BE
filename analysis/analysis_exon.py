@@ -134,7 +134,7 @@ for df in [exon_counts_df]:
             axis_title_x=element_text(size=12),
             legend_title=element_text(size=10),
             legend_text=element_text(size=10),
-            figure_size=(8,6)
+            figure_size=(6,6)
         ) +
         scale_x_discrete(
             limits=[
@@ -156,7 +156,7 @@ for df in [exon_counts_df]:
     )
 display(plot)
 
-plot.save("../data/exon_inframe_ratio_by_coding_status.png", dpi=600)
+plot.save("../data/mm39/exon_inframe_ratio_by_coding_status.png", dpi=600)
 # %%
 # alternative かつ 少なくとも 1回 CDS exon となる exon を再分類し、 in-frame 割合を計算する
 def extract_alternative_coding_exons(df_exp: pd.DataFrame) -> pd.DataFrame:
