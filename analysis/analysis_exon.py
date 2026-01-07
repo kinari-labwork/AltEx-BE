@@ -288,6 +288,45 @@ inframe_summary = pd.concat([inframe_summary, overall_summary], ignore_index=Tru
 print(inframe_summary)
 
 # %%
+# inframe_summary を棒グラフ化
+plot = (
+    ggplot(inframe_summary, aes(x="exon_category", y="inframe_rate", fill="exon_category")) +
+    geom_bar(stat="identity") +
+    labs(title="% of in-frame exon by exon category in alternative coding exons", x="Exon Category", y="% of in-frame exon") +
+    scale_fill_manual(values={
+        "outside_exon": "#E69F00", #orange
+        "skipped_in_coding": "#E69F00", #orange 
+        "skipped_only_in_noncoding": "#E69F00", #orange
+        "overall_alternative_coding_exons": "#009E73", #green
+    }) +
+    theme(
+        axis_text_x=element_text(rotation=0, hjust=0.5, size=10),
+        axis_title_y=element_text(size=10),
+        axis_title_x=element_text(size=12),
+        legend_title=element_text(size=10),
+        legend_text=element_text(size=10),
+        figure_size=(8,6)
+    ) +
+    scale_x_discrete(
+        limits=[
+                "skipped_only_in_noncoding",
+                "skipped_in_coding",
+                "outside_exon",
+                "overall_alternative_coding_exons",
+        ],
+        labels={
+            "overall_alternative_coding_exons": f"Overall alternative coding exons \n (n={num_alternative_coding_exons})",
+            "outside_exon": f"Outside exon \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'outside_exon', 'total_exons'].values[0]})",
+            "skipped_in_coding": f"Skipped in coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_in_coding', 'total_exons'].values[0]})",
+            "skipped_only_in_noncoding": f"Constitutive in coding, \n skipped in non-coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_only_in_noncoding', 'total_exons'].values[0]})",
+        }) +
+    scale_y_continuous(limits=(0, 1), labels=lambda l: ["{:.0f}%".format(v * 100) for v in l]) +
+    coord_flip()
+)
+display(plot)
+
+
+# %%
 skipped_in_coding_outframe = exon_df_alt_cds[(exon_df_alt_cds["exon_category"] == "skipped_in_coding") & (exon_df_alt_cds["frame"] == "out-frame")]
 print(skipped_in_coding_outframe.tail(10))
 
@@ -334,91 +373,6 @@ exon_conditions = [
     ("Intron retention", lambda x: "intron_retention" in x),
     ("Genes have targetable splicing events", lambda x: "alternative" in x or "unique-alternative" in x or "a3ss-long" in x  or "a5ss-long" in x)
 ]
-
-# 関数を呼び出して結果を取得
-result_df = count_genes_by_exon_type(data, exon_conditions)
-
-# %%
-# 結果を表示
-print(result_df)
-
-# %%
-# Exon Type列の順序を明示的に指定
-result_df["Exon Type"] = pd.Categorical(
-    result_df["Exon Type"],
-    categories=[
-        "Alternative exon", 
-        "Unique-Alternative exon", 
-        "Alternative or unique-alternative exon", 
-        "Alternative 3' splice site-long", 
-        "Alternative 5' splice site-long", 
-        "Alternative 3' splice site-short",
-        "Alternative 5' splice site-short",
-        "Overlapping exon", 
-        "Intron retention",
-        "Genes have targetable splicing events"
-    ],  # 希望する順序を指定
-    ordered=True
-)
-
-# データをlong形式に変換
-plot_df = pd.melt(
-    result_df,
-    id_vars=["Exon Type", "Percentage"],
-    value_vars=["Genes with Exon", "Genes without Exon"],
-    var_name="Category",
-    value_name="Count"
-)
-# カテゴリ名をわかりやすく
-plot_df["Category"] = plot_df["Category"].replace({
-    "Genes with Exon": "Genes With Splicing Event",
-    "Genes without Exon": "Genes Without Splicing Event"
-})
-
-plot_df["Category"] = pd.Categorical(
-    plot_df["Category"],
-    categories=["Genes Without Splicing Event", "Genes With Splicing Event"],  # 希望する順序を指定
-    ordered=True
-)
-
-# Percentage列を数値型に変換
-plot_df["Percentage"] = plot_df["Percentage"].str.rstrip('%').astype(float)
-print(plot_df)
-
-
-
-# プロット
-plot = (
-    ggplot(plot_df, aes(x="Exon Type", y="Count", fill="Category")) +
-    geom_bar(stat="identity", position="stack") +
-    geom_text(
-        aes(label="Percentage"),
-        data=plot_df[plot_df["Category"] == "Genes With Splicing Event"],  # "With Exon" のみラベルを表示
-        position="stack",
-        va="bottom",  # バーの上に配置
-        size=10,
-        color="black",
-        format_string="{:.1f}%"  # パーセンテージを表示
-    ) +
-    scale_fill_manual(
-        values={
-            "Genes With Splicing Event": "#56B4E9",  # 青
-            "Genes Without Splicing Event": "#E69F00"  # オレンジ
-        }
-    ) +
-    labs(
-        title="Percentage of Genes by Exon Type (Denominator: Total Genes)",
-        x="Exon Type",
-        y="Number of Genes",
-        fill="Category"
-    ) +
-    theme(
-        axis_text_x=element_text(size=11, rotation=90, hjust=1),
-        figure_size=(10, 6),
-    )
-)
-
-display(plot)  # Jupyter Notebookでの表示用
 
 # %%
 genes_not_one_exon_or_one_variant = data[
@@ -558,42 +512,3 @@ plot = (
 
 display(plot)  # Jupyter Notebookでの表示用
 plot.save("../data/mm39/percentage_genes_has_splicing_events_mm39.png", dpi=300)
-
-# %%
-# 最大エキソンが1つの遺伝子をカウント
-genes_with_one_exon = data[data["max_exon_count"] == 1]["geneName"].unique()
-print(f"最大エキソンが1つの遺伝子数: {len(genes_with_one_exon)}")
-# transcript variantsが1つの遺伝子をカウント
-genes_with_one_variant = data[data["variant_count"] == 1]["geneName"].unique()  
-print(f"transcript variantsが1つの遺伝子数: {len(genes_with_one_variant)}")
-
-
-
-# %%
-# エキソンが一つまたはtranscript variantsが一つの遺伝子をカウント
-genes_with_one_exon_or_one_variant = data[
-    (data["max_exon_count"] == 1) | (data["variant_count"] == 1)
-]["geneName"].unique()
-print(f"最大エキソンが一つまたはtranscript variantsが一つの遺伝子数: {len(genes_with_one_exon_or_one_variant)}")
-
-# skipped exon or unique exonをもつ遺伝子をカウント
-genes_have_skipped_or_unique_exon = data[
-    data["exontype"].apply(lambda x: "skipped" in x or "unique" in x)]["geneName"].unique()
-
-# total genes数をカウント
-total_genes = data["geneName"].nunique()
-print(f"全遺伝子数: {total_genes}")
-
-# skipped exonまたはunique exonが生じうる遺伝子を母数にしてSkipped exonを持つ遺伝子の割合を計算
-print(f"skipped exonを持つ遺伝子の割合 (skipped exonまたはunique exonが生じうる遺伝子を母数とする): "
-    f"{len(genes_have_skipped_or_unique_exon) / ((total_genes)-len(genes_with_one_exon_or_one_variant)):.2%}")
-
-# 最大exonが一つまたはtranscript variantsが一つの遺伝子でskipped exonまたはunique exonを持つ遺伝子
-genes_with_one_exon_or_one_variant_and_skipped_or_unique = data[
-    (data["geneName"].isin(genes_with_one_exon_or_one_variant)) &
-    (data["exontype"].apply(lambda x: "skipped" in x or "unique" in x))
-]
-print(f"最大エキソンが一つまたはtranscript variantsが一つの遺伝子でskipped exonまたはunique exonを持つ遺伝子数: "
-    f"{len(genes_with_one_exon_or_one_variant_and_skipped_or_unique)}")
-
-
