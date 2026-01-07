@@ -324,6 +324,7 @@ plot = (
     scale_y_continuous(limits=(0, 1), labels=lambda l: ["{:.0f}%".format(v * 100) for v in l]) +
     coord_flip()
 )
+plot.save("../data/mm39/inframe_ratio_by_exon_category_in_alternative_coding_exons.jpg", dpi=600)
 display(plot)
 
 
