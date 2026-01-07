@@ -188,10 +188,10 @@ def annotate_exon_skipping(df_exp: pd.DataFrame) -> pd.DataFrame:
     """
 
     # 初期化
-    df_exp["skipped_only_in_coding"] = False
+    df_exp["skipped_in_coding"] = False
     df_exp["skipped_only_in_noncoding"] = False
-    df_exp["skipped_both_coding_and_noncoding"] = False
 
+    # そこまで時間はかからないが、明らかに非効率であるので、将来的に改善を行うべき
     for gene, df_g in df_exp.groupby("geneName"):
         coding_total = df_g["coding_variant_count"].iloc[0]
         noncoding_total = df_g["noncoding_variant_count"].iloc[0]
@@ -223,8 +223,9 @@ def annotate_exon_skipping(df_exp: pd.DataFrame) -> pd.DataFrame:
 
     return df_exp
 
-# 上記3分類は背反である
-# outside exon かつ上記の３分類に該当という場合もあり得る。その場合は outside exon を優先する
+# 上記2分類は背反である
+# one-hot な表現を一つのカテゴリ変数にまとめる
+# outside exon かつ上記の2分類に該当という場合もあり得る。その場合は outside exon を優先する
 def assign_exon_category(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -254,12 +255,7 @@ exon_df_alt_cds = annotate_exon_skipping(exon_df_alt_cds)
 exon_df_alt_cds = assign_exon_category(exon_df_alt_cds)
 exon_df_alt_cds = exon_df_alt_cds[exon_df_alt_cds["cds_info"] == "cds_exon"].drop_duplicates(subset=["chrom","exons"])
 # %%
-# そもそも alternative exon かつ、CDS exon 数は？
-num_alternative_coding_exons = df_exp[
-    (df_exp["exontype"].isin(["alternative", "unique-alternative"])) &
-    (df_exp["cds_info"] == "cds_exon")
-]["exons"].nunique()
-print(f"Number of alternative coding exons: {num_alternative_coding_exons}")
+# exon_category ごとに in-frame 割合を計算する( outside exon, skipped_in_coding, skipped_only_in_noncoding )
 inframe_summary = (
     exon_df_alt_cds
     .query("exon_category != 'NAN'")
@@ -273,23 +269,27 @@ inframe_summary = (
     )
     .reset_index()
 )
+# overall in-frame rate のを inframe_summary に追加
+num_alternative_coding_exons = df_exp[
+    (df_exp["exontype"].isin(["alternative", "unique-alternative"])) &
+    (df_exp["cds_info"] == "cds_exon")
+]["exons"].nunique()
+num_inframe_alternative_coding_exons = exon_df_alt_cds[
+    exon_df_alt_cds["frame"] == "in-frame"
+]["exons"].nunique()
+overall_inframe_rate = num_inframe_alternative_coding_exons / num_alternative_coding_exons
+overall_summary = pd.DataFrame({
+    "exon_category": ["overall_alternative_coding_exons"],
+    "total_exons": [num_alternative_coding_exons],
+    "inframe_exons": [num_inframe_alternative_coding_exons],
+    "inframe_rate": [overall_inframe_rate]
+})
+inframe_summary = pd.concat([inframe_summary, overall_summary], ignore_index=True)
 print(inframe_summary)
-inframe_position_summary = (
-    exon_df_alt_cds
-    .query("exon_category != 'NAN'")
-    .groupby(["exon_category", "exon_position"])
-    .agg(
-        total_exons=("frame", "size"),
-        inframe_exons=("frame", lambda x: (x == "in-frame").sum())
-    )
-    .assign(
-        inframe_rate=lambda df: df["inframe_exons"] / df["total_exons"]
-    )
-    .reset_index()
-)
-print(inframe_position_summary)
-skipped_only_in_coding_outframe = exon_df_alt_cds[(exon_df_alt_cds["exon_category"] == "skipped_only_in_coding") & (exon_df_alt_cds["frame"] == "out-frame")]
-print(skipped_only_in_coding_outframe.head(10))
+
+# %%
+skipped_in_coding_outframe = exon_df_alt_cds[(exon_df_alt_cds["exon_category"] == "skipped_in_coding") & (exon_df_alt_cds["frame"] == "out-frame")]
+print(skipped_in_coding_outframe.tail(10))
 
 # %%
 def count_genes_by_exon_type(data, exon_conditions):
