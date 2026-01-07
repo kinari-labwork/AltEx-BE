@@ -289,7 +289,7 @@ def flag_outside_common_exon_space(refflat: pd.DataFrame) -> pd.DataFrame:
         ce = row["common_exon_space_end"]
 
         return [
-            (end < cs) or (start > ce)
+            not (cs <= start and end <= ce)
             for start, end in row["exons"]
         ]
 
