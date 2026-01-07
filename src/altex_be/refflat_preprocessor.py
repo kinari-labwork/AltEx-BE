@@ -131,7 +131,7 @@ def drop_abnormal_mapped_transcripts(refflat: pd.DataFrame) -> pd.DataFrame:
     return data_filtered.reset_index(drop=True)
 
 
-def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFrame:
+def annotate_coding_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFrame:
     """
     Purpose:
         refFlatのデータフレームに、コーディング情報を追加する。
@@ -142,7 +142,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
     """
     # コーディングと非コーディングのトランスクリプトを識別するための正規表現パターン
     # NMはコーディング、NRは非コーディング
-    cording_pattern = re.compile(r"^NM")
+    coding_pattern = re.compile(r"^NM")
     non_coding_pattern = re.compile(r"^NR")
     refflat["coding"] = ""
     # 入力がgtfファイルの場合は、cdsStart=cdsEndとなっているものをnon-codingとする
@@ -153,7 +153,7 @@ def annotate_cording_information(refflat: pd.DataFrame, gtf_flag) -> pd.DataFram
         )
         refflat["coding"] = refflat["coding"].astype("category")
     else:
-        refflat.loc[refflat["name"].str.match(cording_pattern), "coding"] = "coding"
+        refflat.loc[refflat["name"].str.match(coding_pattern), "coding"] = "coding"
         refflat.loc[refflat["name"].str.match(non_coding_pattern), "coding"] = "non-coding"
         refflat["coding"] = refflat["coding"].astype("category")
     return refflat
@@ -259,45 +259,43 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     return refflat
 
-def add_last_first_exon_position(refflat: pd.DataFrame) -> pd.DataFrame:
+def add_common_exon_window(refflat: pd.DataFrame) -> pd.DataFrame:
     """
-    遺伝子ごとに、各転写物の最初のエキソンの中で、最も3'側に位置するエキソンのstartをlast_exon_start列に追加する
+    遺伝子ごとに、全 transcript に共通する exon 領域
+    (common_exon_start, common_exon_end) を付与する
     """
-    # exons 列はすでに(start, end)のタプルのリストになっていることを前提とする
     for gene, group in refflat.groupby("geneName"):
-        # + strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最初のエキソンのstartの最大値
-        if group["strand"].iloc[0] == "+": # 同じ遺伝子なら基本的にstrandは同じはず
-            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[0][0]).max()
-            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
-        # - strandの場合、最も3'側に位置するエキソンのstartは、各転写物の最後のエキソンのendの最小値
-        else:
-            group["last_first_exon_start"] = group["exons"].apply(lambda exons: exons[-1][1]).min()
-            group["first_last_exon_end"] = group["exons"].apply(lambda exons: exons[0][0]).max()
+        transcript_starts = group["exons"].apply(
+            lambda exons: min(s for s, _ in exons)
+        )
+        transcript_ends = group["exons"].apply(
+            lambda exons: max(e for _, e in exons)
+        )
 
-        refflat.loc[group.index, "last_first_exon_start"] = group["last_first_exon_start"]
-        refflat.loc[group.index, "first_last_exon_end"] = group["first_last_exon_end"]
+        common_start = transcript_starts.max()
+        common_end = transcript_ends.min()
+
+        refflat.loc[group.index, "common_exon_space_start"] = common_start
+        refflat.loc[group.index, "common_exon_space_end"] = common_end
 
     return refflat
 
-def flag_upstream_artificial_alternative(refflat: pd.DataFrame) -> pd.DataFrame:
+def flag_outside_common_exon_space(refflat: pd.DataFrame) -> pd.DataFrame:
     """
-    各 exon が構造上 alternative になっているだけかどうかを判定する。
+    共通 exon window の外にある exon を structural alternative と判定
     """
     def mark_row(row):
-        strand = row["strand"]
-        last_first_pos = row["last_first_exon_start"]
-        first_last_pos = row["first_last_exon_end"]
+        cs = row["common_exon_space_start"]
+        ce = row["common_exon_space_end"]
 
-        flags = []
-        for (start, end) in row["exons"]:
-            if strand == "+":
-                flags.append((start < last_first_pos) or (start > first_last_pos))
-            else:
-                flags.append((end > first_last_pos) or (end < last_first_pos))
-        return flags
+        return [
+            not (cs <= start and end <= ce)
+            for start, end in row["exons"]
+        ]
 
-    refflat["structural_alternative"] = refflat.apply(mark_row, axis=1)
+    refflat["is_outside_common_exon_space"] = refflat.apply(mark_row, axis=1)
     return refflat
+
 
 def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_flag: bool) -> pd.DataFrame:
     """
@@ -309,7 +307,7 @@ def preprocess_refflat(refflat: pd.DataFrame, interest_genes: list[str], gtf_fla
     refflat = parse_exon_coordinates(refflat)
     refflat = calculate_exon_lengths(refflat)
     refflat = drop_abnormal_mapped_transcripts(refflat)
-    refflat = annotate_cording_information(refflat, gtf_flag)
+    refflat = annotate_coding_information(refflat, gtf_flag)
     refflat = annotate_frame_information(refflat)
     refflat = add_exon_position_flags(refflat)
     refflat = annotate_utr_and_cds_exons(refflat)

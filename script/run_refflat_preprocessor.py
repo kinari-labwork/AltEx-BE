@@ -3,7 +3,7 @@ import pandas as pd
 # export PYTHONPATH="$PYTHONPATH:./src" をbashで実行すること
 from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
-    annotate_cording_information,
+    annotate_coding_information,
     annotate_frame_information,
     calculate_exon_lengths,
     drop_abnormal_mapped_transcripts,
@@ -46,7 +46,7 @@ refflat = calculate_exon_lengths(refflat)
 refflat = drop_abnormal_mapped_transcripts(refflat)
 
 # コーディング情報を追加
-refflat = annotate_cording_information(refflat)
+refflat = annotate_coding_information(refflat, gtf_flag=False)
 
 # フレーム情報を追加
 refflat = annotate_frame_information(refflat)
