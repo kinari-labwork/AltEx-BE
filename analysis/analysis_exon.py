@@ -295,9 +295,9 @@ plot = (
     geom_bar(stat="identity") +
     labs(title="% of in-frame exon by exon category in alternative coding exons", x="Exon Category", y="% of in-frame exon") +
     scale_fill_manual(values={
-        "outside_exon": "#D55E00", #vermilion
-        "skipped_in_coding": "#D55E00", #vermilion 
-        "skipped_only_in_noncoding": "#D55E00", #vermilion
+        "outside_exon": "#56B4E9", #skyblue
+        "skipped_in_coding": "#56B4E9", #skyblue 
+        "skipped_only_in_noncoding": "#56B4E9", #skyblue
         "overall_alternative_coding_exons": "#CA931D", #orange
     }) +
     theme(
@@ -321,7 +321,7 @@ plot = (
             "skipped_in_coding": f"Skipped in coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_in_coding', 'total_exons'].values[0]})",
             "skipped_only_in_noncoding": f"Constitutive in coding, \n skipped in non-coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_only_in_noncoding', 'total_exons'].values[0]})",
         }) +
-    scale_y_continuous(limits=(0, 1), labels=lambda l: ["{:.0f}%".format(v * 100) for v in l]) +
+    scale_y_continuous(limits=(0, 1), labels=lambda l: ["{:.0f}".format(v * 100) for v in l]) +
     coord_flip()
 )
 plot.save("../data/mm39/inframe_ratio_by_exon_category_in_alternative_coding_exons.jpg", dpi=600)
