@@ -23,7 +23,7 @@ without writing long command-line arguments.
 
 1. Select **FASTA** and **annotation file** in the sidebar  
 2. Choose an **output directory**
-3. Configure options (mode, threads, base editors, etc.)
+3. Configure options (mode, base editors, etc.)
 4. Click **Run AltEx-BE**
 5. Monitor progress in the log panel
 6. Preview results in the **Results** tab
