@@ -21,7 +21,7 @@ without writing long command-line arguments.
 
 ## Typical workflow
 
-1. Select **FASTA** and **annotation file** in the sidebar  
+1. Select **FASTA** and **annotation file**  
 2. Choose an **output directory**
 3. Configure options (mode, base editors, etc.)
 4. Click **Run AltEx-BE**
