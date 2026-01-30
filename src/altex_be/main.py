@@ -42,7 +42,7 @@ def run_pipeline():
                 "--server.headless=false"
             ]
             subprocess.run(command, check=True)
-        except FileNotFoundError:
+        except ModuleNotFoundError:
             logging.error("`streamlit` command not found. Please ensure Streamlit is installed in the current environment.")
             sys.exit(1)
         except subprocess.CalledProcessError as e:
