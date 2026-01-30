@@ -14,7 +14,9 @@
   - [Workflow Diagram](#workflow-diagram)
   - [Installation](#installation)
   - [Required dataset](#required-dataset)
-  - [Usage \& Quick example](#usage--quick-example)
+  - [Usage](#usage)
+    - [Graphical User Interface (UI)](#graphical-user-interface-ui)
+    - [Command-Line Interface (CLI)](#command-line-interface-cli)
       - [1. Using a Preset Editor:](#1-using-a-preset-editor)
       - [2. Input Base Editor Information in the Command Line:](#2-input-base-editor-information-in-the-command-line)
       - [3. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#3-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
@@ -81,9 +83,29 @@ To use AltEx-BE, you should prepare 2 input files in your computer
 > - When providing a gene symbol (e.g., MYGENE), AltEx-BE will analyze all known transcripts of that gene to identify alternative splicing events.
 > - When providing a RefSeq ID (e.g., NM_0012345), AltEx-BE will automatically identify the corresponding gene and analyze all of its transcripts. This ensures a comprehensive analysis even when starting from a single transcript identifier.
 
-## Usage & Quick example
+## Usage
 
-AltEx-BE is operated via the `altex-be` command.
+AltEx-BE can be run via a graphical user interface (UI) or directly from the command line.
+
+### Graphical User Interface (UI)
+
+For users who prefer a graphical interface, AltEx-BE includes a web-based UI built with Streamlit. It allows you to configure and run the pipeline without using the command line.
+
+**To launch the UI, run:**
+```sh
+altex-be --ui
+```
+
+**The UI helps you:**
+- 📥 Select input files (FASTA, transcript annotation)
+- ⚙️ Configure all options for the analysis
+- ▶️ Run the AltEx-BE pipeline locally
+- 📝 Monitor execution logs in real time
+- 📊 Preview and browse output files
+
+### Command-Line Interface (CLI)
+
+For command-line usage, AltEx-BE is operated via the `altex-be` command. Here are a few examples:
 
 #### 1. Using a Preset Editor:
 - By default, AltEx-BE design sgRNAs for below 6 Base Editing Tools
@@ -150,6 +172,7 @@ altex-be \
 | :--- | :--- | :--- | :--- |
 | -h | --help | | Show the help message and exit. |
 | -v | --version | | Show the version of Altex BE. |
+| | --ui | | Launch the Streamlit web UI for AltEx-BE. |
 | -r | --refflat-path | FILE | (Mutually Required -r or -g) Path to the refFlat file. |
 | -g | --gtf-path | FILE | (Mutually Required with -r or -g) Path to the GTF file. |
 | -f | --fasta-path | FILE | (Required) Path to the FASTA file. |
