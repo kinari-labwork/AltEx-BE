@@ -232,7 +232,7 @@ with st.container(border=True):
             gene_list = None
             gene_file_path = None
             if gene_mode == "Text input":
-                gene_list = [g.strip() for g in target_genes_text.split(",") if g.strip()]
+                gene_list = [g.strip() for g in target_genes_text.split(",", " ") if g.strip()]
             else: # File upload
                 with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".txt", dir=run_outdir) as tmp:
                     content = uploaded_gene_file.read().decode("utf-8")
@@ -284,7 +284,10 @@ with tabs[1]:
             if selected_file:
                 file_path = os.path.join(st.session_state.last_run_outdir, selected_file)
                 try:
-                    df = pd.read_csv(file_path, engine="python")
+                    if selected_file.endswith(".tsv"):
+                        df = pd.read_csv(file_path, sep="\t", engine="python")
+                    else:
+                        df = pd.read_csv(file_path, engine="python")
                 except (UnicodeDecodeError, pd.errors.ParserError, OSError) as exc:
                     st.error(f"Failed to read the file: {exc}")
                 else:
