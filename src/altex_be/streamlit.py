@@ -10,13 +10,7 @@ from typing import Optional, List
 
 import pandas as pd
 import streamlit as st
-
-# 動的にインポートを試みる
-try:
-    from altex_be.class_def.base_editors import PRESET_BASE_EDITORS
-except ImportError:
-    # ローカルでの開発中など、パスが通っていない場合を考慮
-    from class_def.base_editors import PRESET_BASE_EDITORS
+from class_def.base_editors import PRESET_BASE_EDITORS
 
 
 # ========= App config =========
@@ -58,7 +52,7 @@ def is_writable_dir(path: str) -> bool:
 def is_valid_fasta(path: str) -> bool:
     """Check if a file has a valid FASTA extension."""
     p = path.lower()
-    return p.endswith((".fa", ".fasta", ".fna", ".fa.gz", ".fasta.gz", ".fna.gz"))
+    return p.endswith((".fa", ".fasta", ".fa.gz", ".fasta.gz"))
 
 def is_valid_annotation(path: str) -> bool:
     """Check if a file has a valid annotation extension."""
