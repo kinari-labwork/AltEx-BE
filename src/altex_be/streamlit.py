@@ -30,11 +30,11 @@ def select_file(file_type: str = "fasta"):
     root = tk.Tk()
     root.withdraw()
     if file_type == "fasta":
-        filetypes = [("FASTA files", "*.fa *.fasta *.fna"), ("All files", "*.* ")]
+        filetypes = [("FASTA files", "*.fa *.fasta"), ("All files", "*.*")]
     elif file_type == "annotation":
-        filetypes = [("Annotation files", "*.gtf *.txt"), ("All files", "*.* ")]
+        filetypes = [("Annotation files", "*.gtf *.txt"), ("All files", "*.*")]
     else:
-        filetypes = [("All files", "*.* ")]
+        filetypes = [("All files", "*.*")]
     
     file_path = filedialog.askopenfilename(
         master=root,
@@ -75,10 +75,12 @@ def build_command(
     cmd = ["altex-be"]
 
     # Input files
-    if annotation_path.lower().endswith(".gtf"):
+    if st.session_state.gtf_or_refflat == "gtf":
         cmd.extend(["--gtf-path", annotation_path])
-    else:
+    elif st.session_state.gtf_or_refflat == "refflat":
         cmd.extend(["--refflat-path", annotation_path])
+    else:
+        raise ValueError("Annotation type (GTF/RefFlat) not specified.")
     
     cmd.extend(["--fasta-path", fasta_path])
     cmd.extend(["--output-dir", outdir])
@@ -107,6 +109,8 @@ if "input_fasta" not in st.session_state:
     st.session_state.input_fasta = ""
 if "input_annotation" not in st.session_state:
     st.session_state.input_annotation = ""
+if "gtf_or_refflat" not in st.session_state:
+    st.session_state.gtf_or_refflat = ""
 if "output_dir" not in st.session_state:
     st.session_state.output_dir = ""
 if "last_cmd" not in st.session_state:
@@ -139,6 +143,12 @@ with st.container(border=True):
             ap = select_file("annotation")
             if ap:
                 st.session_state.input_annotation = ap
+                if ap.lower().endswith(".gtf"):
+                    st.session_state.gtf_or_refflat = "gtf"
+                    st.info("GTF file selected.")
+                elif ap.lower().endswith(".txt"):
+                    st.session_state.gtf_or_refflat = "refflat"
+                    st.info("RefFlat file selected.")
         st.session_state.input_annotation = st.text_input("Annotation path", value=st.session_state.input_annotation, help="Path to GTF or RefFlat file.")
 
     with col3:
@@ -188,7 +198,6 @@ with st.container(border=True):
 
     def stream_process(cmd: list[str], cwd: str | None = None) -> int:
         st.session_state.log_text = f"$ {' '.join(cmd)}\n\n"
-        st.session_state.run_state = "Running"
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, bufsize=1, universal_newlines=True, cwd=cwd
@@ -246,6 +255,11 @@ with st.container(border=True):
             st.session_state.last_cmd = cmd
             
             rc = stream_process(cmd)
+            if gene_file_path is not None:
+                try:
+                    os.remove(gene_file_path)
+                except Exception as e:
+                    st.warning(f"Failed to delete temporary gene file: {e}")
             if rc == 0:
                 st.toast("AltEx-BE completed successfully!", icon="✅")
             else:
@@ -268,8 +282,13 @@ with tabs[1]:
         if result_files:
             selected_file = st.selectbox("Select a result file to preview", result_files)
             if selected_file:
-                df = pd.read_csv(os.path.join(st.session_state.last_run_outdir, selected_file), sep=None, engine='python')
-                st.dataframe(df)
+                file_path = os.path.join(st.session_state.last_run_outdir, selected_file)
+                try:
+                    df = pd.read_csv(file_path, engine="python")
+                except (UnicodeDecodeError, pd.errors.ParserError, OSError) as exc:
+                    st.error(f"Failed to read the file: {exc}")
+                else:
+                    st.dataframe(df)
         else:
             st.info("No result files (CSV/TSV) found in the output directory.")
     else:
