@@ -14,7 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show the version of Altex BE",
     )
     
-    # UI laucher
+    # UI launcher
     ui_group = parser.add_argument_group("UI Launcher")
     ui_group.add_argument(
         "--ui",
