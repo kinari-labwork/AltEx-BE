@@ -131,7 +131,7 @@ with st.container(border=True):
 
     with col1:
         st.markdown("**FASTA**")
-        if st.button("Select FASTA path", use_container_width=True):
+        if st.button("Select FASTA path", width="stretch"):
             fp = select_file("fasta")
             if fp:
                 st.session_state.input_fasta = fp
@@ -139,7 +139,7 @@ with st.container(border=True):
 
     with col2:
         st.markdown("**Transcript annotation**")
-        if st.button("Select annotation path", use_container_width=True):
+        if st.button("Select annotation path", width="stretch"):
             ap = select_file("annotation")
             if ap:
                 st.session_state.input_annotation = ap
@@ -153,7 +153,7 @@ with st.container(border=True):
 
     with col3:
         st.markdown("**Output directory**")
-        if st.button("Select output directory", use_container_width=True):
+        if st.button("Select output directory", width="stretch"):
             od = select_folder()
             if od:
                 st.session_state.output_dir = od
@@ -188,11 +188,11 @@ with st.container(border=True):
 
     with st.expander("🔍 Show preset base editors"):
         df = pd.DataFrame([vars(be) for be in PRESET_BASE_EDITORS.values()])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
 with st.container(border=True):
     st.markdown("### 🧪 4. Run AltEx-BE")
-    run_clicked = st.button("▶ Run AltEx-BE", type="primary", use_container_width=True)
+    run_clicked = st.button("▶ Run AltEx-BE", type="primary", width="stretch")
     st.caption("Logs will stream to the main panel below.")
     log_box = st.empty()
 
