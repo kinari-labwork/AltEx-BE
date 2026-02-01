@@ -22,7 +22,7 @@ classifiers = [
 include = ["src/altex_be/manage_arguments/crispr_direct_supported_assemblies.txt"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10,<3.13"
 pandas = "^2.3.0"
 pybedtools = "^0.12.0"
 tqdm = "^4.67.1"

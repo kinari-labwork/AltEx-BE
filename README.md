@@ -64,6 +64,11 @@ conda install -c conda-forge -c bioconda altex-be
 # 2. install via pypi
 pip install AltEx-BE
 ```
+
+> [!CAUTION]
+> AltEx-BE required **python 3.10~ 3.12**
+> So when you face to some install errors, please suspect version conflict.
+
 ## Required dataset
 To use AltEx-BE, you should prepare 2 input files in your computer
 - refFlat file or gtf file of your interest species   
