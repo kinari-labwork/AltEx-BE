@@ -1,22 +1,19 @@
-import os
 import subprocess
 import tempfile
 import time
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
-from typing import Optional, List
-
 import pandas as pd
 import streamlit as st
 from class_def.base_editors import PRESET_BASE_EDITORS
 
 
-# ========= App config =========
+# config
 APP_TITLE = "AltEx-BE UI"
 st.set_page_config(page_title=APP_TITLE, page_icon="🧬", layout="wide")
 
-# ========= Helpers (tk dialogs) =========
+# helper functions
 def select_folder():
     """Open a dialog to select a folder."""
     root = tk.Tk()
@@ -46,7 +43,8 @@ def select_file(file_type: str = "fasta"):
 
 def is_writable_dir(path: str) -> bool:
     """Check if a path is a writable directory."""
-    return os.path.isdir(path) and os.access(path, os.W_OK)
+    p = Path(path)
+    return p.is_dir()
 
 def is_valid_fasta(path: str) -> bool:
     """Check if a file has a valid FASTA extension."""
@@ -63,13 +61,13 @@ def build_command(
     annotation_path: str,
     outdir: str,
     assembly_name: str,
-    gene_symbols: Optional[List[str]] = None,
-    gene_file: Optional[str] = None,
-    be_name: Optional[str] = None,
-    be_type: Optional[str] = None,
-    be_pam: Optional[str] = None,
-    be_start: Optional[int] = None,
-    be_end: Optional[int] = None,
+    gene_symbols: list[str] = None,
+    gene_file: str = None,
+    be_name: str = None,
+    be_type: str = None,
+    be_pam: str = None,
+    be_start: int = None,
+    be_end: int = None,
 ) -> list[str]:
     """Build the altex-be command from UI inputs."""
     cmd = ["altex-be"]
@@ -104,7 +102,7 @@ def build_command(
         
     return cmd
 
-# ========= Session state defaults =========
+# Initialize session state variables
 if "input_fasta" not in st.session_state:
     st.session_state.input_fasta = ""
 if "input_annotation" not in st.session_state:
@@ -121,10 +119,11 @@ if "last_run_outdir" not in st.session_state:
     st.session_state.last_run_outdir = ""
 
 
-# ========= Header =========
+# Header
 st.markdown(f"# {APP_TITLE}")
 st.caption("Local UI wrapper for AltEx-BE CLI — configure arguments, run jobs, preview results.")
 
+# design the UI layout
 with st.container(border=True):
     st.markdown("### 📥 1. Input required files")
     col1, col2, col3 = st.columns(3)
@@ -208,25 +207,30 @@ with st.container(border=True):
             log_box.code(tail, language="bash")
         return proc.wait()
 
-    # --- Input validation ---
-    fasta_ok = bool(st.session_state.input_fasta) and os.path.exists(st.session_state.input_fasta) and is_valid_fasta(st.session_state.input_fasta)
-    annotation_ok = bool(st.session_state.input_annotation) and os.path.exists(st.session_state.input_annotation) and is_valid_annotation(st.session_state.input_annotation)
-    out_ok = bool(st.session_state.output_dir) and os.path.exists(st.session_state.output_dir) and is_writable_dir(st.session_state.output_dir)
+    # validate inputs
+    fasta_ok = bool(st.session_state.input_fasta) and Path(st.session_state.input_fasta).exists() and is_valid_fasta(st.session_state.input_fasta)
+    annotation_ok = bool(st.session_state.input_annotation) and Path(st.session_state.input_annotation).exists() and is_valid_annotation(st.session_state.input_annotation)
+    out_ok = bool(st.session_state.output_dir) and Path(st.session_state.output_dir).exists() and is_writable_dir(st.session_state.output_dir)
     assembly_ok = bool(target_species)
     gene_input_ok = (gene_mode == "Text input" and bool(target_genes_text)) or \
                     (gene_mode == "File upload" and uploaded_gene_file is not None)
 
     if run_clicked:
-        # --- Final validation before run ---
-        if not fasta_ok: st.error("Please select a valid FASTA file.")
-        elif not annotation_ok: st.error("Please select a valid annotation file (GTF/RefFlat).")
-        elif not out_ok: st.error("Please select a writable output directory.")
-        elif not assembly_ok: st.error("Please enter an assembly name.")
-        elif not gene_input_ok: st.error("Please provide at least one target gene or a gene file.")
+        # Final validation
+        if not fasta_ok: 
+            st.error("Please select a valid FASTA file.")
+        elif not annotation_ok: 
+            st.error("Please select a valid annotation file (GTF/RefFlat).")
+        elif not out_ok: 
+            st.error("Please select a writable output directory.")
+        elif not assembly_ok: 
+            st.error("Please enter an assembly name.")
+        elif not gene_input_ok: 
+            st.error("Please provide at least one target gene or a gene file.")
         else:
             ts = time.strftime("%Y%m%d_%H%M%S")
             run_outdir = str(Path(st.session_state.output_dir) / f"altexbe_{ts}")
-            os.makedirs(run_outdir, exist_ok=True)
+            Path(run_outdir).mkdir(parents=True, exist_ok=True)
             st.session_state.last_run_outdir = run_outdir
 
             gene_list = None
@@ -257,7 +261,7 @@ with st.container(border=True):
             rc = stream_process(cmd)
             if gene_file_path is not None:
                 try:
-                    os.remove(gene_file_path)
+                    Path(gene_file_path).unlink()
                 except Exception as e:
                     st.warning(f"Failed to delete temporary gene file: {e}")
             if rc == 0:
@@ -277,12 +281,12 @@ with tabs[0]:
 
 with tabs[1]:
     st.caption(f"Last run output directory: `{st.session_state.last_run_outdir}`")
-    if st.session_state.last_run_outdir and os.path.isdir(st.session_state.last_run_outdir):
-        result_files = [f for f in os.listdir(st.session_state.last_run_outdir) if f.endswith((".csv", ".tsv"))]
+    if st.session_state.last_run_outdir and Path(st.session_state.last_run_outdir).is_dir():
+        result_files = [f for f in Path(st.session_state.last_run_outdir).iterdir() if f.is_file() and f.suffix in (".csv", ".tsv")]
         if result_files:
-            selected_file = st.selectbox("Select a result file to preview", result_files)
+            selected_file = st.selectbox("Select a result file to preview", [f.name for f in result_files])
             if selected_file:
-                file_path = os.path.join(st.session_state.last_run_outdir, selected_file)
+                file_path = Path(st.session_state.last_run_outdir) / selected_file
                 try:
                     if selected_file.endswith(".tsv"):
                         df = pd.read_csv(file_path, sep="\t", engine="python")
