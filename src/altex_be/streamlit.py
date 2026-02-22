@@ -236,7 +236,7 @@ with st.container(border=True):
             gene_list = None
             gene_file_path = None
             if gene_mode == "Text input":
-                gene_list = [g.strip() for g in target_genes_text.split(",", " ") if g.strip()]
+                gene_list = [g.strip() for g in target_genes_text.split(" ") if g.strip()]
             else: # File upload
                 with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".txt", dir=run_outdir) as tmp:
                     content = uploaded_gene_file.read().decode("utf-8")
@@ -269,7 +269,7 @@ with st.container(border=True):
             else:
                 st.toast(f"AltEx-BE failed with exit code {rc}.", icon="❌")
 
-# --- Tabs for status and results ---
+# Tabs for status and results
 tabs = st.tabs(["✅ Inputs Status", "📊 Results Preview", "📝 Full Log", "ℹ️ About"])
 
 with tabs[0]:
@@ -314,7 +314,7 @@ with tabs[3]:
     else:
         st.warning("README_for_ui.md not found.")
 
-# --- Footer ---
+# Footer
 st.divider()
 st.caption(f"AltEx-BE UI | {time.strftime('%Y-%m-%d %H:%M:%S')}")
 if st.session_state.last_cmd:
