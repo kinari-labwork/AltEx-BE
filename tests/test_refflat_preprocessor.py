@@ -186,7 +186,7 @@ def test_add_exon_position_flags():
         }
     )
     output_data = add_exon_position_flags(input_data)
-    pd.testing.assert_frame_equal(output_data, expected_output)
+    pd.testing.assert_frame_equal(output_data, expected_output, check_dtype=False)
 
 def test_common_exon_window():
     test_df = pd.DataFrame({

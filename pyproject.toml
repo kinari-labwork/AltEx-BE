@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "AltEx-BE"
-version = "1.0.5"
+version = "1.0.6"
 description = "automatically design sgRNA for exon skipping with many base editors"
 authors = ["Kinari Matsumoto <matsumoto.kinari.qm@alumni.tsukuba.ac.jp>"]
 readme = "README.md"
@@ -22,11 +22,12 @@ classifiers = [
 include = ["src/altex_be/manage_arguments/crispr_direct_supported_assemblies.txt"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10,<3.13"
 pandas = "^2.3.0"
 pybedtools = "^0.12.0"
 tqdm = "^4.67.1"
 pyahocorasick = "^2.2.0"
+streamlit = "^1.53.1"
 
 [tool.poetry.scripts]
 altex-be = "altex_be.main:run_pipeline"

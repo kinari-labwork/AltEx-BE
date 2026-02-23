@@ -13,6 +13,15 @@ def build_parser() -> argparse.ArgumentParser:
         version=importlib.metadata.version("altex-be"),
         help="Show the version of Altex BE",
     )
+    
+    # UI launcher
+    ui_group = parser.add_argument_group("UI Launcher")
+    ui_group.add_argument(
+        "--ui",
+        action="store_true",
+        help="Launch the Streamlit web UI for AltEx-BE.",
+    )
+
     # コマンドライン引数を追加
     dir_group = parser.add_argument_group("Input/Output Options")
     transcript_group = parser.add_mutually_exclusive_group()
@@ -103,3 +112,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="input the path of csv file or txt file of base editor information",
     )
     return parser
+
+if __name__ == "__main__":
+    parser = build_parser()
+    args = parser.parse_args()
+    print(args)

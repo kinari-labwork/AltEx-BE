@@ -3,6 +3,8 @@ import pandas as pd
 from pathlib import Path
 import logging
 import datetime
+import subprocess
+import sys
 from . import (
     gtf2refflat_converter,
     refflat_preprocessor,
@@ -24,10 +26,34 @@ from .class_def.base_editors import BaseEditor
 
 
 def run_pipeline():
+    # --ui flag check before parsing other arguments
+    if '--ui' in sys.argv:
+        streamlit_app_path = Path(__file__).parent / "streamlit.py"
+        if not streamlit_app_path.exists():
+            logging.error(f"Streamlit UI file not found at: {streamlit_app_path}")
+            sys.exit(1)
+        
+        logging.info("Launching Streamlit UI...")
+        try:
+            # Using sys.executable to ensure the same python environment is used
+            # Added --server.headless=false to force browser to open
+            command = [
+                sys.executable, "-m", "streamlit", "run", str(streamlit_app_path),
+                "--server.headless=false"
+            ]
+            subprocess.run(command, check=True)
+        except ModuleNotFoundError:
+            logging.error("`streamlit` command not found. Please ensure Streamlit is installed in the current environment.")
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Streamlit UI failed to launch: {e}")
+            sys.exit(1)
+        return # Exit after UI closes
+
+    # --- CLI pipeline ---
     parser = build_parser.build_parser()
-
     args = parser.parse_args()
-
+    
     refflat_path, gtf_path, fasta_path, output_directory, interest_gene_list, base_editors, assembly_name = parse_arguments.parse_arguments(args, parser)
 
     validate_arguments.validate_arguments(

@@ -47,7 +47,6 @@ data = annotate_variant_counts(data)
 # %%
 data_filtered = data[["geneName","exontype", "chrom", "name","cdsStart", "cdsEnd","exons", "coding","exonlengths", "frame", "exon_position", "cds_info", "is_outside_common_exon_space", "max_exon_count", "min_exon_count", "variant_count"]]
 exon_df = data_filtered.explode(["exontype", "exons", "frame", "exonlengths", "exon_position", "cds_info", "is_outside_common_exon_space"])
-exon_df = exon_df.drop_duplicates(subset=["chrom","exons"])
 
 # %%
 alternative_or_unique_alternative_exon = exon_df[exon_df["exontype"].isin(["alternative", "unique-alternative"])]
@@ -79,14 +78,16 @@ results = []
 for name, df in exon_sets:
     # "cds_edge_exon_start_end", "cds_edge_exon_start", "cds_edge_exon_end" をまとめて "cds_edge_exon" に
     df = df.copy()
-    df["cds_info_grouped"] = df["cds_info"].replace({
+    df["cds_info"] = df["cds_info"].replace({
         "cds_edge_exon_start_end": "utr_containing_exon",
         "cds_edge_exon_start": "utr_containing_exon",
         "cds_edge_exon_end": "utr_containing_exon",
         "utr_exon": "utr_containing_exon"
     })
+    df = df.sort_values(by="cds_info", key=lambda x: x == "cds_exon", ascending=False)
+    df = df.drop_duplicates(subset=["chrom","exons"])
     for cds_status in ["cds_exon", "utr_containing_exon"]:
-        sub = df[df["cds_info_grouped"] == cds_status]
+        sub = df[df["cds_info"] == cds_status]
         total_count = sub.shape[0]
         in_frame_count = (sub["frame"] == "in-frame").sum()
         out_frame_count = (sub["frame"] == "out-frame").sum()
@@ -128,6 +129,7 @@ for df in [exon_counts_df]:
             "cds_exon": "#E69F00", #orange
             "utr_containing_exon": "#009E73" #green
         }) +
+        geom_hline(yintercept=33.3, linetype="dashed", color="black") +
         theme(
             axis_text_x=element_text(rotation=0, hjust=0.5, size=10),
             axis_title_y=element_text(size=10),
@@ -145,11 +147,11 @@ for df in [exon_counts_df]:
                 "a3ss_long_exon",
             ],
             labels={
-            "alternative_exon": "Alternative exon",
-            "a5ss_long_exon": "A5SS-long",
-            "a3ss_long_exon": "A3SS-long",
-            "a5ss_short_exon": "A5SS-short",
-            "a3ss_short_exon": "A3SS-short",
+            "alternative_exon": f"Alternative exon \n (n={df[df['Category'] == 'alternative_exon']['ExonCount'].values.sum()})",
+            "a5ss_long_exon": f"A5SS-long \n (n={df[df['Category'] == 'a5ss_long_exon']['ExonCount'].values.sum()})",
+            "a3ss_long_exon": f"A3SS-long \n (n={df[df['Category'] == 'a3ss_long_exon']['ExonCount'].values.sum()})",
+            "a5ss_short_exon": f"A5SS-short \n (n={df[df['Category'] == 'a5ss_short_exon']['ExonCount'].values.sum()})",
+            "a3ss_short_exon": f"A3SS-short \n (n={df[df['Category'] == 'a3ss_short_exon']['ExonCount'].values.sum()})",
         }) +
         scale_y_continuous(limits=(0, 100)) +
         coord_flip()
@@ -175,7 +177,7 @@ def annotate_variant_counts(data: pd.DataFrame) -> pd.DataFrame:
     coding_counts = data[data["name"].str.startswith("NM")].groupby("geneName").size().reset_index(name="coding_variant_count") 
     noncoding_counts = data[data["name"].str.startswith("NR")].groupby("geneName").size().reset_index(name="noncoding_variant_count") 
     merged_counts = coding_counts.merge(noncoding_counts, on="geneName", how="outer").fillna(0) 
-    data = data.merge(merged_counts, on="geneName", how="right") 
+    data = data.merge(merged_counts, on="geneName", how="left") 
     return data
 
 
@@ -250,11 +252,11 @@ def assign_exon_category(df: pd.DataFrame) -> pd.DataFrame:
 
 data_filtered = annotate_variant_counts(data_filtered)
 df_exp = data_filtered.explode(["exontype", "exons", "frame", "exonlengths", "exon_position", "cds_info", "is_outside_common_exon_space"])
-
 exon_df_alt_cds = extract_alternative_coding_exons(df_exp)
 exon_df_alt_cds = annotate_exon_skipping(exon_df_alt_cds)
 exon_df_alt_cds = assign_exon_category(exon_df_alt_cds)
-exon_df_alt_cds = exon_df_alt_cds[exon_df_alt_cds["cds_info"] == "cds_exon"].drop_duplicates(subset=["chrom","exons"])
+exon_df_alt_cds = exon_df_alt_cds.drop_duplicates(subset=["chrom","exons"])
+print(exon_df_alt_cds.shape)
 # %%
 # exon_category ごとに in-frame 割合を計算する( outside exon, skipped_in_coding, skipped_only_in_noncoding )
 inframe_summary = (
@@ -270,22 +272,6 @@ inframe_summary = (
     )
     .reset_index()
 )
-# overall in-frame rate のを inframe_summary に追加
-num_alternative_coding_exons = df_exp[
-    (df_exp["exontype"].isin(["alternative", "unique-alternative"])) &
-    (df_exp["cds_info"] == "cds_exon")
-]["exons"].nunique()
-num_inframe_alternative_coding_exons = exon_df_alt_cds[
-    exon_df_alt_cds["frame"] == "in-frame"
-]["exons"].nunique()
-overall_inframe_rate = num_inframe_alternative_coding_exons / num_alternative_coding_exons
-overall_summary = pd.DataFrame({
-    "exon_category": ["overall_alternative_coding_exons"],
-    "total_exons": [num_alternative_coding_exons],
-    "inframe_exons": [num_inframe_alternative_coding_exons],
-    "inframe_rate": [overall_inframe_rate]
-})
-inframe_summary = pd.concat([inframe_summary, overall_summary], ignore_index=True)
 print(inframe_summary)
 
 # %%
@@ -298,8 +284,8 @@ plot = (
         "outside_exon": "#56B4E9", #skyblue
         "skipped_in_coding": "#56B4E9", #skyblue 
         "skipped_only_in_noncoding": "#56B4E9", #skyblue
-        "overall_alternative_coding_exons": "#CA931D", #orange
     }) +
+    geom_hline(yintercept=0.333, linetype="dashed", color="black") +
     theme(
         axis_text_x=element_text(rotation=0, hjust=0.5, size=10),
         axis_title_y=element_text(size=10),
@@ -311,15 +297,13 @@ plot = (
     scale_x_discrete(
         limits=[
                 "skipped_only_in_noncoding",
-                "skipped_in_coding",
                 "outside_exon",
-                "overall_alternative_coding_exons",
+                "skipped_in_coding",
         ],
         labels={
-            "overall_alternative_coding_exons": f"Overall alternative coding exons \n (n={num_alternative_coding_exons})",
             "outside_exon": f"Outside exon \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'outside_exon', 'total_exons'].values[0]})",
             "skipped_in_coding": f"Skipped in coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_in_coding', 'total_exons'].values[0]})",
-            "skipped_only_in_noncoding": f"Constitutive in coding, \n skipped in non-coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_only_in_noncoding', 'total_exons'].values[0]})",
+            "skipped_only_in_noncoding": f"Skipped in non-coding \n (n={inframe_summary.loc[inframe_summary['exon_category'] == 'skipped_only_in_noncoding', 'total_exons'].values[0]})",
         }) +
     scale_y_continuous(limits=(0, 1), labels=lambda l: ["{:.0f}".format(v * 100) for v in l]) +
     coord_flip()
