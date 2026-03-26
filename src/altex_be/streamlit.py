@@ -183,7 +183,7 @@ with st.container(border=True):
             pam_sequences = st.text_input("Custom PAM Sequence(s)")
         with c2:
             editing_type = st.selectbox("Editing Type", ["cbe", "abe"], index=0)
-            window_start, window_end = st.slider("Editing Window", 1, 30, (13, 17), 1)
+            window_start, window_end = st.slider("Editing Window", 1, 20, (13, 17), 1)
 
     with st.expander("🔍 Show preset base editors"):
         df = pd.DataFrame([vars(be) for be in PRESET_BASE_EDITORS.values()])
