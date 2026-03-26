@@ -185,6 +185,7 @@ altex-be \
 | | --gene-symbols| SYMBOL [SYMBOL ...] | A space-separated list of gene symbols of interest. |
 | | --refseq-ids | ID [ID ...] | A space-separated list of RefSeq IDs of interest. |
 | | --gene-file | FILE | Path to a CSV or TXT file contain your interest gene symbols/RefseqIDs |
+| | --run-all_genes | store true | when user input this option, AltEx-BE design sgRNAs for all genes |
 | -a | --assembly-name| ASSEMBLY | (Required) The name of the genome assembly to use (e.g., hg38, mm39). |
 | -n | --be-name | NAME | The name of the base editor to use. |
 | -p | --be-pam | SEQUENCE | The PAM sequence for the base editor. |
