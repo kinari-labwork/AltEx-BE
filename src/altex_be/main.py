@@ -168,6 +168,9 @@ def extract_target_exon(classified_refflat: pd.DataFrame, interest_gene_list: li
         parser.error("No target exons found for all of the given genes, exiting")
         
     for gene in interest_gene_list:
+        # Skip the sentinel value for --run-all-genes
+        if gene == "all_genes":
+            continue
         if gene not in exploded_classified_refflat['geneName'].values:
             logging.info(f"No target exons found for the gene: {gene}. Further processing of {gene} will be skipped.")
         else:

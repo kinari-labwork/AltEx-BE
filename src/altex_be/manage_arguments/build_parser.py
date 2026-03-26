@@ -74,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
         required=False,
         help="Path to a file (csv,txt,tsv) containing gene symbols or IDs correspond to reference of transcript (one per line)"
     )
+    gene_group.add_argument(
+        "--run-all-genes",
+        action="store_true",
+        help="Run the analysis for all genes in the reference transcriptome (overrides other gene selection options)"
+    )
     base_editors = parser.add_argument_group("Base Editor Options")
     base_editors.add_argument(
         "-n", "--be-name",
