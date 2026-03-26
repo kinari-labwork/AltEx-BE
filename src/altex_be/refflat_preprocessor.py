@@ -18,8 +18,13 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     """
     gene_symbol_set = set(refFlat["geneName"].values)
     ref_seq_id_set = set(refFlat["name"].values)
+    
+    refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
+    # ごくまれに存在する、exonのスタートが0のものを除外する
+    # exonStarts を文字列のまま扱い、0 が含まれているかを確認
+    refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
 
-    if interest_genes == ["all_genes"]:
+    if "all_genes" in interest_genes and len(interest_genes) == 1:
         logging.info("All genes in the reference transcriptome will be included in the analysis.")
         return refFlat
 
@@ -30,10 +35,6 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
         else :
             logging.info(f"Gene {gene} is found in refFlat.")
     
-    refFlat = refFlat[refFlat["geneName"].isin(interest_genes) | refFlat["name"].isin(interest_genes)].reset_index(drop=True)
-    # ごくまれに存在する、exonのスタートが0のものを除外する
-    # exonStarts を文字列のまま扱い、0 が含まれているかを確認
-    refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
     return refFlat
 
 def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> bool:
@@ -48,7 +49,7 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> 
     found = False
     
     # Handle the special case for "all_genes"
-    if interest_gene_list == ["all_genes"]:
+    if "all_genes" in interest_gene_list and len(interest_gene_list) == 1:
         if (refFlat["exonCount"] > 1).any():
             logging.info("Multiple exons found in the reference transcriptome")
             found = True
