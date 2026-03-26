@@ -40,8 +40,8 @@ def test_parse_base_editors_from_args_valid():
     args = argparse.Namespace(
         be_name="TestBE",
         be_pam="NGG",
-        be_window_start="10",
-        be_window_end="15",
+        be_start="10",
+        be_end="15",
         be_type="cbe"
     )
     base_editors = {}
@@ -61,8 +61,8 @@ def test_parse_base_editors_from_args_invalid():
     args = argparse.Namespace(
         be_name="TestBE",
         be_pam=None,
-        be_window_start="10",
-        be_window_end="15",
+        be_start="10",
+        be_end="15",
         be_type="cbe"
     )
     base_editors = {}
@@ -87,7 +87,8 @@ def test_parse_genes_from_args():
         gene_symbols=["GeneA", "GeneB"],
         refseq_ids=["NM_001", "NM_002"],
         ensembl_ids=["ENST000003", "ENST000004"],
-        gene_file=None
+        gene_file=None,
+        run_all_genes=False
     )
     parser = argparse.ArgumentParser()
     result = parse_genes_from_args(args, parser)
@@ -99,6 +100,20 @@ def test_parse_genes_from_args():
     assert "ENST000003" in result
     assert "ENST000004" in result
     assert len(result) == 6
+
+def test_parse_genes_from_args_run_all_genes():
+    # Test --run-all-genes flag
+    args = argparse.Namespace(
+        gene_symbols=None,
+        refseq_ids=None,
+        ensembl_ids=None,
+        gene_file=None,
+        run_all_genes=True
+    )
+    parser = argparse.ArgumentParser()
+    result = parse_genes_from_args(args, parser)
+    assert isinstance(result, list)
+    assert result == ["all_genes"]
 
 def test_parse_base_editors_from_files(tmp_path):
     # ダミーのbase editorファイル作成
@@ -139,8 +154,8 @@ def test_parse_base_editors_from_all_sources(tmp_path):
         be_files=str(be_file),
         be_name="ArgBE",
         be_pam="NGA",
-        be_window_start="12",
-        be_window_end="16",
+        be_start="12",
+        be_end="16",
         be_type="abe"
     )
     parser = argparse.ArgumentParser()

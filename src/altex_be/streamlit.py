@@ -63,6 +63,7 @@ def build_command(
     assembly_name: str,
     gene_symbols: list[str] = None,
     gene_file: str = None,
+    run_all_genes: bool = False,
     be_name: str = None,
     be_type: str = None,
     be_pam: str = None,
@@ -85,6 +86,9 @@ def build_command(
     cmd.extend(["--assembly-name", assembly_name])
 
     # Gene inputs
+    if run_all_genes:
+        cmd.append("--run-all-genes")
+
     if gene_symbols:
         cmd.extend(["--gene-symbols", *gene_symbols])
     elif gene_file:
@@ -160,8 +164,11 @@ with st.container(border=True):
 
 with st.container(border=True):
     st.markdown("### 🧬 2. Select Target Gene and assembly")
+    run_all_genes = False
+
     target_species = st.text_input("Enter the assembly name (e.g., hg38, mm39)", help="Specify the assembly name.")
     gene_mode = st.radio("Select gene input method", ["Text input", "File upload"], index=0, horizontal=True)
+    run_all_genes = st.checkbox("Run analysis for all genes in the reference transcriptome")
     
     target_genes_text = None
     uploaded_gene_file = None
@@ -213,7 +220,7 @@ with st.container(border=True):
     out_ok = bool(st.session_state.output_dir) and Path(st.session_state.output_dir).exists() and is_writable_dir(st.session_state.output_dir)
     assembly_ok = bool(target_species)
     gene_input_ok = (gene_mode == "Text input" and bool(target_genes_text)) or \
-                    (gene_mode == "File upload" and uploaded_gene_file is not None)
+                    (gene_mode == "File upload" and uploaded_gene_file is not None) or run_all_genes
 
     if run_clicked:
         # Final validation
@@ -250,6 +257,7 @@ with st.container(border=True):
                 assembly_name=target_species,
                 gene_symbols=gene_list,
                 gene_file=gene_file_path,
+                run_all_genes=run_all_genes,
                 be_name=editor_name if mode == "Preset + Custom" else None,
                 be_type=editing_type if mode == "Preset + Custom" else None,
                 be_pam=pam_sequences if mode == "Preset + Custom" else None,

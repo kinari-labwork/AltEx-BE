@@ -25,6 +25,12 @@ def parse_assembly_name_from_args(args: argparse.Namespace) -> str:
     return str(args.assembly_name)
 
 def parse_genes_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> list[str]:
+    """run_all_genesがTrue なら、"all_gene" を返す。
+    それ以外は、gene_symbols, refseq_ids, ensembl_ids, gene_fileから遺伝子リストを作成して返す
+    """
+    if args.run_all_genes:
+        logging.info("Running analysis for all genes in the reference transcriptome (overrides other gene selection options).")
+        return ["all_genes"]
     genes_from_file = parse_gene_file(Path(args.gene_file)) if args.gene_file else []
     gene_symbols = args.gene_symbols if args.gene_symbols is not None else []
     refseq_ids = args.refseq_ids if args.refseq_ids is not None else []
@@ -80,8 +86,9 @@ def parse_base_editors_from_file(
 def show_base_editors_info(base_editors: dict[str, BaseEditor], parser: argparse.ArgumentParser):
     if base_editors is None:
         parser.error("No base editors available to display.")
+    logging.info("-" * 50)
     for base_editor in base_editors.values():
-        print(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
+        logging.info(f"  - {base_editor.base_editor_name} (Type: {base_editor.base_editor_type}, PAM: {base_editor.pam_sequence}, "
             f"Window: {base_editor.editing_window_start_in_grna}-{base_editor.editing_window_end_in_grna})")
     return None
 
@@ -96,8 +103,8 @@ def parse_base_editors_from_args(
     """
     be_name = getattr(args, "be_name", None) or getattr(args, "base_editor_name", None)
     be_pam = getattr(args, "be_pam", None) or getattr(args, "base_editor_pam", None)
-    be_window_start = getattr(args, "be_window_start", None) or getattr(args, "base_editor_window_start", None)
-    be_window_end = getattr(args, "be_window_end", None) or getattr(args, "base_editor_window_end", None)
+    be_window_start = getattr(args, "be_start", None) or getattr(args, "base_editor_window_start", None)
+    be_window_end = getattr(args, "be_end", None) or getattr(args, "base_editor_window_end", None)
     be_type = getattr(args, "be_type", None) or getattr(args, "base_editor_type", None)
     # どれか一つでも指定されていれば、全て必須
     if any([be_name, be_pam, be_window_start, be_window_end, be_type]):

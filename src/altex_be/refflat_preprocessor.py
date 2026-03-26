@@ -19,6 +19,10 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     gene_symbol_set = set(refFlat["geneName"].values)
     ref_seq_id_set = set(refFlat["name"].values)
 
+    if interest_genes == ["all_genes"]:
+        logging.info("All genes in the reference transcriptome will be included in the analysis.")
+        return refFlat
+
     for gene in interest_genes:
         if gene not in gene_symbol_set and gene not in ref_seq_id_set:
             logging.warning(f"Gene {gene} is not found in refFlat.")
@@ -42,6 +46,14 @@ def check_multiple_exon_existance(refFlat: pd.DataFrame, interest_gene_list) -> 
         bool, 複数のエキソンが存在する場合はTrue、存在しない場合はFalse
     """
     found = False
+    
+    # Handle the special case for "all_genes"
+    if interest_gene_list == ["all_genes"]:
+        if (refFlat["exonCount"] > 1).any():
+            logging.info("Multiple exons found in the reference transcriptome")
+            found = True
+        return found
+    
     for gene in interest_gene_list:
         exon_counts = refFlat[refFlat["geneName"] == gene]["exonCount"]
         if (exon_counts > 1).any():
