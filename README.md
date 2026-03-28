@@ -196,7 +196,7 @@ altex-be \
 ## Format of AltEx-BE output
 `altex-be` makes 2 output files in `Path/To/YourOutput/` directory which you specified in `--output-dir` command
 - Summary sgRNA table (.csv)
-    - this table contain imformation of sgRNAs designed by AltEx-BE
+    - this table contain imformation of sgRNAs designed and ranked by AltEx-BE
 <img src=https://github.com/kinari-labwork/AltEx-BE/raw/main/docs/output_csv_example.png width = "100%">
 - Meaning of each column is :
 
@@ -222,6 +222,19 @@ altex-be \
 |crispr_direct_url| link to CRISPR direct|
 |pam+20bp exact match| pam+20bp (23-mer) exact match in all chromosome|
 |pam+12bp exact match| pam+12bp (12-mer) exact match in all chromosome|
+|sgrna_priority|ranking of sgRNA for each target exon|ranked by off-target specificity and GC content|
+
+### sgRNA Prioritization
+
+To facilitate the selection of optimal sgRNAs for experimental validation, 
+AltEx-BE ranks sgRNAs for each target splice site based on predicted off-target 
+binding specificity. The tool prioritizes sgRNAs primarily by the number of 
+exact 20-nucleotide matches (PAM + 20bp) across the genome, selecting those 
+with the fewest potential off-target sites. For sgRNAs with equivalent off-target 
+profiles, GC content is considered as a secondary criterion, favoring sgRNAs 
+within the optimal range of 40-60%. In rare cases where multiple sgRNAs remain 
+equivalent, extended off-target matches (PAM + 12bp) and the number of editable 
+bases within the CDS region are used as final tiebreakers.
 
 - BED file for UCSC custom track (.bed)
     - this bed file can use as a UCSC custom tracks, you can input that bed file into [this webpage](https://genome.ucsc.edu/cgi-bin/hgCustom)
