@@ -25,7 +25,7 @@ def prioritize_sgrna(exploded_sgrna_with_offtarget_info: pd.DataFrame) -> pd.Dat
     )
     df["gc_valid"] = (gc_content >= 40) & (gc_content <= 60)
     
-    # 5. Exon ごとにソート
+    # Exon ごとにソート
     sorted_sgrna_df = df.sort_values(
         by=[
             "geneName",
@@ -39,14 +39,15 @@ def prioritize_sgrna(exploded_sgrna_with_offtarget_info: pd.DataFrame) -> pd.Dat
         ascending=[True, True, True, True, False, True, True],  # gc_valid は False > True なので False に
     ).reset_index(drop=True)
     
-    # 6. Exon ごとに優先度を付与
+    # Exon ごとに優先度を付与
+    
     sorted_sgrna_df["sgrna_priority"] = (
         sorted_sgrna_df
         .groupby(["geneName", "exonStarts", "exonEnds"])
         .cumcount() + 1
     )
     
-    # 7. 中間計算カラムを削除
+    # 中間計算カラムを削除
     sorted_sgrna_df = sorted_sgrna_df.drop(
         columns=["gc_valid"]
     )
