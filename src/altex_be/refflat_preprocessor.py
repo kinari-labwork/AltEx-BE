@@ -271,10 +271,8 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
                 label = "cds_exon"
             labels.append(label)
         return labels
-
-    refflat["cds_info"] = None
-    for _, group in refflat.groupby("geneName"):
-        refflat.loc[group.index, "cds_info"] = group.apply(label_exons, axis=1)
+    
+    refflat["cds_info"] = refflat.apply(label_exons, axis=1)
     
     return refflat
 
