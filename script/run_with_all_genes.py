@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from altex_be import refflat_preprocessor,splicing_event_classifier, target_exon_extractor, sequence_annotator, sgrna_designer
-from altex_be.class_def.base_editors import PRESET_BASE_EDITORS
+from altex_be.class_def.base_editors import PRESET_BASE_EDITORS, BaseEditor
 
 assembly_names = [
     "hg38", # human
@@ -37,6 +37,14 @@ def run_with_all_genes(
     out_file = Path(in_output_dir) / "sgrna_designed_all_genes.pkl"
     
     base_editors = PRESET_BASE_EDITORS
+    base_editors.update({
+        "spry_be4max_nnn": BaseEditor(
+            base_editor_name="spry_be4max_ngg",
+            pam_sequence="NNN",
+            editing_window_start_in_grna=12,
+            editing_window_end_in_grna=17,
+            base_editor_type="cbe"
+        )})
 
     refflat = pd.read_csv(
         in_output_dir + "/refFlat.txt",
