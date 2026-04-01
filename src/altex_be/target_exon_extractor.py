@@ -33,7 +33,7 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: st
         "frame": "first",  # frameも同じであると仮定
         "coding": "first",  # codingも同じであると仮定
         "exontype": "first",  # exontypeも同じであると仮定
-        "exon_position": lambda x: ";".join(set(x)), # exon_positionは転写産物間で異なる可能性があるため、重複を削除して結合
+        "exon_position": lambda x: ";".join(set(x)),
         "cds_info": lambda x: ";".join(set(x)),  # cds_infoは異なる可能性があるため、重複を削除して結合
     })
 
