@@ -39,7 +39,7 @@ def run_with_all_genes(
     base_editors = PRESET_BASE_EDITORS
     base_editors.update({
         "spry_be4max_nnn": BaseEditor(
-            base_editor_name="spry_be4max_ngg",
+            base_editor_name="spry_be4max_nnn",
             pam_sequence="NNN",
             editing_window_start_in_grna=12,
             editing_window_end_in_grna=17,
