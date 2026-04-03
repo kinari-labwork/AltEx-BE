@@ -3,6 +3,7 @@ import pandas as pd
 from altex_be.refflat_preprocessor import (
     add_exon_position_flags,
     annotate_coding_information,
+    annotate_utr_and_cds_exons,
     annotate_frame_information,
     annotate_variant_count,
     calculate_exon_lengths,
@@ -187,6 +188,56 @@ def test_add_exon_position_flags():
     )
     output_data = add_exon_position_flags(input_data)
     pd.testing.assert_frame_equal(output_data, expected_output, check_dtype=False)
+
+
+def test_annotate_utr_and_cds_exons_labels():
+    input_data = pd.DataFrame(
+        {
+            "geneName": ["GENE1", "GENE2"],
+            "coding": ["coding", "non-coding"],
+            "cdsStart": [120, 0],
+            "cdsEnd": [280, 0],
+            "exons": [
+                [(100, 200), (240, 320), (400, 500)],
+                [(10, 30), (40, 60)],
+            ],
+            "exonStarts": [[100, 240, 400], [10, 40]],
+            "exonEnds": [[200, 320, 500], [30, 60]],
+        }
+    )
+
+    output_data = annotate_utr_and_cds_exons(input_data)
+
+    assert output_data.loc[0, "cds_info"] == [
+        "cds_edge_exon_start",
+        "cds_edge_exon_end",
+        "utr_exon",
+    ]
+    assert output_data.loc[1, "cds_info"] == ["utr_exon", "utr_exon"]
+
+
+def test_annotate_utr_and_cds_exons_groupby_by_gene():
+    input_data = pd.DataFrame(
+        {
+            "geneName": ["GENE1", "GENE1", "GENE2"],
+            "coding": ["coding", "coding", "coding"],
+            "cdsStart": [110, 150, 350],
+            "cdsEnd": [180, 190, 420],
+            "exons": [
+                [(100, 200)],
+                [(100, 200)],
+                [(300, 500)],
+            ],
+            "exonStarts": [[100], [100], [300]],
+            "exonEnds": [[200], [200], [500]],
+        }
+    )
+
+    output_data = annotate_utr_and_cds_exons(input_data)
+
+    assert output_data.loc[0, "cds_info"] == ["cds_edge_exon_start_end"]
+    assert output_data.loc[1, "cds_info"] == ["cds_edge_exon_start_end"]
+    assert output_data.loc[2, "cds_info"] == ["cds_edge_exon_start_end"]
 
 def test_common_exon_window():
     test_df = pd.DataFrame({

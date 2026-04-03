@@ -7,8 +7,7 @@ from . import logging_config # noqa: F401
 # BED形式も0base-start, 1base-endであるため、refFlatのexonStartsとexonEndsをそのまま使用する
 
 def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: str = "all") -> pd.DataFrame:
-    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "frame"])
-    classified_refflat["cds_info"] = classified_refflat["cds_info"].apply(lambda x: set(x))  # set型に変換
+    classified_refflat = classified_refflat.explode(["exonStarts", "exonEnds", "exontype", "exon_position", "exonlengths", "frame", "cds_info"])
     classified_refflat = classified_refflat.drop(columns = ["exons"])
     classified_refflat[["exonStarts", "exonEnds"]] = classified_refflat[["exonStarts", "exonEnds"]].astype(
         int
@@ -26,8 +25,20 @@ def explode_classified_refflat(classified_refflat: pd.DataFrame, target_exon: st
             return True
         classified_refflat = classified_refflat.groupby('geneName').filter(filter_genes)
         classified_refflat = classified_refflat[classified_refflat["exontype"].apply(lambda x: x in ("alternative", "unique-alternative","a3ss-long","a5ss-long","constitutive"))]
+    # 重複を消す前に、重複間で cds_info が異なるものがある場合は、append して結合する
+    classified_refflat = classified_refflat.groupby(["chrom", "geneName","exonStarts", "exonEnds"], as_index=False).agg({
+        "geneName": "first",  # geneNameは同じであると仮定
+        "strand": "first",  # strandも同じであると仮定
+        "exonlengths": "first",  # exonlengthsも同じであると仮定
+        "frame": "first",  # frameも同じであると仮定
+        "coding": "first",  # codingも同じであると仮定
+        "exontype": "first",  # exontypeも同じであると仮定
+        "exon_position": lambda x: ";".join(sorted(set(x))),
+        "cds_info": lambda x: ";".join(sorted(set(x))),  # cds_infoは異なる可能性があるため、重複を削除して結合
+    })
+
     # 重複を削除し一方だけ残す
-    classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "exonStarts", "exonEnds"])
+    classified_refflat = classified_refflat.drop_duplicates(subset=["chrom", "geneName", "exonStarts", "exonEnds"])
     classified_refflat['uuid'] = [uuid.uuid4().hex for _ in range(len(classified_refflat))]  # 一意のIDを生成
     return classified_refflat.reset_index(drop=True)
 

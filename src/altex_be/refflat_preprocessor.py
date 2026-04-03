@@ -16,6 +16,13 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     Returns:
         pd.DataFrame, 興味のある遺伝子のみを含むrefFlatのデータフレーム
     """
+    # Check for "all_genes" sentinel BEFORE filtering
+    if "all_genes" in interest_genes and len(interest_genes) == 1:
+        logging.info("All genes in the reference transcriptome will be included in the analysis.")
+        # Apply only exonStart validation for all genes
+        refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
+        return refFlat
+    
     gene_symbol_set = set(refFlat["geneName"].values)
     ref_seq_id_set = set(refFlat["name"].values)
     
@@ -23,10 +30,6 @@ def select_interest_genes(refFlat: pd.DataFrame, interest_genes: set[str]) -> pd
     # ごくまれに存在する、exonのスタートが0のものを除外する
     # exonStarts を文字列のまま扱い、0 が含まれているかを確認
     refFlat = refFlat[refFlat["exonStarts"].apply(lambda x: all(int(s) > 0 for s in x.split(",") if s.strip() != ""))].reset_index(drop=True)
-
-    if "all_genes" in interest_genes and len(interest_genes) == 1:
-        logging.info("All genes in the reference transcriptome will be included in the analysis.")
-        return refFlat
 
     for gene in interest_genes:
         if gene not in gene_symbol_set and gene not in ref_seq_id_set:
@@ -268,8 +271,9 @@ def annotate_utr_and_cds_exons(refflat: pd.DataFrame) -> pd.DataFrame:
                 label = "cds_exon"
             labels.append(label)
         return labels
-
+    
     refflat["cds_info"] = refflat.apply(label_exons, axis=1)
+    
     return refflat
 
 def add_common_exon_window(refflat: pd.DataFrame) -> pd.DataFrame:

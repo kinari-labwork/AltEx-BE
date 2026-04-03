@@ -14,6 +14,7 @@ from . import (
     sgrna_designer,
     output_formatter,
     offtarget_scorer,
+    sgrna_prioritizer,
     bed_for_ucsc_custom_track_maker,
     logging_config # noqa: F401
 )
@@ -106,10 +107,14 @@ def run_pipeline():
     logging.info("Scoring off-targets...")
     exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(formatted_exploded_sgrna_df, assembly_name, fasta_path=fasta_path)
     logging.info("-" * 50)
+    
+    logging.info("Prioritizing sgRNAs...")
+    prioritized_sgrna_df = sgrna_prioritizer.prioritize_sgrna(exploded_sgrna_with_offtarget_info)
+    logging.info("-" * 50)
 
     output_track_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M')}_{assembly_name}_sgrnas_designed_by_altex-be"
     logging.info("Saving results...")
-    exploded_sgrna_with_offtarget_info.to_csv(output_directory / f"{output_track_name}_table.csv")
+    prioritized_sgrna_df.to_csv(output_directory / f"{output_track_name}_table.csv")
     logging.info(f"Results saved to: {output_directory / f'{output_track_name}_table.csv'}")
 
     write_ucsc_custom_track(

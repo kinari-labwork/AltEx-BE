@@ -160,13 +160,15 @@ def is_valid_exon_position(exon_position: str, site_type: str) -> bool:
     """
     Purpose:
         exon_position が site_type に応じて有効かどうかを判定する
+        複数の転写産物が同じエキソンを共有する場合、いずれかの位置が有効なら True を返す
     Parameters:
-        exon_position: str, エキソンの位置 ("internal", "first", "last" のいずれか)
+        exon_position: str, エキソンの位置 ("internal", "first", "last" または ";" で結合された複数値)
         site_type: str, "acceptor" または "donor"
     Returns:
-        bool, 有効なら True, 無効なら False
+        bool, 少なくとも1つの位置が有効なら True, すべて無効なら False
     """
-    return exon_position in VALID_EXON_POSITIONS[site_type]
+    positions = exon_position.split(";") if ";" in exon_position else [exon_position]
+    return any(pos in VALID_EXON_POSITIONS[site_type] for pos in positions)
 
 SGRNA_START_END_RULES = {
     ("acceptor", "cbe"): lambda match: (match.end(1), match.end(1) + 20),

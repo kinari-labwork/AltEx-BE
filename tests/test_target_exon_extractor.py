@@ -12,6 +12,7 @@ def test_extract_target_exon():
     input_data = pd.DataFrame(
         {
             "chrom": ["chr1", "chr1", "chr2", "chr2", "chr3"],
+            "geneName": ["gene1", "gene1", "gene2", "gene2", "gene3"],
             "strand": ["+", "+", "-", "-", "+"],
             "exonStarts": [[100, 200, 300], [100, 400], [500, 600], [700, 850], [900]],
             "exonEnds": [[150, 250, 350], [150, 450], [550, 650], [750, 850], [1000]],
@@ -22,6 +23,7 @@ def test_extract_target_exon():
                 ["exon1", "exon2"],
                 ["exon1"],
             ],
+            "coding": ["coding", "coding", "coding", "coding", "coding"],
             "exontype": [
                 ["alternative", "constitutive", "alternative"],
                 ["alternative", "constitutive"],
@@ -45,14 +47,14 @@ def test_extract_target_exon():
             ],
             "cds_info": [
                 ["cds_start", "cds_end", "cds_start"],
-                ["cds_start", "cds_end"],
+                ["utr_exon", "cds_start"],
                 ["cds_start", "cds_end"],
                 ["cds_start", "cds_end"],
                 ["cds_start"],
             ],
             "exon_position": [
-                ["first", "internal", "last"],
-                ["first", "last"],
+                ["first-1", "internal", "last"],
+                ["first-2", "last"],
                 ["first", "last"],
                 ["first", "last"],
                 ["single"],
@@ -72,7 +74,7 @@ def test_extract_target_exon():
             "name": ["UUID1", "UUID2", "UUID3", "UUID4"],
             "strand": ["+", "+", "-", "-"],
             "exontype": ["alternative", "alternative", "a3ss-long", "a5ss-long"],
-            "exon_position": ["first", "last", "first", "first"],
+            "exon_position": ["first-1;first-2", "last", "first", "first"],
         }
     )
     print(output_data)
