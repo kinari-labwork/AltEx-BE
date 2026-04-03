@@ -23,6 +23,7 @@ def test_extract_target_exon():
                 ["exon1", "exon2"],
                 ["exon1"],
             ],
+            "coding": ["coding", "coding", "coding", "coding", "coding"],
             "exontype": [
                 ["alternative", "constitutive", "alternative"],
                 ["alternative", "constitutive"],
@@ -73,7 +74,7 @@ def test_extract_target_exon():
             "name": ["UUID1", "UUID2", "UUID3", "UUID4"],
             "strand": ["+", "+", "-", "-"],
             "exontype": ["alternative", "alternative", "a3ss-long", "a5ss-long"],
-            "exon_position": ["first-2;first-1", "last", "first", "first"],
+            "exon_position": ["first-1;first-2", "last", "first", "first"],
         }
     )
     print(output_data)
