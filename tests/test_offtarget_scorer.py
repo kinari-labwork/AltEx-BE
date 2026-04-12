@@ -2,8 +2,7 @@ import pandas as pd
 from pathlib import Path
 from altex_be.offtarget_scorer import (
     add_crisprdirect_url_to_df,
-    calculate_offtarget_site_count_ahocorasick,
-    add_reversed_complement_sgrna_column
+    calculate_offtarget_site_count_ahocorasick
 )
 
 def test_add_crisprdirect_url_to_df():
@@ -43,31 +42,51 @@ def test_calculate_offtarget_site_count():
     input_df = pd.DataFrame({
         "strand": ["+", "+", "+", "-"],
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
-        "sgrna_target_sequence": [
-            "GGG+GATTACAGATTACAGATTAC",      # 20-mer, 2回出現, 12-merは3回出現
-            "AAA+AAAAAAAAAAAAAAAAAAAA",      # 20-mer, 0回出現
-            "ggg+gattacagattacagattac",      # 小文字にした場合のテストケース
-            "GTAATCTGTAATCTGTAATC+CCC"       # 20-mer, 逆相補化したもの。 2回出現, 12-merは3回出現
-        ]
+        "sgrna_sequence": [
+            "GTAATCTGTAATCTGTAATC",      # 20-mer, PAM条件付きで1回出現
+            "AAAAAAAAAAAAAAAAAAAA",      # 20-mer, 0回出現
+            "gtaatctgtaatctgtaatc",      # 小文字にした場合のテストケース
+            "GATTACAGATTACAGATTAC"       # 20-mer, PAM条件付きで0回出現
+        ],
+        "base_editor_pam_sequence": ["NGG", "NGG", "NGG", "NGG"]
     })
     
     expected_df = pd.DataFrame({
         "strand": ["+", "+", "+", "-"],
         "uuid": ["id_A", "id_B", "id_C", "id_D"],
-        "sgrna_target_sequence": [
-            "GGG+GATTACAGATTACAGATTAC",
-            "AAA+AAAAAAAAAAAAAAAAAAAA",
-            "ggg+gattacagattacagattac",
-            "GTAATCTGTAATCTGTAATC+CCC" 
+        "sgrna_sequence": [
+            "GTAATCTGTAATCTGTAATC",
+            "AAAAAAAAAAAAAAAAAAAA",
+            "gtaatctgtaatctgtaatc",
+            "GATTACAGATTACAGATTAC" 
         ],
-        "pam+20bp_exact_match_count": [2, 0, 2, 2],
-        "pam+12bp_exact_match_count": [3, 0, 3, 3]
+        "base_editor_pam_sequence": ["NGG", "NGG", "NGG", "NGG"],
+        "pam+20bp_exact_match_count": [1, 0, 1, 0],
+        "pam+12bp_exact_match_count": [1, 0, 1, 0]
 
     })
 
-    input_df = add_reversed_complement_sgrna_column(input_df)
     output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)
     print(output_df)
 
     # Assert: 結果を検証
+    pd.testing.assert_frame_equal(output_df, expected_df)
+
+def test_calculate_offtarget_site_count_with_all_n_pam():
+    fasta_path = Path("tests/data/test2.fa")
+    input_df = pd.DataFrame({
+        "strand": ["+"],
+        "uuid": ["id_N"],
+        "sgrna_sequence": ["GTAATCTGTAATCTGTAATC"],
+        "base_editor_pam_sequence": ["NNN"],
+    })
+    expected_df = pd.DataFrame({
+        "strand": ["+"],
+        "uuid": ["id_N"],
+        "sgrna_sequence": ["GTAATCTGTAATCTGTAATC"],
+        "base_editor_pam_sequence": ["NNN"],
+        "pam+20bp_exact_match_count": [2],
+        "pam+12bp_exact_match_count": [4],
+    })
+    output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)
     pd.testing.assert_frame_equal(output_df, expected_df)

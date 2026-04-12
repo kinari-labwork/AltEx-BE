@@ -3,9 +3,27 @@ from pathlib import Path
 import logging
 from tqdm import tqdm
 import ahocorasick
+from itertools import product
 from . import logging_config # noqa: F401
 
 SEED_LENGTH = 12
+IUPAC_TO_BASES = {
+    "A": ("A",),
+    "C": ("C",),
+    "G": ("G",),
+    "T": ("T",),
+    "M": ("A", "C"),
+    "R": ("A", "G"),
+    "W": ("A", "T"),
+    "S": ("C", "G"),
+    "Y": ("C", "T"),
+    "K": ("G", "T"),
+    "V": ("A", "C", "G"),
+    "H": ("A", "C", "T"),
+    "D": ("A", "G", "T"),
+    "B": ("C", "G", "T"),
+    "N": ("A", "C", "G", "T"),
+}
 
 def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: str) -> pd.DataFrame:
     """
@@ -31,40 +49,43 @@ def convert_dna_to_reversed_complement_dna(sequence: str) -> str:
     """
     complement_map = {
         "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
-        "a": "t", "t": "a", "c": "g", "g": "c", "+": "+"
+        "a": "t", "t": "a", "c": "g", "g": "c", "n": "n"
     }
     return "".join([complement_map[base] for base in reversed(sequence)])
+
+def expand_pam_iupac(pam_rule: str) -> list[str]:
+    """
+    Purpose:
+        IUPAC表記のPAM配列をすべての具体的な塩基配列に展開する。
+    """
+    pam_rule = pam_rule.upper()
+    try:
+        base_choices = [IUPAC_TO_BASES[base] for base in pam_rule]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported IUPAC base in PAM rule: {pam_rule}") from exc
+    return ["".join(bases) for bases in product(*base_choices)]
 
 def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     """
     Purpose: 逆相補のsgRNA配列を追加する
     """
-    exploded_sgrna_df["reversed_sgrna_target_sequence"] = exploded_sgrna_df["sgrna_target_sequence"].apply(
+    exploded_sgrna_df["reversed_sgrna_sequence"] = exploded_sgrna_df["sgrna_sequence"].apply(
         convert_dna_to_reversed_complement_dna
     )
     return exploded_sgrna_df
 
-def get_seed_sequence(sequence_with_plus: str, seed_len: int = SEED_LENGTH) -> str:
+def get_seed_sequence_from_protospacer(protospacer: str, seed_len: int = SEED_LENGTH) -> str:
     """
     Purpose:
-        PAM+Target配列（'+'区切り）から、PAM + Seed領域（PAM隣接領域）のみを抽出する。
-        PAMの位置（前方か後方か）は'+'の位置で自動判定する。
+        protospacer配列（20bp想定）から、PAM隣接側seed領域を抽出する。
+        protospacerの右側にPAMがある向きを基準とし、seedは3'側末端を使う。
     Parameters:
-        sequence_with_plus: "NGG+ATGC..." (PAM+Spacer) or "...ATGC+NGG" (Spacer+PAM)
+        protospacer: PAMなしの標的配列
         seed_len: Seed領域の長さ (default: 12)
     Returns:
-        str: PAMとSeed領域を含む配列（'+'を含む）
+        str: Seed領域配列
     """
-    parts = sequence_with_plus.split('+')
-    part0, part1 = parts[0], parts[1]
-    
-    # 短い方がPAM、長い方がSpacerなので、それに基づいてSeed領域を抽出
-    if len(part0) < len(part1):
-        # SeedはSpacerの先頭
-        return f"{part0}+{part1[:seed_len]}"
-    else:
-        # SeedはSpacerの末尾
-        return f"{part0[-seed_len:]}+{part1}"
+    return protospacer[-seed_len:]
 
 def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, fasta_path: Path) -> pd.DataFrame:
     """
@@ -73,33 +94,48 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     Returns : exploded_sgrna_df: PAM+20bpのオフターゲットサイト数を追加したデータフレーム
     Algorism : sgRNA配列とその逆相補配列をセットに追加し、Aho-CorasickのAutomatonを構築。各染色体配列に対してAutomatonを用いて検索し、各sgRNA配列の出現回数をカウントする。
     """
-    # 遺伝子が - strandの場合、出力されている配列は - strandの配列である。しかし、検索対象は+ strandであるため、逆相補に変換する必要がある。
-    # 重複しないようにセットに追加
-    full_sequences = set()
-    full_sequences.update(exploded_sgrna_df["sgrna_target_sequence"].str.replace('+', '').str.upper())
-    full_sequences.update(exploded_sgrna_df["reversed_sgrna_target_sequence"].str.replace('+', '').str.upper())
+    full_sequences_per_row = []
+    seed_sequences_per_row = []
+    all_full_sequences = set()
+    all_seed_sequences = set()
 
-    exploded_sgrna_df["seed_target_sequence"] = exploded_sgrna_df["sgrna_target_sequence"].apply(get_seed_sequence)
-    exploded_sgrna_df["reversed_seed_target_sequence"] = exploded_sgrna_df["reversed_sgrna_target_sequence"].apply(get_seed_sequence)
+    for _, row in exploded_sgrna_df.iterrows():
+        sgrna_sequence = row["sgrna_sequence"].upper()
+        pam_rule = row["base_editor_pam_sequence"].upper()
+        protospacer = convert_dna_to_reversed_complement_dna(sgrna_sequence).upper()
+        seed = get_seed_sequence_from_protospacer(protospacer)
 
-    seed_sequences = set()
-    seed_sequences.update(exploded_sgrna_df["seed_target_sequence"].str.replace('+', '').str.upper())
-    seed_sequences.update(exploded_sgrna_df["reversed_seed_target_sequence"].str.replace('+', '').str.upper())
+        if pam_rule and set(pam_rule) == {"N"}:
+            full_candidates = {protospacer}
+            seed_candidates = {seed}
+        else:
+            expanded_pams = expand_pam_iupac(pam_rule)
+            full_candidates = {f"{protospacer}{pam}" for pam in expanded_pams}
+            seed_candidates = {f"{seed}{pam}" for pam in expanded_pams}
+
+        # 逆相補配列も候補に追加
+        full_sequences = full_candidates | {convert_dna_to_reversed_complement_dna(seq).upper() for seq in full_candidates}
+        seed_sequences = seed_candidates | {convert_dna_to_reversed_complement_dna(seq).upper() for seq in seed_candidates}
+
+        full_sequences_per_row.append(full_sequences)
+        seed_sequences_per_row.append(seed_sequences)
+        all_full_sequences.update(full_sequences)
+        all_seed_sequences.update(seed_sequences)
 
     # まず最初にAho-CorasickのAutomatonを構築
     automaton = ahocorasick.Automaton()
 
-    for seq in full_sequences:
+    for seq in all_full_sequences:
         automaton.add_word(seq, ("full", seq))
 
-    for seq in seed_sequences:
+    for seq in all_seed_sequences:
         automaton.add_word(seq, ("seed", seq))
 
     automaton.make_automaton()
 
     # sgRNAごとのカウント辞書
-    offtarget_count_dict_full = {seq: 0 for seq in full_sequences}
-    offtarget_count_dict_seed = {seq: 0 for seq in seed_sequences}
+    offtarget_count_dict_full = {seq: 0 for seq in all_full_sequences}
+    offtarget_count_dict_seed = {seq: 0 for seq in all_seed_sequences}
 
     with open(fasta_path, 'r') as fasta_file:
         header_count = sum(1 for line in fasta_file if line.startswith(">"))
@@ -135,24 +171,14 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
             pbar.update(1)
             pbar.close()
     
-    # 順配列、逆相補配列の両方のカウントを合計して新しい列に追加
-    exploded_sgrna_df["pam+20bp_exact_match_count"] = exploded_sgrna_df.apply(
-        lambda row: (
-            offtarget_count_dict_full[row["sgrna_target_sequence"].replace('+', '').upper()]
-            + offtarget_count_dict_full[row["reversed_sgrna_target_sequence"].replace('+', '').upper()]
-        ),
-        axis=1
-    )
-    exploded_sgrna_df["pam+12bp_exact_match_count"] = exploded_sgrna_df.apply(
-        lambda row: (
-            offtarget_count_dict_seed[row["seed_target_sequence"].replace('+', '').upper()]
-            + offtarget_count_dict_seed[row["reversed_seed_target_sequence"].replace('+', '').upper()]
-        ),
-        axis=1
-    )
-
-    # 逆相補配列の列とseed配列の列は不要なので削除
-    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["reversed_sgrna_target_sequence", "seed_target_sequence", "reversed_seed_target_sequence"])
+    exploded_sgrna_df["pam+20bp_exact_match_count"] = [
+        sum(offtarget_count_dict_full[sequence] for sequence in sequences)
+        for sequences in full_sequences_per_row
+    ]
+    exploded_sgrna_df["pam+12bp_exact_match_count"] = [
+        sum(offtarget_count_dict_seed[sequence] for sequence in sequences)
+        for sequences in seed_sequences_per_row
+    ]
     return exploded_sgrna_df
 
 def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_path: Path) -> pd.DataFrame:
@@ -160,7 +186,5 @@ def score_offtargets(exploded_sgrna_df: pd.DataFrame, assembly_name: str, fasta_
     Purpose: このモジュールのラップ関数
     """
     exploded_sgrna_df = add_crisprdirect_url_to_df(exploded_sgrna_df, assembly_name)
-    exploded_sgrna_df = add_reversed_complement_sgrna_column(exploded_sgrna_df)
     exploded_sgrna_df = calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df, fasta_path)
-    exploded_sgrna_df = exploded_sgrna_df.drop(columns=["sgrna_target_sequence"])
     return exploded_sgrna_df

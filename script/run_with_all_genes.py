@@ -1,6 +1,14 @@
 import pandas as pd
 from pathlib import Path
-from altex_be import refflat_preprocessor,splicing_event_classifier, target_exon_extractor, sequence_annotator, sgrna_designer
+from altex_be import (
+    refflat_preprocessor,
+    splicing_event_classifier,
+    target_exon_extractor,
+    sequence_annotator,
+    sgrna_designer,
+    output_formatter,
+    offtarget_scorer,
+)
 from altex_be.class_def.base_editors import PRESET_BASE_EDITORS, BaseEditor
 
 assembly_names = [
@@ -35,8 +43,10 @@ def run_with_all_genes(
     print(f"Processing assembly: {assembly_name}")
 
     out_file = Path(in_output_dir) / "sgrna_designed_all_genes.pkl"
+    formatted_out_file = Path(in_output_dir) / "formatted_exploded_sgrna_all_genes.pkl"
+    offtarget_out_file = Path(in_output_dir) / "exploded_sgrna_with_offtarget_all_genes.pkl"
     
-    base_editors = PRESET_BASE_EDITORS
+    base_editors = dict(PRESET_BASE_EDITORS)
     base_editors.update({
         "spry_be4max_nnn": BaseEditor(
             base_editor_name="spry_be4max_nnn",
@@ -79,8 +89,20 @@ def run_with_all_genes(
         splice_donor_single_exon_df,
         fasta_path=f"{in_output_dir}/{assembly_name}.fa",
     )
+
     sgrna_designed = sgrna_designer.design_sgrna_for_base_editors(sequence_annotated, base_editors)
     sgrna_designed.to_pickle(out_file)
+
+    sgrna_designed_dict = sgrna_designer.design_sgrna_for_base_editors_dict(sequence_annotated, base_editors)
+    formatted_exploded_sgrna_df = output_formatter.format_output(sgrna_designed_dict, base_editors)
+    formatted_exploded_sgrna_df.to_pickle(formatted_out_file)
+
+    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(
+        formatted_exploded_sgrna_df,
+        assembly_name,
+        fasta_path=Path(f"{in_output_dir}/{assembly_name}.fa"),
+    )
+    exploded_sgrna_with_offtarget_info.to_pickle(offtarget_out_file)
 
 if __name__ == "__main__":
     for assembly_name in assembly_names:
