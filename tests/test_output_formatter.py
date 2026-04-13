@@ -3,6 +3,7 @@ from altex_be.output_formatter import (
     convert_empty_list_into_na,
     prepare_melted_df,
     explode_sgrna_df,
+    add_sgrna_strand_to_df,
     add_base_editor_info_to_df
 )
 from altex_be.sgrna_designer import BaseEditor
@@ -171,3 +172,14 @@ def test_add_base_editor_info_to_df():
     output_df = output_df[expected_df.columns]  
     print(output_df)
     pd.testing.assert_frame_equal(output_df, expected_df)
+
+def test_add_sgrna_strand_to_df_respects_gene_strand():
+    input_df = pd.DataFrame({
+        "strand": ["+", "+", "-", "-"],
+        "sgrna_target_sequence": ["CCC+ATCG", "ATCG+CCC", "CCC+ATCG", "ATCG+CCC"],
+    })
+    expected = ["-", "+", "+", "-"]
+
+    output_df = add_sgrna_strand_to_df(input_df)
+
+    assert output_df["sgrna_strand"].tolist() == expected
