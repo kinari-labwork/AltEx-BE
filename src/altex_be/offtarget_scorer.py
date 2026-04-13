@@ -48,8 +48,12 @@ def convert_dna_to_reversed_complement_dna(sequence: str) -> str:
         reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
     """
     complement_map = {
-        "A": "T", "T": "A", "C": "G", "G": "C", "N": "N",
-        "a": "t", "t": "a", "c": "g", "g": "c", "n": "n"
+        "A": "T", "T": "A", "C": "G", "G": "C",
+        "R": "Y", "Y": "R", "S": "S", "W": "W", "K": "M", "M": "K",
+        "B": "V", "V": "B", "D": "H", "H": "D", "N": "N",
+        "a": "t", "t": "a", "c": "g", "g": "c",
+        "r": "y", "y": "r", "s": "s", "w": "w", "k": "m", "m": "k",
+        "b": "v", "v": "b", "d": "h", "h": "d", "n": "n"
     }
     return "".join([complement_map[base] for base in reversed(sequence)])
 
@@ -64,15 +68,6 @@ def expand_pam_iupac(pam_rule: str) -> list[str]:
     except KeyError as exc:
         raise ValueError(f"Unsupported IUPAC base in PAM rule: {pam_rule}") from exc
     return ["".join(bases) for bases in product(*base_choices)]
-
-def add_reversed_complement_sgrna_column(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Purpose: 逆相補のsgRNA配列を追加する
-    """
-    exploded_sgrna_df["reversed_sgrna_sequence"] = exploded_sgrna_df["sgrna_sequence"].apply(
-        convert_dna_to_reversed_complement_dna
-    )
-    return exploded_sgrna_df
 
 def get_seed_sequence_from_protospacer(protospacer: str, seed_len: int = SEED_LENGTH) -> str:
     """
@@ -100,9 +95,8 @@ def calculate_offtarget_site_count_ahocorasick(exploded_sgrna_df: pd.DataFrame, 
     all_seed_sequences = set()
 
     for _, row in exploded_sgrna_df.iterrows():
-        sgrna_sequence = row["sgrna_sequence"].upper()
+        protospacer = row["sgrna_sequence"].upper()
         pam_rule = row["base_editor_pam_sequence"].upper()
-        protospacer = convert_dna_to_reversed_complement_dna(sgrna_sequence).upper()
         seed = get_seed_sequence_from_protospacer(protospacer)
 
         if pam_rule and set(pam_rule) == {"N"}:
