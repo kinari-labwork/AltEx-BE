@@ -12,8 +12,8 @@ from altex_be import (
 from altex_be.class_def.base_editors import PRESET_BASE_EDITORS, BaseEditor
 
 assembly_names = [
-    "hg38", # human
     "mm39", # mouse
+    "hg38", # human
     "rn7",  # rat
     "danRer11" # zebrafish
 ]
@@ -97,12 +97,13 @@ def run_with_all_genes(
     formatted_exploded_sgrna_df = output_formatter.format_output(sgrna_designed_dict, base_editors)
     formatted_exploded_sgrna_df.to_pickle(formatted_out_file)
 
-    exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(
+    if assembly_name == "mm39":
+        exploded_sgrna_with_offtarget_info = offtarget_scorer.score_offtargets(
         formatted_exploded_sgrna_df,
         assembly_name,
         fasta_path=Path(f"{in_output_dir}/{assembly_name}.fa"),
-    )
-    exploded_sgrna_with_offtarget_info.to_pickle(offtarget_out_file)
+        )
+        exploded_sgrna_with_offtarget_info.to_pickle(offtarget_out_file)
 
 if __name__ == "__main__":
     for assembly_name in assembly_names:
