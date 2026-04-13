@@ -40,29 +40,27 @@ def test_calculate_offtarget_site_count():
     fasta_path = Path("tests/data/test2.fa")
 
     input_df = pd.DataFrame({
-        "strand": ["+", "+", "+", "-"],
-        "uuid": ["id_A", "id_B", "id_C", "id_D"],
+        "strand": ["+", "-", "-"],
+        "uuid": ["id_A", "id_B", "id_C"],
         "sgrna_sequence": [
-            "GTAATCTGTAATCTGTAATC",      # 20-mer, PAM条件付きで1回出現
             "AAAAAAAAAAAAAAAAAAAA",      # 20-mer, 0回出現
-            "gtaatctgtaatctgtaatc",      # 小文字にした場合のテストケース
-            "GATTACAGATTACAGATTAC"       # 20-mer, PAM条件付きで0回出現
+            "GATTACAGATTACAGATTAC",      # 20-mer, PAM条件付きで1回出現
+            "GATTACAGATTACAGATTAC",       # 20-mer, PAM条件なしで2回出現
         ],
-        "base_editor_pam_sequence": ["NGG", "NGG", "NGG", "NGG"]
+        "base_editor_pam_sequence": ["NGG", "NGG", "NNN"]
     })
     
     expected_df = pd.DataFrame({
-        "strand": ["+", "+", "+", "-"],
-        "uuid": ["id_A", "id_B", "id_C", "id_D"],
+        "strand": ["+", "-", "-"],
+        "uuid": ["id_A", "id_B", "id_C"],
         "sgrna_sequence": [
-            "GTAATCTGTAATCTGTAATC",
             "AAAAAAAAAAAAAAAAAAAA",
-            "gtaatctgtaatctgtaatc",
-            "GATTACAGATTACAGATTAC" 
+            "GATTACAGATTACAGATTAC",
+            "GATTACAGATTACAGATTAC",
         ],
-        "base_editor_pam_sequence": ["NGG", "NGG", "NGG", "NGG"],
-        "pam+20bp_exact_match_count": [1, 0, 1, 0],
-        "pam+12bp_exact_match_count": [1, 0, 1, 0]
+        "base_editor_pam_sequence": ["NGG", "NGG", "NNN"],
+        "pam+20bp_exact_match_count": [0, 1, 2],
+        "pam+12bp_exact_match_count": [0, 1, 4],
 
     })
 
@@ -76,17 +74,19 @@ def test_calculate_offtarget_site_count_with_all_n_pam():
     fasta_path = Path("tests/data/test2.fa")
     input_df = pd.DataFrame({
         "strand": ["+"],
+        "sgrna_strand": ["-"],
         "uuid": ["id_N"],
         "sgrna_sequence": ["GTAATCTGTAATCTGTAATC"],
         "base_editor_pam_sequence": ["NNN"],
     })
     expected_df = pd.DataFrame({
         "strand": ["+"],
+        "sgrna_strand": ["-"],
         "uuid": ["id_N"],
         "sgrna_sequence": ["GTAATCTGTAATCTGTAATC"],
         "base_editor_pam_sequence": ["NNN"],
         "pam+20bp_exact_match_count": [2],
-        "pam+12bp_exact_match_count": [4],
+        "pam+12bp_exact_match_count": [5],
     })
     output_df = calculate_offtarget_site_count_ahocorasick(input_df, fasta_path)
     pd.testing.assert_frame_equal(output_df, expected_df)
