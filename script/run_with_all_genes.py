@@ -90,9 +90,6 @@ def run_with_all_genes(
         fasta_path=f"{in_output_dir}/{assembly_name}.fa",
     )
 
-    sgrna_designed = sgrna_designer.design_sgrna_for_base_editors(sequence_annotated, base_editors)
-    sgrna_designed.to_pickle(out_file)
-
     sgrna_designed_dict = sgrna_designer.design_sgrna_for_base_editors_dict(sequence_annotated, base_editors)
     formatted_exploded_sgrna_df = output_formatter.format_output(sgrna_designed_dict, base_editors)
     formatted_exploded_sgrna_df.to_pickle(formatted_out_file)
