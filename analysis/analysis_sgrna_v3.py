@@ -13,7 +13,16 @@ pd.set_option('display.max_rows', 5000)  # 表示する行数の上限を設定
 P = print
 
 # %%
-res_df = pd.read_csv("../data/mm39/altexbe_20260326_164828/202603261736_mm39_sgrnas_designed_by_altex-be_table.csv")
+res_df = pd.read_pickle("../data/mm39/exploded_sgrna_with_offtarget_all_genes.pkl")
+
+# %%
+print(res_df.head())
+
+# %%
+print(res_df.loc[res_df["sgrna_strand"] == "+"].head())
+
+# %%
+print(res_df.loc[res_df["strand"] == "+"].head())
 
 # %%
 
@@ -74,13 +83,10 @@ def calc_offtarget_stat(ref_df, base_editors, output_csv_path="../data/mm39/offt
     
     return stats_df
 
-base_editors = ["target_aid_ngg", "be4max_ngg", "abe8e_ngg", "target_aid_ng", "be4max_ng", "abe8e_ng", "SpRY_BE4max"]
+base_editors = ["target_aid_ngg", "be4max_ngg", "abe8e_ngg", "target_aid_ng", "be4max_ng", "abe8e_ng", "spry_be4max_nnn"]
 
 # Calculate and export off-target statistics
 stats_df = calc_offtarget_stat(res_df, base_editors)
-print("\n" + "="*80)
-print(stats_df.to_string())
-print("="*80)
 
 # %%
 # Add PAM type and base editor type for visualization
@@ -107,54 +113,3 @@ def add_metadata(stats_df):
     return stats_df
 
 stats_df = add_metadata(stats_df)
-
-# %%
-# Plot: Box plot for 20bp and 12bp off-target counts by base editor
-
-plot_20bp_df = stats_df[["base_editor", "20bp_vector"]].explode("20bp_vector")
-plot_20bp_df["20bp_vector"] = pd.to_numeric(plot_20bp_df["20bp_vector"], errors="coerce")
-plot_20bp_df = plot_20bp_df.dropna(subset=["20bp_vector"])
-
-plot_12bp_df = stats_df[["base_editor", "12bp_vector"]].explode("12bp_vector")
-plot_12bp_df["12bp_vector"] = pd.to_numeric(plot_12bp_df["12bp_vector"], errors="coerce")
-plot_12bp_df = plot_12bp_df.dropna(subset=["12bp_vector"])
-
-plt.figure(figsize=(12, 6))
-
-# --- 20bp ---
-plt.subplot(1, 2, 1)
-sns.violinplot(
-    x="base_editor",
-    y="20bp_vector",
-    data=plot_20bp_df,
-    inner=None,  
-    cut=0,              # ← 外側に変な裾を伸ばさない
-    scale="width"       # ← 比較しやすい
-)
-plt.yscale("log")
-plt.title("Distribution of 20bp Off-target Counts by Base Editor")
-plt.xticks(rotation=30, ha="right")
-
-# --- 12bp ---
-plt.subplot(1, 2, 2)
-sns.violinplot(
-    x="base_editor",
-    y="12bp_vector",
-    data=plot_12bp_df,
-    inner=None,
-    cut=0,
-    scale="width"
-)
-plt.yscale("log")
-plt.title("Distribution of 12bp Off-target Counts by Base Editor")
-plt.xticks(rotation=30, ha="right")
-
-plt.tight_layout()
-
-# %%
-# Summary table: Compare by PAM type
-print("\n" + "="*80)
-print("Summary by PAM Type:")
-print("="*80)
-summary_by_pam = stats_df.groupby("pam_type")[["designed_gRNA_count", "20bp_mean", "12bp_mean", "12bp_median"]].agg(["mean", "min", "max"])
-print(summary_by_pam.round(2))
