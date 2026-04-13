@@ -76,13 +76,16 @@ def explode_sgrna_df(target_exon_with_sgrna_dict: dict[str, pd.DataFrame]) -> pd
 
 def add_sgrna_strand_to_df(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Purpose: exploded_sgrna_dfのstrand情報は、標的遺伝子のstrand情報であるため、sgRNAのstrand情報を追加する
+    Purpose: exploded_sgrna_dfのstrand情報は標的遺伝子のstrand情報であるため、sgRNAのゲノム上のstrand情報を追加する
     sgrna_target_sequenceの、+ で区切られる末尾または先頭の文字がPAM配列に対応している。
-    そのため、sgRNAのstrand情報は、sgrna_target_sequenceの中のどこに+があるかで判定できる。
+    そのため、まず遺伝子向きでのsgRNA strandを判定し、標的遺伝子が- strandの場合はゲノム向きに反転する。
     """
-    exploded_sgrna_df["sgrna_strand"] = exploded_sgrna_df["sgrna_target_sequence"].apply(
-        lambda x: "-" if len(x.split('+')[0]) < len(x.split('+')[1]) else "+" 
-    )
+    sgrna_parts = exploded_sgrna_df["sgrna_target_sequence"].str.split("+", expand=True)
+    pam_is_left = sgrna_parts[0].str.len() < sgrna_parts[1].str.len()
+    gene_is_minus = exploded_sgrna_df["strand"].eq("-")
+    genome_is_minus = pam_is_left ^ gene_is_minus
+
+    exploded_sgrna_df["sgrna_strand"] = genome_is_minus.map({True: "-", False: "+"})
     return exploded_sgrna_df
 
 def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
