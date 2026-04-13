@@ -20,6 +20,7 @@ print(res_df.head())
 
 # %%
 print(res_df.loc[res_df["sgrna_strand"] == "+"].head())
+print(res_df.loc[res_df["sgrna_strand"] == "+"]["strand"].value_counts())
 
 # %%
 print(res_df.loc[res_df["strand"] == "+"].head())
