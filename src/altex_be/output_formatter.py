@@ -80,13 +80,12 @@ def add_sgrna_strand_to_df(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     sgrna_target_sequenceの、+ で区切られる末尾または先頭の文字がPAM配列に対応している。
     そのため、まず遺伝子向きでのsgRNA strandを判定し、標的遺伝子が- strandの場合はゲノム向きに反転する。
     """
-    def infer_genome_sgrna_strand(row: pd.Series) -> str:
-        inferred_gene_strand = "-" if len(row["sgrna_target_sequence"].split('+')[0]) < len(row["sgrna_target_sequence"].split('+')[1]) else "+"
-        if row["strand"] == "+":
-            return inferred_gene_strand
-        return "+" if inferred_gene_strand == "-" else "-"
+    sgrna_parts = exploded_sgrna_df["sgrna_target_sequence"].str.split("+", expand=True)
+    pam_is_left = sgrna_parts[0].str.len() < sgrna_parts[1].str.len()
+    gene_is_minus = exploded_sgrna_df["strand"].eq("-")
+    genome_is_minus = pam_is_left ^ gene_is_minus
 
-    exploded_sgrna_df["sgrna_strand"] = exploded_sgrna_df.apply(infer_genome_sgrna_strand, axis=1)
+    exploded_sgrna_df["sgrna_strand"] = genome_is_minus.map({True: "-", False: "+"})
     return exploded_sgrna_df
 
 def add_base_editor_info_to_df(exploded_sgrna_df: pd.DataFrame, base_editors: dict[str, BaseEditor]) -> pd.DataFrame:
