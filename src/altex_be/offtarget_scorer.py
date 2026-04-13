@@ -41,11 +41,11 @@ def add_crisprdirect_url_to_df(exploded_sgrna_df: pd.DataFrame, assembly_name: s
 def convert_dna_to_reversed_complement_dna(sequence: str) -> str:
     """
     purpose:
-        塩基配列を逆相補のRNAに変換する
+        塩基配列を逆相補のDNAに変換する
     Parameters:
         sequence: 変換したいDNA配列
     Returns:
-        reversed_complement_rna_sequence: 入力したDNA配列の逆相補RNA配列
+        reversed_complement_dna_sequence: 入力したDNA配列の逆相補DNA配列
     """
     complement_map = {
         "A": "T", "T": "A", "C": "G", "G": "C",
