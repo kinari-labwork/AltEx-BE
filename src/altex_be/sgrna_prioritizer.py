@@ -43,7 +43,7 @@ def prioritize_sgrna(exploded_sgrna_with_offtarget_info: pd.DataFrame) -> pd.Dat
     
     sorted_sgrna_df["sgrna_priority"] = (
         sorted_sgrna_df
-        .groupby(["geneName", "exonStarts", "exonEnds"])
+        .groupby(["geneName", "exonStarts", "exonEnds", "base_editor_name"])
         .cumcount() + 1
     )
     
