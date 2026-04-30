@@ -121,7 +121,7 @@ def add_exon_id(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     Purpose: exon_idをgeneNameとchromの隣に追加する。
     exon_idは、geneName 内で exon_position が同じものは同じ exon_id とした通し番号とする。
     """
-    exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exon_starts"])
+    exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exonStarts"])
     exploded_sgrna_df["exon_id"] = (
         exploded_sgrna_df
         .groupby(["geneName", "exon_position"])
@@ -160,5 +160,8 @@ def format_output(target_exon_with_sgrna_dict: dict[str, pd.DataFrame],
 
     # geneNameを基にソート
     exploded_sgrna_df = exploded_sgrna_df.sort_values(by=["geneName", "exon_position"])
+
+    # exon_idを追加
+    exploded_sgrna_df = add_exon_id(exploded_sgrna_df)
 
     return exploded_sgrna_df.reset_index(drop=True)
