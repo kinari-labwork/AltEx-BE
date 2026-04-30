@@ -125,7 +125,7 @@ def add_exon_id(exploded_sgrna_df: pd.DataFrame) -> pd.DataFrame:
     exploded_sgrna_df["exon_id"] = (
         exploded_sgrna_df
         .groupby(["geneName", "exon_position"])
-        .cumcount() + 1
+        .ngroup() + 1
     )
     # chromの隣にexon_idを移動
     cols = exploded_sgrna_df.columns.tolist()
