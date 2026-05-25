@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           conda activate test-AltExAid
-          conda install -y -c bioconda pybedtools
+          conda install -y -c bioconda pybedtools pip
           conda install tqdm
           conda install conda-forge::pyahocorasick
           python -m pip install --upgrade pip pytest numpy pandas 

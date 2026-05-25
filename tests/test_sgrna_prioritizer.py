@@ -16,6 +16,7 @@ def sample_sgrna_df():
         "pam+12bp_exact_match_count": [10, 20, 10, 15, 10],
         "sgrna_overlap_between_cds_and_editing_window": [0, 0, 1, 0, 0],
         "sgrna_possible_unintended_edited_base_count": [0, 0, 2, 0, 0],
+        "base_editor_name": ["BE1", "BE1", "BE2", "BE1", "BE2"],  # 新しい列を追加
     })
 
 
@@ -67,6 +68,7 @@ def test_gc_content_validation():
         "pam+12bp_exact_match_count": [10, 10, 10],
         "sgrna_overlap_between_cds_and_editing_window": [0, 0, 0],
         "sgrna_possible_unintended_edited_base_count": [0, 0, 0],
+        "base_editor_name": ["BE1", "BE1", "BE1"],  # 新しい列を追加
     })
     
     result = prioritize_sgrna(df)
@@ -87,6 +89,7 @@ def test_tiebreaker_12bp_offtarget():
         "pam+12bp_exact_match_count": [10, 5],  # Different - 5 should rank higher
         "sgrna_overlap_between_cds_and_editing_window": [0, 0],
         "sgrna_possible_unintended_edited_base_count": [0, 0],
+        "base_editor_name": ["BE1", "BE1"],  # 新しい列を追加
     })
     
     result = prioritize_sgrna(df)
@@ -108,6 +111,7 @@ def test_final_tiebreaker_unintended_edits():
         "pam+12bp_exact_match_count": [10, 10],  # Same
         "sgrna_overlap_between_cds_and_editing_window": [0, 0],
         "sgrna_possible_unintended_edited_base_count": [2, 0],  # Different - 0 should rank higher
+        "base_editor_name": ["BE1", "BE1"],  # 新しい列を追加
     })
     
     result = prioritize_sgrna(df)
@@ -129,6 +133,7 @@ def test_priority_reset_per_exon():
         "pam+12bp_exact_match_count": [10] * 5,
         "sgrna_overlap_between_cds_and_editing_window": [0] * 5,
         "sgrna_possible_unintended_edited_base_count": [0] * 5,
+        "base_editor_name": ["BE1", "BE1", "BE1", "BE2", "BE2"],  # 新しい列を追加
     })
     
     result = prioritize_sgrna(df)

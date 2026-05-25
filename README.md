@@ -9,6 +9,7 @@
 
 
 - [AltEx-BE: Alternate Exon Skipping by Base Editing](#altex-be-alternate-exon-skipping-by-base-editing)
+  - [Important Notices](#important-notices)
   - [Overview](#overview)
   - [Key Features](#key-features)
   - [Workflow Diagram](#workflow-diagram)
@@ -16,13 +17,22 @@
   - [Required dataset](#required-dataset)
   - [Usage](#usage)
     - [Graphical User Interface (UI)](#graphical-user-interface-ui)
+    - [Web Viewer (GitHub Pages)](#web-viewer-github-pages)
     - [Command-Line Interface (CLI)](#command-line-interface-cli)
       - [1. Using a Preset Editor:](#1-using-a-preset-editor)
       - [2. Input Base Editor Information in the Command Line:](#2-input-base-editor-information-in-the-command-line)
       - [3. Input a CSV/TSV/TXT File Containing Information about Your Base Editors:](#3-input-a-csvtsvtxt-file-containing-information-about-your-base-editors)
   - [List of command line options](#list-of-command-line-options)
   - [Format of AltEx-BE output](#format-of-altex-be-output)
+    - [sgRNA Prioritization](#sgrna-prioritization)
 - [License](#license)
+
+## Important Notices
+- Japanese version of README is also available! Please visit [this file](README_ja.md)
+
+> [!IMPORTANT]
+> **WEB version of AltEx-BE is also available! You can use it without installing anything on your computer.**
+> Please visit [this webpage](https://kinari-labwork.github.io/altex-be-web/)
 
 ## Overview
 
@@ -107,6 +117,14 @@ altex-be --ui
 - ▶️ Run the AltEx-BE pipeline locally
 - 📝 Monitor execution logs in real time
 - 📊 Preview and browse output files
+
+### Web Viewer (GitHub Pages)
+
+For a mouse-only workflow, you can use the static web viewer to upload **precomputed** sgRNA results and browse them in your browser. The viewer is in `docs/index.html` and works on GitHub Pages because it does not run any computation.
+
+**To use it:**
+- Open `docs/index.html` locally in a browser, or
+- Enable GitHub Pages with the `/docs` folder as the source and open the published URL.
 
 ### Command-Line Interface (CLI)
 
@@ -246,4 +264,3 @@ bases within the CDS region are used as final tiebreakers.
 
 # License
 - Please see [LICENSE.md](LICENSE.md)
-
